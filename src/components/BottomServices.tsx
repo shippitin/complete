@@ -1,4 +1,4 @@
-import React from 'react';
+  import React from 'react';
 import { Globe, Shield, Ship, Clock, HelpCircle } from 'lucide-react';
 import type { BottomService } from '../types/index.ts';
 

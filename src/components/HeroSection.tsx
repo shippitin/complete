@@ -1,35 +1,207 @@
-import React, { useState } from 'react';
+// src/components/HeroSection.tsx
+import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import ServiceNavigation from './ServiceNavigation';
-import ShipmentTabs from './ShipmentTabs';
-import QuoteForm from './QuoteForm';
-import type { TabType } from '../types';
+
+// Import QuoteForm components
+import DoorToDoorQuoteForm from './QuoteForms/DoorToDoorQuoteForm';
+import TruckQuoteForm from './QuoteForms/TruckQuoteForm';
+import AirQuoteForm from './QuoteForms/AirQuoteForm';
+import SeaQuoteForm from './QuoteForms/SeaQuoteForm';
+import ParcelQuoteForm from './QuoteForms/ParcelQuoteForm';
+import LCLQuoteForm from './QuoteForms/LCLQuoteForm';
+import InsuranceQuoteForm from './QuoteForms/InsuranceQuoteForm';
+import FirstLastMileQuoteForm from './QuoteForms/FirstLastMileQuoteForm';
+import CustomsQuoteForm from './QuoteForms/CustomsQuoteForm';
+import RailQuoteForm from './QuoteForms/RailQuoteForm'; // NEW: Import RailQuoteForm
+
+// Correct Import Path for types
+import type {
+  QuoteFormHandle,
+  AllFormData,
+  TrainContainerFormData // Still needed for type narrowing in handleSearch if train types are checked
+} from '../types/QuoteFormHandle';
+
+import {
+  FaHome,
+  FaTrain,
+  FaShip,
+  FaPlane,
+  FaTruck,
+  FaBox,
+  FaBoxes,
+  FaStamp,
+  FaDolly,
+  FaHandshake,
+} from "react-icons/fa";
+
+interface TabProps {
+  icon: React.ElementType;
+  label: string;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
+  <div
+    className={`flex flex-col items-center justify-center px-5 py-3 cursor-pointer rounded-xl
+                ${isActive
+                  ? 'bg-blue-200 text-black font-bold shadow-lg transform scale-105' // Changed text-blue-800 to text-black
+                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-800'}
+                transition-all duration-300 ease-in-out whitespace-nowrap flex-shrink-0`}
+    onClick={onClick}
+  >
+    {/* Adjusted margin-bottom for the icon back to mb-1 */}
+    <Icon className={`text-2xl mb-1 ${isActive ? '' : 'text-gray-600'}`} />
+    <span className="text-xs font-medium text-center">{label}</span>
+  </div>
+);
 
 const HeroSection: React.FC = () => {
   const { t } = useTranslation();
-  const [activeService, setActiveService] = useState('road');
-  const [selectedTab, setSelectedTab] = useState<TabType>('oneTime');
+  const [activeTab, setActiveTab] = useState<string>('Rail'); // Default to Rail
+
+  // formRefs will now include 'Rail' to hold its ref
+  const formRefs = useRef<Record<string, QuoteFormHandle | null>>({
+    'Door to Door': null,
+    'Rail': null, // NEW: Added ref for RailQuoteForm
+    'Sea': null,
+    'Air': null,
+    'Truck': null,
+    'LCL': null,
+    'Parcel': null,
+    'Customs': null,
+    'Insurance': null,
+    'First/Last Mile': null,
+  });
+
+  const navigate = useNavigate();
+
+  const handleSearch = () => {
+    let currentForm: QuoteFormHandle | null = null;
+    let formData: AllFormData | null = null;
+    let navigationPath: string | null = null;
+    let displayComponent: string | null = null;
+
+    currentForm = formRefs.current[activeTab];
+
+    if (currentForm) {
+      formData = currentForm.submit(); // Call submit, which now returns data
+
+      if (formData) {
+        console.log("HeroSection: Form Data Booking Type:", formData.bookingType);
+
+        switch (formData.bookingType) {
+          case 'Train Container Booking':
+          case 'Train Goods Booking':
+          case 'Train Parcel Booking':
+            navigationPath = '/train-results';
+            if (formData.bookingType === 'Train Container Booking') {
+                displayComponent = (formData as TrainContainerFormData).isDomestic ? 'DomesticContainerResults' : 'InternationalContainerResults';
+            } else if (formData.bookingType === 'Train Goods Booking') {
+                displayComponent = 'GoodsResults';
+            } else if (formData.bookingType === 'Train Parcel Booking') {
+                displayComponent = 'ParcelResults';
+            }
+            break;
+          case 'Door to Door':
+            navigationPath = '/door-to-door-results';
+            break;
+          case 'Sea':
+            navigationPath = '/sea-results';
+            break;
+          case 'Air':
+            navigationPath = '/air-results';
+            break;
+          case 'Truck':
+            navigationPath = '/truck-results';
+            break;
+          case 'LCL':
+            navigationPath = '/lcl-results';
+            break;
+          case 'Parcel':
+            navigationPath = '/parcel-results';
+            break;
+          case 'Customs':
+            navigationPath = '/customs-results';
+            break;
+          case 'Insurance':
+            navigationPath = '/insurance-results';
+            break;
+          case 'First/Last Mile':
+            navigationPath = '/first-last-mile-results'; // Corrected typo here
+            break;
+          default:
+            console.error(`Unknown booking type: ${formData && 'bookingType' in formData ? (formData as any).bookingType : 'unknown'}`);
+            break;
+        }
+
+        if (navigationPath) {
+          navigate(navigationPath, { state: { formData, displayComponent } });
+        } else {
+          console.error(`Navigation not configured for ${activeTab} with booking type ${formData.bookingType}.`);
+        }
+      }
+    } else {
+      console.warn(`Please fill in the required fields for the ${activeTab} form.`);
+    }
+  };
+
+  const renderQuoteForm = () => {
+    switch (activeTab) {
+      case 'Door to Door': return <DoorToDoorQuoteForm ref={el => formRefs.current['Door to Door'] = el} showButtons={false} />;
+      case 'Rail':
+        return <RailQuoteForm ref={el => formRefs.current['Rail'] = el} showButtons={false} />; // Pass showButtons={false}
+      case 'Sea': return <SeaQuoteForm ref={el => formRefs.current['Sea'] = el} showButtons={false} />;
+      case 'Air': return <AirQuoteForm ref={el => formRefs.current['Air'] = el} showButtons={false} />;
+      case 'Truck': return <TruckQuoteForm ref={el => formRefs.current['Truck'] = el} showButtons={false} />;
+      case 'LCL': return <LCLQuoteForm ref={el => formRefs.current['LCL'] = el} showButtons={false} />;
+      case 'Parcel': return <ParcelQuoteForm ref={el => formRefs.current['Parcel'] = el} showButtons={false} />;
+      case 'Customs': return <CustomsQuoteForm ref={el => formRefs.current['Customs'] = el} showButtons={false} />;
+      case 'Insurance': return <InsuranceQuoteForm ref={el => formRefs.current['Insurance'] = el} showButtons={false} />;
+      case 'First/Last Mile': return <FirstLastMileQuoteForm ref={el => formRefs.current['First/Last Mile'] = el} showButtons={false} />;
+      default:
+        return <div className="text-center py-10 text-gray-400">Coming soon...</div>;
+    }
+  };
 
   return (
-    <section className="bg-gradient-to-br from-purple-100 via-purple-200 to-blue-100 py-10">
-      <div className="max-w-6xl mx-auto px-4 text-center">
-        <h1 className="text-2xl sm:text-3xl font-semibold mb-4">
-          {t('hero.title')}
-        </h1>
+    <section className="w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
+      <div className="max-w-6xl mx-auto px-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-6 border border-gray-100 animate-fade-in">
 
-        <div className="bg-white shadow-2xl rounded-lg p-4 sm:p-6 mt-6">
-          <ServiceNavigation
-            activeService={activeService}
-            onServiceChange={setActiveService}
-          />
-          <ShipmentTabs
-            selectedTab={selectedTab}
-            onSelectTab={setSelectedTab}
-          />
-          <QuoteForm
-            selectedTab={selectedTab}
-            mode={activeService}
-          />
+          <nav className="flex flex-wrap justify-center sm:justify-between items-center px-2 sm:px-4 py-3 overflow-x-auto scrollbar-hide gap-2 mb-6">
+            {/* Reordered Tabs as per user request */}
+            <Tab icon={FaTrain} label="Rail" isActive={activeTab === 'Rail'} onClick={() => setActiveTab('Rail')} />
+            <Tab icon={FaShip} label="Sea" isActive={activeTab === 'Sea'} onClick={() => setActiveTab('Sea')} />
+            <Tab icon={FaPlane} label="Air" isActive={activeTab === 'Air'} onClick={() => setActiveTab('Air')} />
+            <Tab icon={FaTruck} label="Truck" isActive={activeTab === 'Truck'} onClick={() => setActiveTab('Truck')} />
+            <Tab icon={FaBox} label="Parcel" isActive={activeTab === 'Parcel'} onClick={() => setActiveTab('Parcel')} />
+            <Tab icon={FaStamp} label="Customs" isActive={activeTab === 'Customs'} onClick={() => setActiveTab('Customs')} />
+            <Tab icon={FaHandshake} label="Insurance" isActive={activeTab === 'Insurance'} onClick={() => setActiveTab('Insurance')} />
+            <Tab icon={FaBoxes} label="LCL" isActive={activeTab === 'LCL'} onClick={() => setActiveTab('LCL')} />
+            <Tab icon={FaDolly} label="First/Last Mile" isActive={activeTab === 'First/Last Mile'} onClick={() => setActiveTab('First/Last Mile')} />
+            <Tab icon={FaHome} label="Door to Door" isActive={activeTab === 'Door to Door'} onClick={() => setActiveTab('Door to Door')} />
+          </nav>
+
+          <div className="p-4 sm:p-6 bg-gray-50 rounded-lg border border-gray-100">
+            {renderQuoteForm()}
+          </div>
+
+          {/* This is the ONLY SEARCH button for forms rendered within HeroSection */}
+          <div className="text-center mt-8">
+            <button
+              onClick={handleSearch}
+              // Updated Tailwind CSS classes for the gradient background and white text
+              className="text-white text-xl font-bold px-12 py-4 rounded-full shadow-md transition duration-300 transform hover:scale-105 animate-bounce-in"
+              style={{
+                background: 'linear-gradient(to right, #53b2fe, #065af3)',
+                border: 'none', // Ensure no default border interferes
+              }}
+            >
+              SEARCH
+            </button>
+          </div>
         </div>
       </div>
     </section>

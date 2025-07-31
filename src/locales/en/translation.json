@@ -1,98 +1,193 @@
 {
-  "hero": {
-    "title": "Simplify Your Logistics with Shippitin"
-  },
-  "form": {
-    "from": "From Location",
-    "to": "To Location",
-    "cargoType": "Cargo Type",
-    "weight": "Weight (kg)",
-    "date": "Date",
-    "getQuote": "Get Quote",
-    "estimatedPrice": "Estimated Price:"
-  },
-  "tabs": {
-    "oneTime": "One-Time Shipment",
-    "multipleStops": "Multiple Stops",
-    "recurring": "Regular / Recurring"
-  },
-  "services": {
-    "road": "Road",
-    "rail": "Rail",
-    "air": "Air",
-    "sea": "Sea",
-    "lcl": "LCL",
-    "parcel": "Parcel",
-    "insurance": "Insurance",
-    "firstLastMile": "First / Last Mile",
-    "global": "Global"
-  },
+  "book_freight": "Book Freight",
+  "track_shipment": "Track Shipment",
+  "offers_title": "Offers",
+  "services_title": "Services",
+  "support_title": "Support",
+  "login_signup": "Login / Sign Up",
+  "efficient_logistics_solutions": "Efficient Logistics Solutions",
+  "welcome_to_platform": "Welcome to our Logistics Platform!",
+
+  "from_label": "FROM",
+  "to_label": "TO",
+  "departure_label": "DEPARTURE",
+  "cargo_type_label": "CARGO TYPE",
+  "insurance_coverage_label": "INSURANCE",
+  "pod_label": "POD",
+  "first_last_mile_label": "FIRST / LAST MILE",
+  "search_button": "SEARCH",
+  "from_placeholder": "Enter origin",
+  "to_placeholder": "Enter destination",
+  "departure_placeholder": "mm/dd/yyyy",
+  "cargo_type_select_placeholder": "Select",
+  "none_option": "None",
+  "select_option": "Select Option",
+
+  "road_freight": "Road Freight",
+  "air_freight": "Air Freight",
+  "sea_freight": "Sea Freight",
+  "rail_freight": "Rail Freight",
+  "parcel": "Parcel",
+  "lcl": "LCL",
+  "insurance_service": "Insurance",
+  "global_freight": "Global Freight",
+
   "offers": {
-    "title": "Top Offers",
-    "road": {
-      "title": "Flat 15% Off on Road Freight",
-      "description": "Special discount for first-time shippers via Shippitin.",
-      "cta": "Book Now"
-    },
-    "global": {
-      "title": "Global Shipping Offer",
-      "description": "Free cargo insurance for select high-value shipments this month.",
-      "cta": "Explore Deals"
-    },
-    "insurance": {
-      "title": "Insurance Combo",
-      "description": "Get exclusive shipping insurance on LCL & FCL orders.",
-      "cta": "Claim Now"
-    }
+    "title": "Offers",
+    "road_title": "Road Freight Offer",
+    "road_description": "Flat 15% Off on Road Freight. Special discount for first-time users via Shippitin.",
+    "road_cta": "Book now",
+    "global_title": "Global Shipping Offer",
+    "global_description": "Get exclusive shipping insurance on LCL & FCL orders.",
+    "global_cta": "Explore Deals",
+    "insurance_title": "Insurance Combo",
+    "insurance_description": "Get exclusive shipping insurance on LCL & FCL orders.",
+    "insurance_cta": "Claim Now"
   },
+
   "why": {
-    "title": "Why Choose Shippitin?",
-    "panIndia": {
-      "title": "Pan-India Coverage",
-      "desc": "Connects remote and urban locations effortlessly."
-    },
-    "multiModal": {
-      "title": "Multi-Modal Support",
-      "desc": "Choose from road, rail, air or sea — we handle it all."
-    },
-    "instantQuotes": {
-      "title": "Instant Quotes",
-      "desc": "Real-time pricing & quick booking made easy."
-    }
+    "title": "Why Choose Us?",
+    "pan_india_title": "Pan-India Reach",
+    "pan_india_description": "Our extensive network covers every corner of India for seamless logistics.",
+    "multi_modal_title": "Multi-Modal Solutions",
+    "multi_modal_description": "Integrated solutions for road, rail, air, and sea transport.",
+    "instant_quotes_title": "Instant Quotes",
+    "instant_quotes_description": "Get real-time, competitive quotes for your shipments instantly."
   },
-  "howItWorks": {
+
+  "how_it_works": {
     "title": "How It Works",
-    "step1": {
-      "title": "1. Choose Service",
-      "desc": "Select shipment mode & service type."
-    },
-    "step2": {
-      "title": "2. Get Quote",
-      "desc": "Get instant pricing and timelines."
-    },
-    "step3": {
-      "title": "3. Confirm & Track",
-      "desc": "Book and track your shipment in real-time."
-    }
+    "step1_title": "1. Book Your Shipment",
+    "step1_description": "Easily book your preferred freight service online.",
+    "step2_title": "2. Schedule Pickup",
+    "step2_description": "Arrange for convenient pickup of your goods at your location.",
+    "step3_title": "3. Track & Deliver",
+    "step3_description": "Monitor your shipment in real-time until it safely reaches its destination."
   },
-  "trusted": {
-    "title": "Trusted By"
-  },
+
+  "trusted_partners_title": "Trusted Partners",
+
   "cta": {
-    "title": "Simplify Your Logistics with Shippitin",
-    "subtitle": "One platform to quote, book, and track freight across India — road, rail, air & sea.",
-    "button": "Book Now"
+    "title_homepage": "Ready to Ship Smarter?",
+    "subtitle_homepage": "Experience the future of logistics with Shippitin. Get started today!",
+    "button_homepage": "Get a Quote Now"
   },
-  "footer": {
-    "services": "Services",
-    "support": "Support",
-    "legal": "Legal",
-    "follow": "Follow Us"
-  },
-  "header": {
-    "track": "Track",
-    "myShipments": "My Shipments",
-    "support": "Support",
-    "loginSignup": "Login or Signup"
+
+  "footer_services": "Services",
+  "footer_support": "Support",
+  "footer_legal": "Legal",
+  "footer_follow": "Follow Us",
+  "about_us_title": "About Us",
+  "careers": "Careers",
+  "media": "Media",
+  "blog": "Blog",
+  "help_center": "Help Center",
+  "report_issue": "Report Issue",
+  "partner_with_us": "Partner With Us",
+  "terms_of_use": "Terms of Use",
+  "privacy_policy": "Privacy Policy",
+  "cookie_policy": "Cookie Policy",
+
+  "global_freight_booking": "Global Freight Booking",
+  "origin_country_label": "Origin Country",
+  "origin_city_label": "Origin City",
+  "destination_country_label": "Destination Country",
+  "destination_city_label": "Destination City",
+  "mode_of_transport_label": "Mode of Transport",
+  "cargo_type_label_booking": "Cargo Type",
+  "declared_value_label": "Declared Value (USD)",
+  "next_button": "Next",
+
+  "lcl_booking": "LCL Booking",
+  "origin_port_label": "Origin Port",
+  "destination_port_label": "Destination Port",
+  "packages_label": "Packages",
+  "total_weight_label": "Total Weight (kg)",
+  "total_volume_label": "Total Volume (cbm)",
+
+  "air_freight_booking": "Air Freight Booking",
+  "pickup_country_label": "Pickup Country",
+  "pickup_location_label": "Pickup Location",
+  "delivery_country_label": "Delivery Country",
+  "delivery_location_label": "Delivery Location",
+  "total_packages_label": "Total Packages",
+  "commodity_label": "Commodity",
+
+  "insurance_booking": "Insurance Booking",
+  "cargo_insurance_title": "Cargo Insurance",
+  "invoice_no_label": "Invoice No",
+  "total_value_label": "Total Value (INR)",
+  "origin_label_booking": "Origin",
+  "destination_label_booking": "Destination",
+  "coverage_label": "Coverage",
+
+  "first_last_mile_booking": "First / Last Mile Booking",
+  "pickup_address_label": "Pickup Address",
+  "delivery_address_label": "Delivery Address",
+  "pickup_date_label": "Pickup Date",
+  "no_of_packages_label": "No. of Packages",
+  "special_instructions_label": "Special Instructions",
+
+  "train_freight_booking": "Train Freight Booking",
+  "pickup_city_label": "Pickup City",
+  "pickup_station_label": "Pickup Station",
+  "delivery_city_label": "Delivery City",
+  "delivery_station_label": "Delivery Station",
+  "container_type_label": "Container Type",
+
+  "parcel_booking": "Parcel Booking",
+  "sender_name_label": "Sender's Name",
+  "recipient_name_label": "Recipient's Name",
+  "origin_city_address_label": "Origin City/Address",
+  "destination_city_address_label": "Destination City/Address",
+  "dimensions_label": "Dimensions (L×W×H in cm)",
+  "fragile_label": "Fragile?",
+
+  "create_booking": "Create Your Booking",
+  "pickup_location": "Pickup Location",
+  "drop_location": "Drop Location",
+  "pickup_date": "Pickup Date",
+  "materials": "Materials",
+  "truck_type": "Truck Type",
+  "weight_in_ton": "Weight in Ton",
+  "back_button": "Back",
+
+  "air_results_page": {
+    "title": "Air Freight Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "origin": "Origin",
+    "origin_airport": "Origin Airport",
+    "origin_city": "Origin City",
+    "origin_address": "Origin Address",
+    "destination": "Destination",
+    "destination_airport": "Destination Airport",
+    "destination_city": "Destination City",
+    "destination_address": "Destination Address",
+    "activity_type": "Activity Type",
+    "clearance_date": "Clearance Date",
+    "gross_weight": "Gross Weight",
+    "number_of_pieces": "No. of Pieces",
+    "volume_weight": "Volume Weight",
+    "commodity_category": "Commodity Category",
+    "commodity": "Commodity",
+    "hsn_code": "HSN Code",
+    "hazardous_cargo": "Hazardous Cargo",
+    "insurance_required": "Insurance Required",
+    "filters": "Filters",
+    "all": "All",
+    "load_type": "Load Type",
+    "transit_time": "Transit Time",
+    "slabs": "Slabs",
+    "included_services": "Included Services",
+    "pickup": "Pickup",
+    "origin_clearance": "Origin Clearance",
+    "freight": "Freight",
+    "destination_clearance": "Destination Clearance",
+    "delivery": "Delivery",
+    "book_now": "Book Now",
+    "view_details": "View Details",
+    "no_offers_found": "No offers found for your criteria.",
+    "home_button": "Go to Home",
+    "previous_button": "Go Back to Form"
   }
 }

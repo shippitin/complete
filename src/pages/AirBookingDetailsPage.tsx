@@ -1,0 +1,313 @@
+// src/pages/AirBookingDetailsPage.tsx
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FaUser, FaBuilding, FaIdCard, FaEnvelope, FaPhone, FaCommentDots, FaSave, FaArrowLeft, FaInfoCircle } from 'react-icons/fa';
+import type { AllFormData } from '../types/QuoteFormHandle';
+
+// Define the structure for an Air service result, matching what's passed from AirResultsPage
+interface AirServiceResult {
+  id: string;
+  serviceName: string;
+  carrier: string;
+  originAirport: string;
+  destinationAirport: string;
+  departureDate: string;
+  transitTime: string;
+  price: number;
+  cargoType: string;
+  features: string[];
+  status: 'Available' | 'Limited' | 'Full';
+}
+
+interface AirBookingDetailsPageProps {
+  // Props will be passed via location.state
+}
+
+const AirBookingDetailsPage: React.FC<AirBookingDetailsPageProps> = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Retrieve data passed from AirResultsPage
+  const selectedResult = location.state?.selectedResult as AirServiceResult | undefined;
+  const originalFormData = location.state?.originalFormData as AllFormData | undefined;
+
+  // State for contact and KYC details
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [gstin, setGstin] = useState('');
+  const [kycDocType, setKycDocType] = useState('Passport'); // Default KYC doc type
+  const [specialInstructions, setSpecialInstructions] = useState('');
+
+  // Options for KYC Document Type
+  const kycDocOptions = [
+    'Passport',
+    'Aadhaar Card',
+    'Driving License',
+    'PAN Card',
+    'Other'
+  ];
+
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Basic validation
+    if (!fullName || !email || !phone) {
+      alert('Please fill in your Full Name, Email, and Phone Number.');
+      return;
+    }
+    if (!selectedResult || !originalFormData) {
+      alert('Booking details are missing. Please go back to search results.');
+      return;
+    }
+
+    // Construct the final booking details object to pass to confirmation page
+    const bookingDetails = {
+      selectedResult: { // Map Air result to a generic structure for confirmation page
+        id: selectedResult.id,
+        serviceName: selectedResult.serviceName,
+        originStation: selectedResult.originAirport, // Use originAirport from AirServiceResult
+        destinationStation: selectedResult.destinationAirport, // Use destinationAirport from AirServiceResult
+        departureTime: 'N/A', // Air might not have fixed departure times
+        arrivalTime: 'N/A', // Air might not have fixed arrival times
+        transitTime: selectedResult.transitTime,
+        price: selectedResult.price,
+        availableCapacity: originalFormData.weight ? `${originalFormData.weight} KG` : 'N/A', // Using weight as capacity indicator
+        features: selectedResult.features,
+        operator: selectedResult.carrier, // Use carrier from AirServiceResult
+        status: selectedResult.status,
+      },
+      originalFormData: originalFormData,
+      contactDetails: {
+        fullName,
+        email,
+        phone,
+        companyName: companyName || 'N/A',
+        gstin: gstin || 'N/A',
+        kycDocType: kycDocType || 'N/A',
+        specialInstructions: specialInstructions || 'N/A',
+      },
+      bookingDate: new Date().toLocaleDateString('en-IN'),
+      bookingTime: new Date().toLocaleTimeString('en-IN'),
+      bookingId: `AIR-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`,
+    };
+
+    // Navigate to confirmation page
+    navigate('/booking-confirmation', { state: { bookingDetails } });
+  };
+
+  // If no data is passed, redirect back or show an error
+  if (!selectedResult || !originalFormData) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
+          <FaInfoCircle className="text-red-500 text-6xl mb-4 mx-auto" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Booking details missing.</h2>
+          <p className="text-gray-600 mb-6">Please go back to search results and select a service.</p>
+          <button
+            onClick={() => navigate('/air-results')} // Navigate back to Air results
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300"
+          >
+            <FaArrowLeft className="inline-block mr-2" /> Back to Results
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center">
+      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Header */}
+        <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Air Booking Details</h1>
+          <button
+            onClick={() => navigate(-1)} // Go back to previous page (results)
+            className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-full text-sm font-semibold transition duration-200"
+          >
+            <FaArrowLeft className="mr-2" /> Back
+          </button>
+        </div>
+
+        {/* Step Indicators */}
+        <div className="flex justify-around mb-8 text-center p-6 border-b border-gray-200 bg-white">
+          <div className="flex-1 text-gray-400">
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
+              1
+            </div>
+            Search Results
+          </div>
+          <div className="flex-1 text-blue-600 font-bold">
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-blue-600 bg-blue-100">
+              2
+            </div>
+            Booking Details
+          </div>
+          <div className="flex-1 text-gray-400">
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
+              3
+            </div>
+            Payment & Confirmation
+          </div>
+        </div>
+
+        {/* Booking Summary Card (Optional, but good for context) */}
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <div className="bg-blue-50 p-6 rounded-xl border border-blue-200 shadow-md">
+            <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
+              <FaInfoCircle className="mr-3" /> Selected Service Summary
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-gray-700">
+              <div><strong>Service:</strong> {selectedResult.serviceName} ({selectedResult.carrier})</div>
+              <div><strong>Route:</strong> {selectedResult.originAirport} to {selectedResult.destinationAirport}</div>
+              <div><strong>Departure Date:</strong> {selectedResult.departureDate}</div>
+              <div><strong>Transit Time:</strong> {selectedResult.transitTime}</div>
+              <div><strong>Cargo Type:</strong> {selectedResult.cargoType}</div>
+              <div><strong>Price:</strong> ₹{selectedResult.price.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact and KYC Form */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+            <FaUser className="mr-3 text-blue-600" /> Your Contact & KYC Details
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-8">
+            {/* Full Name */}
+            <div className="flex flex-col">
+              <label htmlFor="fullName" className="text-sm font-medium text-gray-600 mb-1">Full Name <span className="text-red-500">*</span></label>
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                <FaUser className="text-gray-400 mr-3" />
+                <input
+                  type="text"
+                  id="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Your full name"
+                  className="flex-1 bg-transparent outline-none text-gray-800"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="flex flex-col">
+              <label htmlFor="email" className="text-sm font-medium text-gray-600 mb-1">Email <span className="text-red-500">*</span></label>
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                <FaEnvelope className="text-gray-400 mr-3" />
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your.email@example.com"
+                  className="flex-1 bg-transparent outline-none text-gray-800"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="flex flex-col">
+              <label htmlFor="phone" className="text-sm font-medium text-gray-600 mb-1">Phone Number <span className="text-red-500">*</span></label>
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                <FaPhone className="text-gray-400 mr-3" />
+                <input
+                  type="tel"
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g., +91 9876543210"
+                  className="flex-1 bg-transparent outline-none text-gray-800"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Company Name */}
+            <div className="flex flex-col">
+              <label htmlFor="companyName" className="text-sm font-medium text-gray-600 mb-1">Company Name (Optional)</label>
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                <FaBuilding className="text-gray-400 mr-3" />
+                <input
+                  type="text"
+                  id="companyName"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Your company name"
+                  className="flex-1 bg-transparent outline-none text-gray-800"
+                />
+              </div>
+            </div>
+
+            {/* GSTIN */}
+            <div className="flex flex-col">
+              <label htmlFor="gstin" className="text-sm font-medium text-gray-600 mb-1">GSTIN (Optional)</label>
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                <FaIdCard className="text-gray-400 mr-3" />
+                <input
+                  type="text"
+                  id="gstin"
+                  value={gstin}
+                  onChange={(e) => setGstin(e.target.value)}
+                  placeholder="e.g., 22AAAAA0000A1Z5"
+                  className="flex-1 bg-transparent outline-none text-gray-800"
+                />
+              </div>
+            </div>
+
+            {/* KYC Document Type */}
+            <div className="flex flex-col">
+              <label htmlFor="kycDocType" className="text-sm font-medium text-gray-600 mb-1">KYC Document Type (Optional)</label>
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                <FaIdCard className="text-gray-400 mr-3" />
+                <select
+                  id="kycDocType"
+                  value={kycDocType}
+                  onChange={(e) => setKycDocType(e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-gray-800"
+                >
+                  {kycDocOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Special Instructions */}
+            <div className="flex flex-col md:col-span-2">
+              <label htmlFor="specialInstructions" className="text-sm font-medium text-gray-600 mb-1">Special Instructions (Optional)</label>
+              <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
+                <FaCommentDots className="text-gray-400 mr-3" />
+                <textarea
+                  id="specialInstructions"
+                  value={specialInstructions}
+                  onChange={(e) => setSpecialInstructions(e.target.value)}
+                  placeholder="Any special handling instructions or notes for your shipment."
+                  rows={3}
+                  className="flex-1 bg-transparent outline-none text-gray-800 resize-y"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="text-center mt-6">
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 flex items-center justify-center mx-auto"
+            >
+              <FaSave className="mr-2" /> Confirm & Proceed
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default AirBookingDetailsPage;
