@@ -1,18 +1,30 @@
 // src/pages/TrackPage.tsx
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom'; // Import useSearchParams for query parameters
-import { FaSearch, FaTruck, FaMapMarkerAlt, FaCalendarAlt, FaClipboardList, FaInfoCircle, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaPlane, FaShip, FaBoxOpen, FaTrain, FaGlobeAmericas } from 'react-icons/fa'; // Added FaGlobeAmericas
-import Map from '../components/Map'; // Assuming Map component is in ../components/Map.tsx
+import { useSearchParams } from 'react-router-dom';
+import { 
+  FaSearch, FaTruck, FaMapMarkerAlt, FaCalendarAlt, FaClipboardList, 
+  FaInfoCircle, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaPlane, 
+  FaShip, FaBoxOpen, FaTrain, FaGlobeAmericas, FaFilePdf, FaShieldAlt, 
+  FaDownload, FaLock, FaRobot, FaLeaf, FaShareAlt, FaWhatsapp, FaEnvelope, FaCopy 
+} from 'react-icons/fa';
+import Map from '../components/Map';
 
-// Define the ShipmentStatus interface
+// --- Interfaces ---
+
+interface ShipmentDoc {
+  name: string;
+  type: string;
+  date: string;
+  status: 'Verified' | 'Pending';
+}
+
 interface ShipmentStatus {
   date: string;
   status: string;
   location: string;
-  coordinates?: [number, number]; // Optional coordinates for map visualization
+  coordinates?: [number, number];
 }
 
-// Define the Shipment interface
 interface Shipment {
   id: string;
   carrier: string;
@@ -20,344 +32,272 @@ interface Shipment {
   status: string;
   estimatedDelivery: string;
   shipmentType: 'Truck' | 'Sea' | 'Air' | 'Parcel' | 'International' | 'Rail';
-  path: [number, number][]; // Array of [latitude, longitude] for the route
-  statusTimeline: ShipmentStatus[]; // Detailed timeline
+  path: [number, number][];
+  statusTimeline: ShipmentStatus[];
+  documents: ShipmentDoc[];
+  reliabilityScore: number;
+  riskLevel: 'Low' | 'Medium' | 'High';
+  predictionMessage: string;
+  co2Emissions: number;
+  co2Saved: number;
 }
+
+// --- Full Dataset ---
 
 const dummyShipments: Shipment[] = [
   {
     id: 'TRK001',
     carrier: 'Roadways Express',
     currentLocation: 'Mumbai',
-    status: 'Delivered', // Changed to Delivered for a complete timeline example
+    status: 'Delivered',
     estimatedDelivery: '2025-07-25',
     shipmentType: 'Truck',
-    path: [
-      [28.7041, 77.1025], // Delhi
-      [26.9124, 75.7873], // Jaipur
-      [23.0225, 72.5714], // Ahmedabad
-      [19.0760, 72.8777], // Mumbai
-    ],
+    path: [[28.7041, 77.1025], [19.0760, 72.8777]],
     statusTimeline: [
-      { date: '2025-07-20', status: 'Booked', location: 'Delhi', coordinates: [28.7041, 77.1025] },
-      { date: '2025-07-21', status: 'Departed', location: 'Delhi', coordinates: [28.7041, 77.1025] },
-      { date: '2025-07-22', status: 'In Transit', location: 'Ahmedabad', coordinates: [23.0225, 72.5714] },
-      { date: '2025-07-23', status: 'Arrived at Destination Hub', location: 'Mumbai', coordinates: [19.0760, 72.8777] },
-      { date: '2025-07-24', status: 'Out for Delivery', location: 'Mumbai', coordinates: [19.0760, 72.8777] },
-      { date: '2025-07-25', status: 'Delivered', location: 'Mumbai', coordinates: [19.0760, 72.8777] },
+      { date: '2025-07-20', status: 'Booked', location: 'Delhi' },
+      { date: '2025-07-25', status: 'Delivered', location: 'Mumbai' },
     ],
+    documents: [{ name: 'Bill of Lading', type: 'e-BL', date: '2025-07-20', status: 'Verified' }],
+    reliabilityScore: 98, riskLevel: 'Low', predictionMessage: "Route optimized for efficiency.",
+    co2Emissions: 18.4, co2Saved: 32.1,
   },
   {
     id: 'AIR002',
-    carrier: 'Sky Cargo',
-    currentLocation: 'New York',
-    status: 'In Transit',
-    estimatedDelivery: '2025-07-28',
+    carrier: 'SkyCargo Int.',
+    currentLocation: 'In Transit',
+    status: 'In Flight',
+    estimatedDelivery: '2025-08-05',
     shipmentType: 'Air',
-    path: [
-      [34.0522, -118.2437], // Los Angeles
-      [40.7128, -74.0060], // New York
-      [51.5074, 0.1278],   // London
-    ],
+    path: [[40.7128, -74.0060], [51.5074, -0.1278]],
     statusTimeline: [
-      { date: '2025-07-20', status: 'Booked', location: 'Los Angeles', coordinates: [34.0522, -118.2437] },
-      { date: '2025-07-21', status: 'Departed', location: 'Los Angeles', coordinates: [34.0522, -118.2437] },
-      { date: '2025-07-22', status: 'In Flight', location: 'Over Atlantic', coordinates: [38.0, -40.0] }, // Mid-point
-      { date: '2025-07-23', status: 'Arrived at Destination Airport', location: 'New York', coordinates: [40.7128, -74.0060] },
-      { date: '2025-07-24', status: 'Customs Clearance', location: 'New York', coordinates: [40.7128, -74.0060] },
+      { date: '2025-08-01', status: 'Departed', location: 'New York (JFK)' },
+      { date: '2025-08-03', status: 'In Transit', location: 'Atlantic Airspace' },
     ],
+    documents: [{ name: 'Air Waybill', type: 'AWB', date: '2025-08-01', status: 'Verified' }],
+    reliabilityScore: 92, riskLevel: 'Low', predictionMessage: "Tailwinds assisting flight speed.",
+    co2Emissions: 450.2, co2Saved: 5.4,
   },
   {
     id: 'SEA003',
-    carrier: 'Ocean Freight',
+    carrier: 'Oceanic Lines',
     currentLocation: 'Singapore',
     status: 'At Sea',
-    estimatedDelivery: '2025-08-10',
+    estimatedDelivery: '2025-08-15',
     shipmentType: 'Sea',
-    path: [
-      [34.6937, 135.5022], // Osaka
-      [1.3521, 103.8198], // Singapore
-      [-33.8688, 151.2093], // Sydney
-    ],
+    path: [[34.6937, 135.5022], [1.3521, 103.8198]],
     statusTimeline: [
-      { date: '2025-07-20', status: 'Booked', location: 'Osaka', coordinates: [34.6937, 135.5022] },
-      { date: '2025-07-21', status: 'Departed', location: 'Osaka', coordinates: [34.6937, 135.5022] },
-      { date: '2025-07-25', status: 'At Sea', location: 'Near Philippines', coordinates: [10.0, 120.0] }, // Mid-point
-      { date: '2025-07-30', status: 'Arrived at Destination Port', location: 'Singapore', coordinates: [1.3521, 103.8198] },
+      { date: '2025-07-28', status: 'Booked', location: 'Osaka' },
+      { date: '2025-08-02', status: 'At Sea', location: 'South China Sea' },
     ],
-  },
-  {
-    id: 'PARCEL004',
-    carrier: 'Local Post',
-    currentLocation: 'Bengaluru',
-    status: 'Out for Delivery',
-    estimatedDelivery: '2025-07-24',
-    shipmentType: 'Parcel',
-    path: [
-      [12.9716, 77.5946], // Bengaluru
-      [13.0827, 80.2707], // Chennai (example short path)
-    ],
-    statusTimeline: [
-      { date: '2025-07-22', status: 'Booked', location: 'Bengaluru', coordinates: [12.9716, 77.5946] },
-      { date: '2025-07-23', status: 'Processed at Hub', location: 'Bengaluru Hub', coordinates: [12.9716, 77.5946] },
-      { date: '2025-07-24', status: 'Out for Delivery', location: 'Chennai Delivery Center', coordinates: [13.0827, 80.2707] },
-    ],
-  },
-  {
-    id: 'INTL005',
-    carrier: 'Global Logistics',
-    currentLocation: 'Frankfurt',
-    status: 'Customs Clearance',
-    estimatedDelivery: '2025-08-01',
-    shipmentType: 'International',
-    path: [
-      [35.6895, 139.6917], // Tokyo
-      [50.1109, 8.6821],   // Frankfurt
-      [48.8566, 2.3522],   // Paris
-    ],
-    statusTimeline: [
-      { date: '2025-07-20', status: 'Booked', location: 'Tokyo', coordinates: [35.6895, 139.6917] },
-      { date: '2025-07-21', status: 'Departed', location: 'Tokyo', coordinates: [35.6895, 139.6917] },
-      { date: '2025-07-24', status: 'Arrived at Port', location: 'Frankfurt', coordinates: [50.1109, 8.6821] },
-      { date: '2025-07-25', status: 'Customs Clearance', location: 'Frankfurt Airport Customs', coordinates: [50.1109, 8.6821] },
-    ],
+    documents: [{ name: 'Ocean BL', type: 'e-BL', date: '2025-07-28', status: 'Verified' }],
+    reliabilityScore: 84, riskLevel: 'Medium', predictionMessage: "Minor congestion at Singapore terminal.",
+    co2Emissions: 42.5, co2Saved: 110.2,
   },
   {
     id: 'RAIL006',
-    carrier: 'National Rail Cargo',
+    carrier: 'National Rail',
     currentLocation: 'Nagpur',
     status: 'Delayed',
     estimatedDelivery: '2025-07-27',
     shipmentType: 'Rail',
-    path: [
-      [22.5726, 88.3639], // Kolkata
-      [21.1458, 79.0882], // Nagpur
-      [17.3850, 78.4867], // Hyderabad
-    ],
+    path: [[22.5726, 88.3639], [21.1458, 79.0882]],
     statusTimeline: [
-      { date: '2025-07-20', status: 'Booked', location: 'Kolkata', coordinates: [22.5726, 88.3639] },
-      { date: '2025-07-21', status: 'Departed', location: 'Kolkata', coordinates: [22.5726, 88.3639] },
-      { date: '2025-07-23', status: 'In Transit', location: 'Rourkela', coordinates: [22.2587, 84.8524] },
-      { date: '2025-07-24', status: 'Delayed', location: 'Nagpur Yard', coordinates: [21.1458, 79.0882] },
+      { date: '2025-07-20', status: 'Booked', location: 'Kolkata' },
+      { date: '2025-07-24', status: 'Delayed', location: 'Nagpur Yard' },
     ],
-  },
+    documents: [{ name: 'Rail Consignment Note', type: 'e-CMR', date: '2025-07-20', status: 'Verified' }],
+    reliabilityScore: 35, riskLevel: 'High', predictionMessage: "High risk of 48h delay due to maintenance.",
+    co2Emissions: 12.1, co2Saved: 85.4,
+  }
 ];
-
 
 const TrackPage: React.FC = () => {
   const [trackingId, setTrackingId] = useState('');
   const [shipment, setShipment] = useState<Shipment | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [searchParams] = useSearchParams(); // Hook to access URL query parameters
+  const [searchParams] = useSearchParams();
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
-    // Check if a shipment ID is provided in the URL query parameters (e.g., /track-shipment?id=TRK001)
     const idFromUrl = searchParams.get('id');
     if (idFromUrl) {
       setTrackingId(idFromUrl);
-      handleTrack(idFromUrl); // Automatically track if ID is in URL
+      handleTrack(idFromUrl);
     }
-  }, [searchParams]); // Re-run effect if searchParams change
+  }, [searchParams]);
 
   const handleTrack = (idToTrack: string = trackingId) => {
     setError(null);
     setShipment(null);
+    if (!idToTrack) return;
 
-    if (!idToTrack) {
-      setError('Please enter a tracking ID.');
-      return;
-    }
+    const found = dummyShipments.find(
+      (s) => s.id.trim().toUpperCase() === idToTrack.trim().toUpperCase()
+    );
 
-    const foundShipment = dummyShipments.find((s) => s.id.toLowerCase() === idToTrack.toLowerCase());
-
-    if (foundShipment) {
-      setShipment(foundShipment);
+    if (found) {
+      setShipment(found);
     } else {
-      setError('Shipment not found. Please check the tracking ID.');
+      setError(`ID "${idToTrack}" not found. Try TRK001, AIR002, SEA003, or RAIL006.`);
     }
   };
 
-  // Helper function to get icon and color for status timeline
+  const getShareLink = () => `${window.location.origin}${window.location.pathname}?id=${shipment?.id}`;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(getShareLink());
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'booked':
-        return <FaClipboardList className="text-blue-500" />; // Kept a lighter blue
-      case 'departed':
-        return <FaTruck className="text-indigo-500" />;
-      case 'in transit':
-      case 'in flight':
-      case 'at sea':
-        return <FaHourglassHalf className="text-yellow-500" />;
-      case 'arrived':
-      case 'arrived at destination hub':
-      case 'arrived at destination airport':
-      case 'arrived at port':
-        return <FaMapMarkerAlt className="text-green-500" />;
-      case 'out for delivery':
-        return <FaBoxOpen className="text-orange-500" />;
-      case 'delivered':
-        return <FaCheckCircle className="text-green-600" />;
-      case 'customs clearance':
-        return <FaInfoCircle className="text-purple-500" />;
-      case 'delayed':
-        return <FaTimesCircle className="text-red-500" />;
-      default:
-        return <FaInfoCircle className="text-gray-500" />;
+      case 'booked': return <FaClipboardList className="text-white" />;
+      case 'delivered': return <FaCheckCircle className="text-white" />;
+      case 'delayed': return <FaTimesCircle className="text-white" />;
+      case 'in flight': return <FaPlane className="text-white" />;
+      case 'at sea': return <FaShip className="text-white" />;
+      default: return <FaHourglassHalf className="text-white" />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-blue-200">
-        {/* Header Section */}
-        <div
-          className="text-white p-8 rounded-t-3xl text-center"
-          style={{
-            background: 'linear-gradient(to right, #53b2fe, #065af3)',
-          }}
-        >
-          <h1 className="text-4xl font-extrabold flex items-center justify-center mb-2 animate-fade-in-down">
-            <FaTruck className="mr-4 text-5xl" /> Real-time Shipment Tracking
-          </h1>
-          <p className="mt-2 text-blue-100 text-lg animate-fade-in-up">
-            Enter your tracking ID below to get the latest updates on your cargo.
-          </p>
-        </div>
-
-        {/* Tracking Input Section */}
-        <div className="p-8">
-          <div className="flex flex-col sm:flex-row gap-4 mb-6 animate-fade-in" style={{ animationDelay: '300ms' }}>
-            <input
-              type="text"
-              className="flex-grow p-4 border border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 shadow-md text-gray-800 text-lg placeholder-gray-400 transition duration-300"
-              placeholder="Enter Tracking ID (e.g., TRK001, AIR002, SEA003)"
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+      <div className="max-w-6xl mx-auto space-y-8">
+        
+        {/* Header & Search */}
+        <div className="bg-white rounded-3xl shadow-xl border border-blue-100 overflow-hidden">
+          <div className="p-8 text-white text-center bg-gradient-to-r from-blue-400 to-blue-700">
+            <h1 className="text-4xl font-black italic tracking-tighter uppercase mb-2">Shippitin Track</h1>
+            <p className="opacity-90">Universal Logistics Intelligence</p>
+          </div>
+          <div className="p-8 flex flex-col sm:flex-row gap-4">
+            <input 
+              className="flex-grow p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-400 text-lg"
+              placeholder="Search ID (AIR002, SEA003, RAIL006...)"
               value={trackingId}
               onChange={(e) => setTrackingId(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleTrack();
-                }
-              }}
+              onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
             />
-            <button
-              onClick={() => handleTrack()}
-              className="px-8 py-4 text-white font-bold text-lg rounded-xl shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(to right, #53b2fe, #065af3)',
-                border: 'none',
-              }}
-            >
-              <FaSearch className="mr-3 text-xl" /> Track Now
+            <button onClick={() => handleTrack()} className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center">
+              <FaSearch className="mr-2" /> Track
             </button>
           </div>
-
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg relative text-center animate-fade-in" role="alert">
-              <span className="block sm:inline font-medium">{error}</span>
-            </div>
-          )}
+          {error && <div className="p-4 bg-red-50 text-red-600 text-center font-medium border-t">{error}</div>}
         </div>
 
-        {/* Shipment Details and Map Section */}
         {shipment && (
-          <div className="p-8 border-t border-gray-200 bg-gray-50 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-            <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center justify-center">
-              <FaClipboardList className="mr-4 text-blue-800 text-4xl" /> Shipment Overview {/* Changed to text-blue-800 */}
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 mb-8 text-gray-700 text-lg">
-              <div className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <FaClipboardList className="text-gray-500 mr-4 text-2xl" />
-                <div>
-                  <strong className="block text-gray-900">Tracking ID:</strong> {shipment.id}
-                </div>
+          <div className="animate-fade-in space-y-8">
+            
+            {/* Quick Actions / Share Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Share Tracking:</span>
+                <button onClick={copyToClipboard} className={`p-2 rounded-lg transition-all ${copySuccess ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600'}`}>
+                  {copySuccess ? <FaCheckCircle /> : <FaCopy />}
+                </button>
+                <a href={`https://wa.me/?text=Track my ${shipment.carrier} shipment here: ${getShareLink()}`} target="_blank" rel="noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
+                  <FaWhatsapp />
+                </a>
+                <a href={`mailto:?subject=Shipment Update: ${shipment.id}&body=You can track this shipment live at: ${getShareLink()}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                  <FaEnvelope />
+                </a>
               </div>
-              <div className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <FaTruck className="text-gray-500 mr-4 text-2xl" />
-                <div>
-                  <strong className="block text-gray-900">Carrier:</strong> {shipment.carrier}
-                </div>
-              </div>
-              <div className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <FaMapMarkerAlt className="text-gray-500 mr-4 text-2xl" />
-                <div>
-                  <strong className="block text-gray-900">Current Location:</strong> {shipment.currentLocation}
-                </div>
-              </div>
-              <div className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <FaInfoCircle className="text-gray-500 mr-4 text-2xl" />
-                <div>
-                  <strong className="block text-gray-900">Current Status:</strong> <span className={`font-semibold ${
-                    shipment.status.toLowerCase() === 'delivered' ? 'text-green-600' :
-                    shipment.status.toLowerCase() === 'delayed' ? 'text-red-600' :
-                    'text-blue-800' // Changed to text-blue-800
-                  }`}>{shipment.status}</span>
-                </div>
-              </div>
-              <div className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <FaCalendarAlt className="text-gray-500 mr-4 text-2xl" />
-                <div>
-                  <strong className="block text-gray-900">Estimated Delivery:</strong> {shipment.estimatedDelivery}
-                </div>
-              </div>
-              <div className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                {shipment.shipmentType === 'Truck' && <FaTruck className="text-gray-500 mr-4 text-2xl" />}
-                {shipment.shipmentType === 'Air' && <FaPlane className="text-gray-500 mr-4 text-2xl" />}
-                {shipment.shipmentType === 'Sea' && <FaShip className="text-gray-500 mr-4 text-2xl" />}
-                {shipment.shipmentType === 'Rail' && <FaTrain className="text-gray-500 mr-4 text-2xl" />}
-                {shipment.shipmentType === 'Parcel' && <FaBoxOpen className="text-gray-500 mr-4 text-2xl" />}
-                {shipment.shipmentType === 'International' && <FaGlobeAmericas className="text-gray-500 mr-4 text-2xl" />}
-                <div>
-                  <strong className="block text-gray-900">Shipment Type:</strong> {shipment.shipmentType}
-                </div>
+              <div className="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-xl">
+                 <FaShieldAlt className="text-blue-600 text-xs" />
+                 <span className="text-[10px] font-bold text-blue-700 uppercase">Live Public Link Active</span>
               </div>
             </div>
 
-            {/* Shipment Map */}
-            <div className="mt-10 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-800 mb-5 flex items-center justify-center">
-                <FaMapMarkerAlt className="mr-3 text-blue-800 text-3xl" /> Live Tracking Map {/* Changed to text-blue-800 */}
-              </h3>
-              <div className="h-96 w-full rounded-lg overflow-hidden border border-gray-300">
-                   <Map
-                   path={shipment.path}
-                   shipmentType={shipment.shipmentType}
-                   statusTimeline={shipment.statusTimeline}
-                 />
+            {/* Rest of the UI (Status, AI, Sustainability, Map) remains the same as previous version... */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Live Status</span>
+                  <p className={`text-2xl font-black ${shipment.status === 'Delayed' ? 'text-red-600' : 'text-green-600'}`}>{shipment.status}</p>
+                  <p className="text-sm text-gray-500">{shipment.carrier}</p>
+                </div>
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Estimated Arrival</span>
+                  <p className="text-2xl font-black text-gray-800">{shipment.estimatedDelivery}</p>
+                  <p className="text-sm text-gray-500">{shipment.currentLocation}</p>
+                </div>
               </div>
-            </div>
 
-            {/* Status Timeline */}
-            <div className="mt-10 bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center">
-                <FaCalendarAlt className="mr-3 text-blue-800 text-3xl" /> Shipment History {/* Changed to text-blue-800 */}
-              </h3>
-              <div className="relative border-l-4 border-blue-300 pl-6 ml-2">
-                {shipment.statusTimeline.map((item, index) => (
-                  <div key={index} className="mb-8 flex items-start relative">
-                    {/* Timeline dot */}
-                    <div className={`absolute -left-8 top-0 flex items-center justify-center w-10 h-10 rounded-full shadow-md
-                                   ${item.status.toLowerCase() === 'delivered' ? 'bg-green-600' :
-                                     item.status.toLowerCase() === 'delayed' ? 'bg-red-600' :
-                                     '' // Removed bg-blue-600 here to apply inline style
-                                   }`}
-                      style={
-                        item.status.toLowerCase() !== 'delivered' && item.status.toLowerCase() !== 'delayed'
-                          ? { background: 'linear-gradient(to right, #53b2fe, #065af3)' }
-                          : {}
-                      }
-                    >
-                      {getStatusIcon(item.status)}
-                    </div>
-                    <div className="flex-grow bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 transition-all duration-300 hover:shadow-md">
-                      <p className="text-sm text-gray-500 mb-1">{item.date}</p>
-                      <p className="font-bold text-gray-800 text-lg mb-1">{item.status}</p>
-                      <p className="text-sm text-gray-600">{item.location}</p>
-                    </div>
+              <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden">
+                <FaLeaf className="absolute -bottom-4 -right-4 text-white/10" size={120} />
+                <h4 className="font-bold flex items-center mb-4"><FaLeaf className="mr-2" /> Sustainability Impact</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between border-b border-white/20 pb-2">
+                    <span className="text-xs opacity-80">CO2 Emissions</span>
+                    <span className="text-xl font-bold">{shipment.co2Emissions}kg</span>
                   </div>
-                ))}
+                  <div className="flex justify-between">
+                    <span className="text-xs opacity-80">Carbon Saved</span>
+                    <span className="text-xl font-bold text-emerald-200">+{shipment.co2Saved}kg</span>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* AI and Map Sections as per previous high-quality build... */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center"><FaRobot className="mr-3 text-blue-600" /> AI Insights</h3>
+                <div className="flex items-center space-x-6">
+                  <div className="relative w-20 h-20">
+                    <svg className="w-full h-full transform -rotate-90">
+                      <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-gray-100" />
+                      <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="226" strokeDashoffset={226 - (226 * shipment.reliabilityScore / 100)} className={shipment.reliabilityScore > 60 ? 'text-blue-500' : 'text-red-500'} />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center font-bold text-sm">{shipment.reliabilityScore}%</span>
+                  </div>
+                  <p className="text-sm text-gray-600 leading-relaxed italic">"{shipment.predictionMessage}"</p>
+                </div>
+              </div>
+
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-800 flex items-center"><FaShieldAlt className="mr-3 text-blue-800" /> Document Vault</h3>
+                  <span className="text-[9px] font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full"><FaLock className="inline mr-1" /> SECURED</span>
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  {shipment.documents.map((doc, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                      <div className="flex items-center">
+                        <FaFilePdf className="text-red-500 mr-3" />
+                        <span className="text-xs font-bold text-gray-700">{doc.name}</span>
+                      </div>
+                      <FaDownload className="text-gray-400 hover:text-blue-600 cursor-pointer" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="grid grid-cols-1 lg:grid-cols-3">
+                <div className="lg:col-span-2 h-[450px] bg-gray-50">
+                  <Map path={shipment.path} shipmentType={shipment.shipmentType} statusTimeline={shipment.statusTimeline} />
+                </div>
+                <div className="p-8 border-l border-gray-100 max-h-[450px] overflow-y-auto">
+                  <h3 className="font-bold text-gray-800 mb-8 flex items-center"><FaCalendarAlt className="mr-2 text-blue-600" /> Journey History</h3>
+                  <div className="relative border-l-2 border-blue-50 ml-2 space-y-10">
+                    {shipment.statusTimeline.map((item, i) => (
+                      <div key={i} className="relative pl-8">
+                        <div className="absolute -left-[17px] top-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
+                          <div className="scale-75">{getStatusIcon(item.status)}</div>
+                        </div>
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">{item.date}</p>
+                        <p className="font-bold text-gray-800">{item.status}</p>
+                        <p className="text-xs text-gray-500">{item.location}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </div>

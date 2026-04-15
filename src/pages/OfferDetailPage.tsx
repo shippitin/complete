@@ -1,182 +1,216 @@
 // src/pages/OfferDetailPage.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaTruck, FaShip, FaPlane, FaTrain, FaBoxOpen, FaFileInvoice, FaMapMarkerAlt, FaTag } from 'react-icons/fa'; // Added FaTag, FaPercent for general offers
+import { 
+  FaTruck, FaShip, FaPlane, FaTrain, FaBoxOpen, FaFileInvoice, 
+  FaMapMarkerAlt, FaTag, FaLeaf, FaCopy, FaCheckCircle, FaStar 
+} from 'react-icons/fa';
 
-// Define a richer set of offers for the listing page
+// --- Data Structure ---
+
 const detailedOffers = [
   {
-    id: 'road-freight-discount',
+    id: 'ROAD-15',
     title: "Flat 15% Off on Road Freight",
-    description: "Special discount for first-time users booking road freight services. Applicable on all domestic truck bookings over 500 KG.",
+    description: "Special discount for first-time users booking road freight services over 500 KG.",
     icon: FaTruck,
-    link: "/truck-booking", // Direct link to truck booking
+    link: "/truck-booking",
     serviceType: "Truck",
     bgColor: "bg-blue-50",
     iconColor: "text-blue-600",
     buttonColor: "bg-blue-600",
-    buttonHoverColor: "hover:bg-blue-700"
+    buttonHoverColor: "hover:bg-blue-700",
+    isEco: false
   },
   {
-    id: 'sea-shipping-insurance',
-    title: "Exclusive Shipping Insurance on Sea Cargo",
-    description: "Get comprehensive cargo insurance at reduced rates for all FCL and LCL sea shipments. Protect your goods from port to port.",
+    id: 'SEA-INSURE',
+    title: "Exclusive Sea Cargo Insurance",
+    description: "Comprehensive cargo insurance at reduced rates for all FCL and LCL sea shipments.",
     icon: FaShip,
-    link: "/insurance-booking", // Direct link to insurance booking
+    link: "/insurance-booking",
     serviceType: "Insurance",
     bgColor: "bg-green-50",
     iconColor: "text-green-600",
     buttonColor: "bg-green-600",
-    buttonHoverColor: "hover:bg-green-700"
+    buttonHoverColor: "hover:bg-green-700",
+    isEco: true
   },
   {
-    id: 'air-express-promo',
-    title: "20% Off on Air Express Services",
-    description: "Expedite your urgent shipments with 20% off on all express air freight bookings. Limited time offer!",
+    id: 'AIR-20',
+    title: "20% Off Air Express",
+    description: "Expedite urgent shipments with 20% off on all express air freight bookings.",
     icon: FaPlane,
-    link: "/air-booking", // Direct link to air booking
+    link: "/air-booking",
     serviceType: "Air",
     bgColor: "bg-red-50",
     iconColor: "text-red-600",
     buttonColor: "bg-red-600",
-    buttonHoverColor: "hover:bg-red-700"
+    buttonHoverColor: "hover:bg-red-700",
+    isEco: false
   },
   {
-    id: 'train-container-special',
-    title: "Train Container Booking Special",
-    description: "Discounted rates for 20ft and 40ft container bookings via rail. Ideal for bulk cargo transportation.",
+    id: 'RAIL-BULK',
+    title: "Train Container Special",
+    description: "Discounted rates for 20ft and 40ft container bookings via rail. Ideal for bulk.",
     icon: FaTrain,
-    link: "/train-booking", // Direct link to train booking
-    serviceType: "Train Container Booking",
-    bgColor: "bg-yellow-50",
-    iconColor: "text-yellow-600",
-    buttonColor: "bg-yellow-600",
-    buttonHoverColor: "hover:bg-yellow-700"
+    link: "/train-booking",
+    serviceType: "Train",
+    bgColor: "bg-emerald-50",
+    iconColor: "text-emerald-600",
+    buttonColor: "bg-emerald-600",
+    buttonHoverColor: "hover:bg-emerald-700",
+    isEco: true
   },
   {
-    id: 'parcel-delivery-deal',
-    title: "Flat Rate Parcel Delivery",
-    description: "Send parcels nationwide with a special flat rate for packages under 10 KG. Fast and reliable service.",
-    icon: FaBoxOpen,
-    link: "/parcel-booking", // Direct link to parcel booking
-    serviceType: "Parcel",
-    bgColor: "bg-indigo-50",
-    iconColor: "text-indigo-600",
-    buttonColor: "bg-indigo-600",
-    buttonHoverColor: "hover:bg-indigo-700"
-  },
-  {
-    id: 'customs-clearance-assist',
+    id: 'CUSTOM-FREE',
     title: "Free Customs Consultation",
-    description: "Get a free 30-minute consultation with our customs experts for your import/export needs.",
+    description: "Get a free 30-minute consultation with our experts for your import/export needs.",
     icon: FaFileInvoice,
-    link: "/customs-booking", // Direct link to customs booking
+    link: "/customs-booking",
     serviceType: "Customs",
     bgColor: "bg-purple-50",
     iconColor: "text-purple-600",
     buttonColor: "bg-purple-600",
-    buttonHoverColor: "hover:bg-purple-700"
+    buttonHoverColor: "hover:bg-purple-700",
+    isEco: false
   },
   {
-    id: 'door-to-door-convenience',
-    title: "Door to Door Service Package",
-    description: "Enjoy seamless logistics with our all-inclusive door-to-door service. Special rates for new clients.",
+    id: 'DOOR-STEP',
+    title: "Door to Door Package",
+    description: "Seamless logistics with our all-inclusive door-to-door service at special rates.",
     icon: FaMapMarkerAlt,
-    link: "/door-to-door-booking", // Direct link to door-to-door booking
+    link: "/door-to-door-booking",
     serviceType: "Door to Door",
     bgColor: "bg-teal-50",
     iconColor: "text-teal-600",
     buttonColor: "bg-teal-600",
-    buttonHoverColor: "hover:bg-teal-700"
-  },
-  {
-    id: 'lcl-volume-discount',
-    title: "LCL Volume Discount",
-    description: "Save more on Less than Container Load (LCL) shipments when booking multiple cubic meters.",
-    icon: FaBoxOpen, // Re-using FaBoxOpen for LCL
-    link: "/lcl-booking", // Direct link to LCL booking
-    serviceType: "LCL",
-    bgColor: "bg-orange-50",
-    iconColor: "text-orange-600",
-    buttonColor: "bg-orange-600",
-    buttonHoverColor: "hover:bg-orange-700"
-  },
-  {
-    id: 'first-last-mile-bundle',
-    title: "First & Last Mile Bundle Offer",
-    description: "Combine first-mile pickup and last-mile delivery for a discounted bundled price.",
-    icon: FaMapMarkerAlt, // Re-using FaMapMarkerAlt for First/Last Mile
-    link: "/first-last-mile-booking", // Direct link to first/last mile booking
-    serviceType: "First/Last Mile",
-    bgColor: "bg-pink-50",
-    iconColor: "text-pink-600",
-    buttonColor: "bg-pink-600",
-    buttonHoverColor: "hover:bg-pink-700"
-  },
+    buttonHoverColor: "hover:bg-teal-700",
+    isEco: false
+  }
 ];
 
 const OfferDetailPage: React.FC = () => {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedId(code);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
-      {/* Hero Section for Offers Page - More Subtle */}
-      <section className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-16 px-4 text-center">
-        <h1 className="text-4xl font-extrabold mb-3 animate-fade-in-up">
-          Exclusive <span className="text-yellow-300">Offers & Discounts</span>
-        </h1>
-        <p className="text-lg max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-          Unlock amazing savings on our top-tier logistics services.
-        </p>
+    <div className="bg-gray-50 min-h-screen font-sans">
+      
+      {/* 1. Hero Section with Green Rewards Tracker */}
+      <section className="bg-slate-900 text-white py-16 px-4 relative overflow-hidden">
+        <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4">
+          <FaLeaf size={400} />
+        </div>
+        
+        <div className="max-w-7xl mx-auto relative z-10 text-center">
+          <h1 className="text-5xl font-black mb-4 tracking-tight">
+            YOUR <span className="text-emerald-400">REWARDS</span> HUB
+          </h1>
+          <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
+            The more sustainable your logistics, the bigger your discounts. Join our Green-Tier program.
+          </p>
+
+          <div className="max-w-3xl mx-auto bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-3xl shadow-2xl">
+            <div className="flex justify-between items-end mb-4">
+              <div className="text-left">
+                <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Current Tier</span>
+                <p className="text-2xl font-black flex items-center">SILVER ECO <FaStar className="ml-2 text-yellow-400 text-sm" /></p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-gray-400">Next Reward: <span className="text-white">FREE Insurance</span></p>
+                <p className="text-[10px] text-emerald-400">240kg CO2 saved of 500kg</p>
+              </div>
+            </div>
+            
+            <div className="w-full bg-gray-800 h-4 rounded-full overflow-hidden flex">
+              <div className="bg-emerald-500 h-full w-[48%] shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-1000" />
+            </div>
+            
+            <div className="grid grid-cols-3 mt-4 text-[10px] font-bold text-gray-500 uppercase">
+              <div className="text-left">Bronze</div>
+              <div className="text-center text-emerald-400">Silver</div>
+              <div className="text-right">Gold</div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-800 mb-4 animate-fade-in">
-            Discover Our <span className="text-purple-700">Special Deals</span>
-          </h2>
-          <p className="text-gray-600 text-lg max-w-3xl mx-auto animate-fade-in" style={{ animationDelay: "100ms" }}>
-            We're constantly updating our promotions to provide you with the best value.
-          </p>
+      {/* 2. Offers Grid */}
+      <div className="max-w-7xl mx-auto py-20 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-end mb-12">
+          <div className="text-left">
+            <h2 className="text-3xl font-black text-gray-900">Available Promotions</h2>
+            <p className="text-gray-500">Active vouchers for your next shipment</p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {detailedOffers.map((offer, index) => (
-            <div
-              key={offer.id}
-              className={`p-8 rounded-xl shadow-lg transition-transform transform hover:scale-105
-                         ${offer.bgColor} border-2 border-gray-200 flex flex-col items-center text-center
-                         animate-fade-in`}
-              style={{ animationDelay: `${index * 100}ms`, animationFillMode: "both" }}
-            >
-              <div className={`mb-5 p-4 rounded-full ${offer.bgColor.replace('-50', '-200')} group-hover:${offer.bgColor.replace('-50', '-300')} transition-colors duration-300`}>
-                <offer.icon className={`text-5xl ${offer.iconColor}`} />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-3">{offer.title}</h2>
-              <p className="text-gray-700 mb-6 flex-grow">{offer.description}</p>
-              <Link
-                to={offer.link}
-                state={{ activeService: offer.serviceType }} // Pass serviceType to pre-select tab if applicable
-                className={`mt-auto px-8 py-3 ${offer.buttonColor} text-white font-semibold rounded-full shadow-md
-                            ${offer.buttonHoverColor} transition duration-300 transform hover:scale-105 flex items-center justify-center`}
+          {detailedOffers.map((offer) => {
+            const promoCode = `${offer.id}SHIP26`;
+            return (
+              <div
+                key={offer.id}
+                className="group relative bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col"
               >
-                View Offer
-                <FaTag className="ml-2" />
-              </Link>
-            </div>
-          ))}
+                {offer.isEco && (
+                  <div className="absolute top-6 right-6 flex items-center bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full border border-emerald-200">
+                    <FaLeaf className="mr-1" /> ECO-SAVER
+                  </div>
+                )}
+
+                <div className={`w-14 h-14 rounded-2xl ${offer.bgColor} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                  <offer.icon className={`text-2xl ${offer.iconColor}`} />
+                </div>
+
+                <h3 className="text-xl font-black text-gray-900 mb-3">{offer.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed mb-8 flex-grow">
+                  {offer.description}
+                </p>
+
+                {/* Coupon UI */}
+                <div className="mb-6 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl p-4 flex justify-between items-center group-hover:border-blue-200 transition-colors">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Promo Code</p>
+                    <p className="font-mono font-bold text-gray-700">{promoCode}</p>
+                  </div>
+                  <button 
+                    onClick={() => copyCode(promoCode)}
+                    className={`p-3 rounded-xl transition-all ${copiedId === promoCode ? 'bg-green-500 text-white' : 'bg-white text-gray-400 shadow-sm hover:text-blue-600'}`}
+                  >
+                    {copiedId === promoCode ? <FaCheckCircle /> : <FaCopy />}
+                  </button>
+                </div>
+
+                {/* Claim Offer with Auto-fill State */}
+                <Link
+                  to={offer.link}
+                  state={{ appliedPromo: promoCode }}
+                  className={`w-full py-4 ${offer.buttonColor} text-white font-bold rounded-2xl flex items-center justify-center shadow-lg transform active:scale-95 transition-all`}
+                >
+                  Claim This Offer <FaTag className="ml-2 text-xs opacity-50" />
+                </Link>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Call to Action for general inquiries */}
-        <div className="mt-16 text-center bg-blue-600 text-white p-10 rounded-xl shadow-lg animate-fade-in">
-          <h3 className="text-3xl font-bold mb-4">Didn't find what you're looking for?</h3>
-          <p className="text-lg mb-8">
-            Contact our sales team for custom quotes and tailored logistics solutions.
+        {/* 3. Support CTA */}
+        <div className="mt-20 bg-blue-600 rounded-[3rem] p-12 text-center text-white relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
+          <h3 className="text-4xl font-black mb-4">Enterprise Scaling?</h3>
+          <p className="text-blue-100 text-lg mb-10 max-w-xl mx-auto">
+            For volumes over 100 containers/month, our sales team creates custom rate-cards.
           </p>
           <Link
             to="/support"
-            className="inline-block bg-white text-blue-600 font-semibold py-3 px-8 rounded-full
-                       shadow-lg hover:bg-gray-100 transition duration-300 transform hover:scale-105"
+            className="bg-white text-blue-600 px-12 py-5 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-gray-100 shadow-xl transition-all"
           >
-            Contact Sales
+            Request Enterprise Quote
           </Link>
         </div>
       </div>

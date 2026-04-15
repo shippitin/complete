@@ -1,238 +1,198 @@
-// src/pages/BookingConfirmationPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaCheckCircle, FaClipboardCheck, FaHome, FaHistory, FaInfoCircle, FaTrain, FaUser, FaRupeeSign, FaCalendarAlt, FaClock, FaIdCard, FaMapMarkerAlt, FaFileAlt } from 'react-icons/fa';
-// Import types for clarity
-import type { FreightTrainResult, AllFormData, TrainContainerFormData, TrainGoodsFormData, TrainParcelFormData } from '../types/QuoteFormHandle';
-
-// Updated BookingDetails interface to match what RailBookingConfirmation passes
-interface BookingDetails {
-  selectedResult: FreightTrainResult;
-  originalFormData: AllFormData;
-  kycDetails: { // This structure matches the data sent from RailBookingConfirmationPage
-    companyName: string;
-    gstin: string;
-    email: string;
-    mobile: string;
-    pan: string;
-    tan: string;
-    aadhaar: string;
-    landline: string;
-    fax: string;
-    cpda: string;
-    gstAddress: string;
-    companyRegCert: string | null;
-    requestLetter: string | null;
-    customerType: string;
-  };
-  bookingDate: string;
-  bookingTime: string;
-  bookingId: string;
-  finalAmount: number;
-  insuranceRequired: boolean;
-}
+import { 
+  FaCheckCircle, FaHome, FaHistory, FaInfoCircle, 
+  FaTrain, FaTruck, FaPlane, FaShip, FaUser, 
+  FaCalendarAlt, FaClock, FaPrint, FaDownload 
+} from 'react-icons/fa';
 
 const BookingConfirmationPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [bookingDetails, setBookingDetails] = useState<BookingDetails | undefined>(undefined);
+  const [bookingDetails, setBookingDetails] = useState<any | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Attempt to get details from location.state first
-    let details: BookingDetails | undefined = location.state?.bookingDetails;
-
+    let details = location.state?.bookingDetails;
+    
+    // Recovery logic: if user refreshes, try to get data from session storage
     if (!details) {
-      // If no details from location.state, try to retrieve from sessionStorage
       const storedDetails = sessionStorage.getItem('lastBookingDetails');
-      if (storedDetails) {
-        try {
-          details = JSON.parse(storedDetails);
-        } catch (e) {
-          console.error("BookingConfirmationPage: Error parsing session storage data:", e);
-          sessionStorage.removeItem('lastBookingDetails'); // Clear corrupted data
-        }
-      }
+      if (storedDetails) details = JSON.parse(storedDetails);
     }
 
     if (details) {
       setBookingDetails(details);
-      // Store in sessionStorage for persistence across refreshes (if it came from location.state or was already there)
       sessionStorage.setItem('lastBookingDetails', JSON.stringify(details));
-    } else {
-      console.error("BookingConfirmationPage: No booking details found in state or session storage.");
     }
-    setLoading(false); // Set loading to false once data retrieval is attempted
-  }, [location.state]); // Depend on location.state to re-run if navigated with new state
+    setLoading(false);
+  }, [location.state]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-100">
-        <div className="text-center p-10 bg-white rounded-2xl shadow-xl">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent mx-auto mb-6"></div>
-          <p className="text-2xl text-gray-700 font-semibold">Loading booking confirmation...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState />;
+  if (!bookingDetails) return <ErrorState navigate={navigate} />;
 
-  if (!bookingDetails) {
-    return (
-      <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center justify-center">
-        <div className="bg-white p-8 rounded-2xl shadow-xl text-center border border-red-200">
-          <FaInfoCircle className="text-red-500 text-6xl mb-4 mx-auto" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Booking details not found.</h2>
-          <p className="text-gray-600 mb-6">It seems like you've navigated directly or refreshed the page. Please go back to the booking process to view your confirmation.</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300 flex items-center justify-center mx-auto"
-          >
-            <FaHome className="inline-block mr-2" /> Go to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // --- SAFETY DESTRUCTURING ---
+  // We use "= {}" and default values to prevent the app from crashing 
+  // if the previous page didn't send a specific field.
+  const { 
+    selectedResult = {}, 
+    kycDetails = {}, 
+    originalFormData = {},
+    bookingDate = new Date().toLocaleDateString(), 
+    bookingTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+    bookingId = 'BK-PENDING', 
+    finalAmount = 0, 
+  } = bookingDetails;
 
-  const { selectedResult, originalFormData, kycDetails, bookingDate, bookingTime, bookingId, finalAmount, insuranceRequired } = bookingDetails;
-
-  // Determine weight based on the specific type of originalFormData
-  let displayedWeight: string = 'N/A';
-  let displayedCargoType: string = originalFormData.cargoType || 'N/A';
-
-  // Use type guards to safely access properties based on bookingType
-  // Note: originalFormData.bookingType is the source of truth for the form type
-  if (originalFormData.bookingType === 'Train Container Booking') {
-    const trainData = originalFormData as TrainContainerFormData;
-    if (trainData.totalWeight !== undefined && trainData.totalWeight !== null) {
-      displayedWeight = `${trainData.totalWeight} KG`;
-    }
-    displayedCargoType = trainData.containerType || 'N/A';
-  } else if (originalFormData.bookingType === 'Train Goods Booking') {
-    const trainData = originalFormData as TrainGoodsFormData;
-    if (trainData.totalWeight !== undefined && trainData.totalWeight !== null) {
-      displayedWeight = `${trainData.totalWeight} Tons`;
-    }
-    displayedCargoType = trainData.wagonType || 'N/A';
-  } else if (originalFormData.bookingType === 'Train Parcel Booking') {
-    const trainData = originalFormData as TrainParcelFormData;
-    if (trainData.totalWeight !== undefined && trainData.totalWeight !== null) {
-      displayedWeight = `${trainData.totalWeight} KG`;
-    }
-    displayedCargoType = 'Parcel';
-  } else if (originalFormData.totalWeight !== undefined && originalFormData.totalWeight !== null) {
-    // Fallback for other booking types that might use totalWeight
-    displayedWeight = `${originalFormData.totalWeight} KG`;
-  }
-
+  // Determine which icon to show based on the transport mode
+  const mode = selectedResult.mode?.toLowerCase() || 'truck'; 
+  
+  const theme = {
+    train: { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', icon: <FaTrain /> },
+    truck: { color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', icon: <FaTruck /> },
+    air: { color: 'text-sky-600', bg: 'bg-sky-50', border: 'border-sky-200', icon: <FaPlane /> },
+    sea: { color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200', icon: <FaShip /> }
+  }[mode as 'train' | 'truck' | 'air' | 'sea'] || { color: 'text-slate-600', bg: 'bg-slate-50', border: 'border-slate-200', icon: <FaTruck /> };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8 font-inter">
-      <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-green-600 text-white p-8 rounded-t-2xl flex flex-col items-center justify-center text-center">
-          <FaCheckCircle className="text-5xl mb-4" />
-          <h1 className="text-4xl font-bold mb-2">Booking Confirmed!</h1>
-          <p className="text-xl font-semibold">Your booking has been successfully placed.</p>
+    <div className="min-h-screen bg-[#F8FAFC] py-12 px-4 font-sans">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="bg-emerald-600 rounded-t-[2.5rem] p-10 text-center text-white shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10 text-9xl">
+            {theme.icon}
+          </div>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
+            <FaCheckCircle className="text-4xl" />
+          </div>
+          <h1 className="text-4xl font-black tracking-tight">Booking Confirmed!</h1>
+          <p className="opacity-90 mt-2 text-lg font-medium">Your shipment has been successfully scheduled.</p>
         </div>
 
-        <div className="p-8 text-gray-800">
-          <div className="text-center mb-10">
-            <FaClipboardCheck className="text-green-500 text-8xl mx-auto mb-6" />
-            <p className="text-2xl font-semibold mb-3">Your Booking ID:</p>
-            <p className="text-4xl font-extrabold text-green-700 tracking-wide">{bookingId}</p>
-            <p className="text-lg text-gray-600 mt-4 flex items-center justify-center">
-              <FaCalendarAlt className="mr-2 text-xl" /> Booked on {bookingDate} <span className="mx-3">|</span> <FaClock className="mr-2 text-xl" /> {bookingTime}
-            </p>
+        <div className="bg-white rounded-b-[2.5rem] shadow-sm border border-slate-200 overflow-hidden">
+          
+          {/* Reference ID Area */}
+          <div className="p-10 text-center border-b border-slate-100 bg-slate-50/30">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">Booking Reference</p>
+            <h2 className="text-5xl font-black text-slate-900 tracking-tighter">{bookingId}</h2>
+            <div className="flex items-center justify-center gap-6 mt-6 text-slate-500 font-bold text-sm">
+               <span className="flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border border-slate-200 shadow-sm">
+                 <FaCalendarAlt className="text-blue-500" /> {bookingDate}
+               </span>
+               <span className="flex items-center gap-2 px-4 py-1.5 bg-white rounded-full border border-slate-200 shadow-sm">
+                 <FaClock className="text-blue-500" /> {bookingTime}
+               </span>
+            </div>
           </div>
 
-          {/* Booking Summary Details (Train Specific) */}
-          <div className="bg-blue-50 p-8 rounded-2xl border border-blue-200 shadow-md mb-10">
-            <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center">
-              <FaTrain className="text-blue-600 mr-3 text-3xl" /> Train Booking Summary
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-lg">
-              <div className="flex justify-between">
-                <span className="font-semibold">Service Name:</span> <span className="text-right">{selectedResult.serviceName}</span>
+          <div className="p-8 lg:p-12 grid grid-cols-1 md:grid-cols-2 gap-10">
+            
+            {/* Left: Shipment Summary */}
+            <div className={`${theme.bg} ${theme.border} border rounded-[2rem] p-8`}>
+              <h3 className={`text-xl font-black ${theme.color} mb-6 flex items-center gap-3`}>
+                {theme.icon} Shipment Details
+              </h3>
+              <div className="space-y-5">
+                <SummaryRow label="Carrier" value={selectedResult.serviceProvider || 'Not Specified'} />
+                <SummaryRow label="Vehicle" value={selectedResult.vehicleType || 'Standard'} />
+                <SummaryRow label="Route" value={`${selectedResult.pickupPincode || 'Origin'} → ${selectedResult.dropoffPincode || 'Destination'}`} />
+                <SummaryRow label="Load Type" value={originalFormData.loadType || 'General Cargo'} />
+                
+                <div className="pt-6 border-t border-slate-200 mt-4">
+                    <div className="flex justify-between items-center">
+                        <span className="text-slate-500 font-bold text-xs uppercase tracking-widest">Amount Paid</span>
+                        <span className="text-3xl font-black text-slate-900 tracking-tighter">₹{finalAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Origin:</span> <span className="text-right">{selectedResult.originStation}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Destination:</span> <span className="text-right">{selectedResult.destinationStation}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Transit:</span> <span className="text-right">{selectedResult.transitDuration}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Cargo Type:</span> <span className="text-right">{displayedCargoType}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Weight:</span> <span className="text-right">{displayedWeight}</span>
-              </div>
-              <div className="flex justify-between md:col-span-2">
-                <span className="font-semibold">Price:</span> <span className="text-right"><FaRupeeSign className="inline-block text-base mr-1" />{selectedResult.price.toLocaleString('en-IN')}</span>
-              </div>
-              <div className="flex justify-between md:col-span-2">
-                <span className="font-semibold">Insurance:</span> <span className="text-right">{insuranceRequired ? `Yes (included in total)` : 'No'}</span>
-              </div>
-              <div className="md:col-span-2 text-3xl font-extrabold text-blue-700 flex items-center justify-end mt-4">
-                <FaRupeeSign className="text-2xl mr-1" />Total Amount: {finalAmount.toLocaleString('en-IN')}
+            </div>
+
+            {/* Right: Customer & Billing */}
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm">
+              <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">
+                <FaUser className="text-slate-400" /> Billing Info
+              </h3>
+              <div className="space-y-5">
+                <SummaryRow label="Customer" value={kycDetails.companyName || 'Guest User'} />
+                <SummaryRow label="GSTIN" value={kycDetails.gstin || 'N/A'} />
+                <SummaryRow label="Contact" value={kycDetails.mobile || 'N/A'} />
+                <SummaryRow label="Email" value={kycDetails.email || 'N/A'} />
+                <div className="mt-8 p-4 bg-emerald-50 rounded-xl border border-emerald-100 flex items-start gap-3">
+                  <FaInfoCircle className="text-emerald-500 mt-1" />
+                  <p className="text-[11px] text-emerald-800 font-bold leading-relaxed">
+                    A confirmation email and SMS with tracking details have been sent to your registered contact info.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* KYC Details Summary */}
-          <div className="bg-purple-50 p-8 rounded-2xl border border-purple-200 shadow-md mb-10">
-            <h2 className="text-2xl font-bold text-purple-800 mb-6 flex items-center">
-              <FaUser className="text-purple-600 mr-3 text-3xl" /> Your KYC Details
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-lg">
-              <div className="flex justify-between">
-                <span className="font-semibold">Company/Individual Name:</span> <span className="text-right">{kycDetails.companyName || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">GSTIN/Unique ID:</span> <span className="text-right">{kycDetails.gstin || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Email:</span> <span className="text-right">{kycDetails.email || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="font-semibold">Mobile:</span> <span className="text-right">{kycDetails.mobile || 'N/A'}</span>
-              </div>
-              {kycDetails.pan && <div className="flex justify-between"><span className="font-semibold">PAN:</span> <span className="text-right">{kycDetails.pan}</span></div>}
-              {kycDetails.tan && <div className="flex justify-between"><span className="font-semibold">TAN:</span> <span className="text-right">{kycDetails.tan}</span></div>}
-              {kycDetails.aadhaar && <div className="flex justify-between"><span className="font-semibold">Aadhar Card:</span> <span className="text-right">{kycDetails.aadhaar}</span></div>}
-              {kycDetails.landline && <div className="flex justify-between"><span className="font-semibold">Landline No.:</span> <span className="text-right">{kycDetails.landline}</span></div>}
-              {kycDetails.fax && <div className="flex justify-between"><span className="font-semibold">Fax No.:</span> <span className="text-right">{kycDetails.fax}</span></div>}
-              {kycDetails.cpda && <div className="flex justify-between"><span className="font-semibold">CPDA No.:</span> <span className="text-right">{kycDetails.cpda}</span></div>}
-              {kycDetails.gstAddress && <div className="md:col-span-2 flex justify-between"><span className="font-semibold">GST Address:</span> <span className="text-right">{kycDetails.gstAddress}</span></div>}
-              <div className="flex justify-between">
-                <span className="font-semibold">Customer Type:</span> <span className="text-right">{kycDetails.customerType || 'N/A'}</span>
-              </div>
-              {kycDetails.companyRegCert && <div className="flex justify-between"><span className="font-semibold">Company Reg. Cert.:</span> <span className="text-right">{kycDetails.companyRegCert}</span></div>}
-              {kycDetails.requestLetter && <div className="flex justify-between"><span className="font-semibold">Request Letter:</span> <span className="text-right">{kycDetails.requestLetter}</span></div>}
-            </div>
+          {/* Footer Actions */}
+          <div className="p-8 bg-slate-900 flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={() => navigate('/')} 
+              className="flex-1 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-black transition-all flex items-center justify-center gap-2"
+            >
+              <FaHome /> Back to Home
+            </button>
+            <button 
+              onClick={() => navigate('/track')}
+              className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black shadow-xl shadow-blue-900/40 transition-all flex items-center justify-center gap-2"
+            >
+              Track Live Shipment <FaHistory />
+            </button>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-6 mt-10">
-            <button
-              onClick={() => navigate('/')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center text-xl"
-            >
-              <FaHome className="mr-3 text-2xl" /> Go to Home
+        {/* Tools */}
+        <div className="mt-8 flex justify-center gap-8">
+            <button className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold text-xs uppercase tracking-widest transition-all">
+                <FaPrint /> Print Receipt
             </button>
-            <button
-              onClick={() => alert('View My Bookings functionality not yet implemented.')} // Placeholder for now
-              className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center text-xl"
-            >
-              <FaHistory className="mr-3 text-2xl" /> View My Bookings
+            <button className="flex items-center gap-2 text-slate-400 hover:text-blue-600 font-bold text-xs uppercase tracking-widest transition-all">
+                <FaDownload /> Download Invoice
             </button>
-          </div>
         </div>
       </div>
     </div>
   );
 };
+
+// --- SUB-COMPONENTS ---
+
+const SummaryRow = ({ label, value }: { label: string, value: string }) => (
+  <div className="flex justify-between items-start gap-4">
+    <span className="text-slate-400 font-black uppercase text-[9px] tracking-widest mt-1">{label}</span>
+    <span className="text-slate-800 font-bold text-right text-sm tracking-tight">{value}</span>
+  </div>
+);
+
+const LoadingState = () => (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-10">
+        <div className="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent mb-4"></div>
+        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Securing Booking...</p>
+    </div>
+);
+
+const ErrorState = ({ navigate }: any) => (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="bg-white p-12 rounded-[3rem] shadow-xl text-center max-w-md border border-slate-200">
+            <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
+               <FaInfoCircle size={32} />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Data Unavailable</h2>
+            <p className="text-slate-500 mt-3 mb-8 font-medium leading-relaxed">
+              We couldn't retrieve your booking summary. This usually happens if the page is refreshed or accessed directly.
+            </p>
+            <button 
+              onClick={() => navigate('/')} 
+              className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg hover:bg-black transition-all"
+            >
+              Return to Homepage
+            </button>
+        </div>
+    </div>
+);
 
 export default BookingConfirmationPage;

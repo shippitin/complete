@@ -1,9 +1,9 @@
 // src/pages/QuoteFormPage.tsx
-import React, { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaInfoCircle, FaSearch } from 'react-icons/fa';
+import React, { useRef, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FaInfoCircle, FaSearch, FaTag } from 'react-icons/fa';
 
-// Import all individual quote form components (excluding train forms)
+// Import all individual quote form components
 import TruckQuoteForm from '../components/QuoteForms/TruckQuoteForm';
 import AirQuoteForm from '../components/QuoteForms/AirQuoteForm';
 import SeaQuoteForm from '../components/QuoteForms/SeaQuoteForm';
@@ -14,48 +14,48 @@ import InsuranceQuoteForm from '../components/QuoteForms/InsuranceQuoteForm';
 import FirstLastMileQuoteForm from '../components/QuoteForms/FirstLastMileQuoteForm';
 import ParcelQuoteForm from '../components/QuoteForms/ParcelQuoteForm';
 
-// Import types
-import type { QuoteFormHandle } from '../types/QuoteFormHandle';
-import type { ParsedVoiceCommand } from '../components/VoiceAssistant';
+// --- TYPE FIX ---
+// Explicitly import as types to avoid "Value vs Type" conflicts
+import type { QuoteFormHandle, ParsedVoiceCommand } from '../types/QuoteFormHandle';
 
 interface QuoteFormPageProps {
-  activeService: string; // The currently selected service (e.g., 'Truck', 'Air')
-  prefillData?: ParsedVoiceCommand; // Prop to receive pre-fill data from voice commands
+  activeService: string;
+  prefillData?: ParsedVoiceCommand;
 }
 
 const QuoteFormPage: React.FC<QuoteFormPageProps> = ({ activeService, prefillData }) => {
-  const formRef = useRef<QuoteFormHandle>(null); // Generic ref for the currently active form
+  const formRef = useRef<QuoteFormHandle>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Determine which form to render based on activeService
+  // Logic to merge Voice Assistant data with Offers Page promo codes
+  const mergedPrefillData = useMemo(() => {
+    const appliedPromo = location.state?.appliedPromo;
+    
+    if (!appliedPromo && !prefillData) return undefined;
+
+    return {
+      ...(prefillData || {}),
+      promoCode: appliedPromo || prefillData?.promoCode 
+    } as ParsedVoiceCommand;
+  }, [location.state, prefillData]);
+
   const renderForm = () => {
     switch (activeService) {
-      case 'Truck':
-        return <TruckQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'Air':
-        return <AirQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'Sea':
-        return <SeaQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'Door to Door':
-        return <DoorToDoorQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'LCL':
-        return <LCLQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'Parcel': // Generic Parcel
-        return <ParcelQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'Customs':
-        return <CustomsQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'Insurance':
-        return <InsuranceQuoteForm ref={formRef} prefillData={prefillData} />;
-      case 'First/Last Mile':
-        return <FirstLastMileQuoteForm ref={formRef} prefillData={prefillData} />;
+      case 'Truck': return <TruckQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'Air': return <AirQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'Sea': return <SeaQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'Door to Door': return <DoorToDoorQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'LCL': return <LCLQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'Parcel': return <ParcelQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'Customs': return <CustomsQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'Insurance': return <InsuranceQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
+      case 'First/Last Mile': return <FirstLastMileQuoteForm ref={formRef} prefillData={mergedPrefillData} />;
       default:
-        // This case should ideally not be hit if routing is correct,
-        // but provides a fallback message.
         return (
-          <div className="text-center p-8 bg-white rounded-xl shadow-md">
+          <div className="text-center p-8 bg-white rounded-xl shadow-md border border-gray-100">
             <FaInfoCircle className="text-blue-500 text-5xl mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800">Please select a service to get a quote.</h3>
-            <p className="text-gray-600 mt-2">You can use the the navigation menu or the voice assistant.</p>
+            <h3 className="text-xl font-semibold text-gray-800">Select a service to proceed.</h3>
           </div>
         );
     }
@@ -65,82 +65,53 @@ const QuoteFormPage: React.FC<QuoteFormPageProps> = ({ activeService, prefillDat
     if (formRef.current) {
       const formData = formRef.current.submit();
       if (formData) {
-        console.log('Form Data Submitted:', formData);
-        // Navigate based on bookingType
-        switch (formData.bookingType) {
-          // Train booking types are now handled by TrainBookingPage,
-          // so they should not appear here.
-          case 'Air':
-            navigate('/air-results', { state: { formData } });
-            break;
-          case 'Sea':
-            navigate('/sea-results', { state: { formData } });
-            break;
-          case 'Truck':
-            navigate('/truck-results', { state: { formData } });
-            break;
-          case 'Door to Door':
-            navigate('/door-to-door-results', { state: { formData } });
-            break;
-          case 'LCL':
-            navigate('/lcl-results', { state: { formData } });
-            break;
-          case 'Parcel':
-            navigate('/parcel-results', { state: { formData } });
-            break;
-          case 'Customs':
-            navigate('/customs-results', { state: { formData } });
-            break;
-          case 'Insurance':
-            navigate('/insurance-results', { state: { formData } });
-            break;
-          case 'First/Last Mile':
-            navigate('/first-last-mile-results', { state: { formData } });
-            break;
-          default:
-            console.warn('Unknown booking type, navigating to a generic summary or home.');
-            navigate('/booking-summary', { state: { formData } });
-            break;
-        }
+        const routeMap: Record<string, string> = {
+          'Air': '/air-results',
+          'Sea': '/sea-results',
+          'Truck': '/truck-results',
+          'Door to Door': '/door-to-door-results',
+          'LCL': '/lcl-results',
+          'Parcel': '/parcel-results',
+          'Customs': '/customs-results',
+          'Insurance': '/insurance-results',
+          'First/Last Mile': '/first-last-mile-results'
+        };
+        const target = routeMap[formData.bookingType] || '/booking-summary';
+        navigate(target, { state: { formData } });
       }
     }
   };
 
-  const handleReset = () => {
-    if (formRef.current) {
-      formRef.current.reset();
-    }
-  };
-
-  // Dynamically set the title based on the active service
-  const pageTitle = activeService ? `${activeService} Quote` : 'Get a Quote';
+  const handleReset = () => formRef.current?.reset();
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-purple-700 text-white p-6 rounded-t-2xl">
-          <h1 className="text-3xl font-bold text-center">{pageTitle}</h1>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100">
+        <div className="bg-slate-900 text-white p-8 relative">
+          <h1 className="text-3xl font-black italic tracking-tighter uppercase">
+            {activeService ? `${activeService} Quote` : 'Get a Quote'}
+          </h1>
+          <p className="text-slate-400 text-[10px] font-bold tracking-widest uppercase mt-1">Shippitin Logistics Engine v2.0</p>
         </div>
 
-        <div className="p-6">
-          {renderForm()}
-
-          {activeService && ( // Only show buttons if a service is selected
-            <div className="flex justify-center gap-4 mt-8">
-              <button
-                onClick={handleSubmit}
-                className="px-8 py-3 bg-green-600 text-white font-bold rounded-full shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 flex items-center"
-              >
-                <FaSearch className="mr-2" /> Search Quotes
-              </button>
-              <button
-                onClick={handleReset}
-                className="px-8 py-3 bg-gray-300 text-gray-800 font-bold rounded-full shadow-lg hover:bg-gray-400 transition duration-300 transform hover:scale-105"
-              >
-                Reset Form
-              </button>
+        <div className="p-8">
+          {location.state?.appliedPromo && (
+            <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center text-emerald-700 animate-in fade-in slide-in-from-top-4 duration-500">
+              <FaTag className="mr-3" />
+              <span className="text-xs font-black uppercase tracking-tight">Voucher Applied: {location.state.appliedPromo}</span>
             </div>
           )}
+
+          {renderForm()}
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
+            <button onClick={handleSubmit} className="px-10 py-4 bg-blue-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center">
+              <FaSearch className="mr-2" /> Search Quotes
+            </button>
+            <button onClick={handleReset} className="px-10 py-4 bg-slate-100 text-slate-500 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all">
+              Reset Form
+            </button>
+          </div>
         </div>
       </div>
     </div>

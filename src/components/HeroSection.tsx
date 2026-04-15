@@ -1,4 +1,3 @@
-// src/components/HeroSection.tsx
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -13,13 +12,14 @@ import LCLQuoteForm from './QuoteForms/LCLQuoteForm';
 import InsuranceQuoteForm from './QuoteForms/InsuranceQuoteForm';
 import FirstLastMileQuoteForm from './QuoteForms/FirstLastMileQuoteForm';
 import CustomsQuoteForm from './QuoteForms/CustomsQuoteForm';
-import RailQuoteForm from './QuoteForms/RailQuoteForm'; // NEW: Import RailQuoteForm
+import RailQuoteForm from './QuoteForms/RailQuoteForm'; 
+import PortServicesQuoteForm from './QuoteForms/PortServicesQuoteForm'; // ADDED
 
 // Correct Import Path for types
 import type {
   QuoteFormHandle,
   AllFormData,
-  TrainContainerFormData // Still needed for type narrowing in handleSearch if train types are checked
+  TrainContainerFormData 
 } from '../types/QuoteFormHandle';
 
 import {
@@ -33,6 +33,7 @@ import {
   FaStamp,
   FaDolly,
   FaHandshake,
+  FaAnchor, // ADDED
 } from "react-icons/fa";
 
 interface TabProps {
@@ -46,12 +47,11 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
   <div
     className={`flex flex-col items-center justify-center px-5 py-3 cursor-pointer rounded-xl
                 ${isActive
-                  ? 'bg-blue-200 text-black font-bold shadow-lg transform scale-105' // Changed text-blue-800 to text-black
+                  ? 'bg-blue-200 text-black font-bold shadow-lg transform scale-105' 
                   : 'text-gray-700 hover:bg-blue-50 hover:text-blue-800'}
                 transition-all duration-300 ease-in-out whitespace-nowrap flex-shrink-0`}
     onClick={onClick}
   >
-    {/* Adjusted margin-bottom for the icon back to mb-1 */}
     <Icon className={`text-2xl mb-1 ${isActive ? '' : 'text-gray-600'}`} />
     <span className="text-xs font-medium text-center">{label}</span>
   </div>
@@ -59,13 +59,13 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
 
 const HeroSection: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<string>('Rail'); // Default to Rail
+  const [activeTab, setActiveTab] = useState<string>('Rail'); 
 
-  // formRefs will now include 'Rail' to hold its ref
   const formRefs = useRef<Record<string, QuoteFormHandle | null>>({
     'Door to Door': null,
-    'Rail': null, // NEW: Added ref for RailQuoteForm
+    'Rail': null,
     'Sea': null,
+    'Port Services': null, // ADDED
     'Air': null,
     'Truck': null,
     'LCL': null,
@@ -86,7 +86,7 @@ const HeroSection: React.FC = () => {
     currentForm = formRefs.current[activeTab];
 
     if (currentForm) {
-      formData = currentForm.submit(); // Call submit, which now returns data
+      formData = currentForm.submit(); 
 
       if (formData) {
         console.log("HeroSection: Form Data Booking Type:", formData.bookingType);
@@ -110,6 +110,9 @@ const HeroSection: React.FC = () => {
           case 'Sea':
             navigationPath = '/sea-results';
             break;
+          case 'Port Services': // ADDED
+            navigationPath = '/port-results';
+            break;
           case 'Air':
             navigationPath = '/air-results';
             break;
@@ -129,7 +132,7 @@ const HeroSection: React.FC = () => {
             navigationPath = '/insurance-results';
             break;
           case 'First/Last Mile':
-            navigationPath = '/first-last-mile-results'; // Corrected typo here
+            navigationPath = '/first-last-mile-results'; 
             break;
           default:
             console.error(`Unknown booking type: ${formData && 'bookingType' in formData ? (formData as any).bookingType : 'unknown'}`);
@@ -151,8 +154,10 @@ const HeroSection: React.FC = () => {
     switch (activeTab) {
       case 'Door to Door': return <DoorToDoorQuoteForm ref={el => formRefs.current['Door to Door'] = el} showButtons={false} />;
       case 'Rail':
-        return <RailQuoteForm ref={el => formRefs.current['Rail'] = el} showButtons={false} />; // Pass showButtons={false}
+        return <RailQuoteForm ref={el => formRefs.current['Rail'] = el} showButtons={false} />; 
       case 'Sea': return <SeaQuoteForm ref={el => formRefs.current['Sea'] = el} showButtons={false} />;
+      case 'Port Services': // ADDED
+        return <PortServicesQuoteForm ref={el => formRefs.current['Port Services'] = el} showButtons={false} />;
       case 'Air': return <AirQuoteForm ref={el => formRefs.current['Air'] = el} showButtons={false} />;
       case 'Truck': return <TruckQuoteForm ref={el => formRefs.current['Truck'] = el} showButtons={false} />;
       case 'LCL': return <LCLQuoteForm ref={el => formRefs.current['LCL'] = el} showButtons={false} />;
@@ -171,9 +176,10 @@ const HeroSection: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-6 border border-gray-100 animate-fade-in">
 
           <nav className="flex flex-wrap justify-center sm:justify-between items-center px-2 sm:px-4 py-3 overflow-x-auto scrollbar-hide gap-2 mb-6">
-            {/* Reordered Tabs as per user request */}
             <Tab icon={FaTrain} label="Rail" isActive={activeTab === 'Rail'} onClick={() => setActiveTab('Rail')} />
             <Tab icon={FaShip} label="Sea" isActive={activeTab === 'Sea'} onClick={() => setActiveTab('Sea')} />
+            {/* Added Port Services Tab */}
+            <Tab icon={FaAnchor} label="Port Services" isActive={activeTab === 'Port Services'} onClick={() => setActiveTab('Port Services')} />
             <Tab icon={FaPlane} label="Air" isActive={activeTab === 'Air'} onClick={() => setActiveTab('Air')} />
             <Tab icon={FaTruck} label="Truck" isActive={activeTab === 'Truck'} onClick={() => setActiveTab('Truck')} />
             <Tab icon={FaBox} label="Parcel" isActive={activeTab === 'Parcel'} onClick={() => setActiveTab('Parcel')} />
@@ -188,15 +194,13 @@ const HeroSection: React.FC = () => {
             {renderQuoteForm()}
           </div>
 
-          {/* This is the ONLY SEARCH button for forms rendered within HeroSection */}
           <div className="text-center mt-8">
             <button
               onClick={handleSearch}
-              // Updated Tailwind CSS classes for the gradient background and white text
               className="text-white text-xl font-bold px-12 py-4 rounded-full shadow-md transition duration-300 transform hover:scale-105 animate-bounce-in"
               style={{
                 background: 'linear-gradient(to right, #53b2fe, #065af3)',
-                border: 'none', // Ensure no default border interferes
+                border: 'none',
               }}
             >
               SEARCH

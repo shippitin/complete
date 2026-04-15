@@ -1,389 +1,215 @@
-// src/pages/TruckBookingDetailsPage.tsx
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaUser, FaBuilding, FaEnvelope, FaPhone, FaArrowLeft, FaInfoCircle, FaTruck, FaRupeeSign, FaClipboardList, FaShieldAlt, FaFileAlt, FaArrowRight, FaWeight, FaBoxes, FaTag, FaRulerCombined, FaDollarSign, FaMapMarkerAlt, FaCalendarAlt, FaCheckCircle } from 'react-icons/fa'; // Added FaCheckCircle and other icons
-import type { TruckFormData } from '../types/QuoteFormHandle'; // Correctly import TruckFormData
+import React, { useState, useRef } from 'react';
 
-// Define the structure for a Truck service offer, matching what's passed from TruckResultsPage
-interface TruckServiceOffer {
-  id: string;
-  serviceProvider: string; // Changed from serviceName to serviceProvider
+/**
+ * REFINED INTERFACES
+ */
+interface SelectedResult {
+  price: number;
   pickupPincode: string;
   dropoffPincode: string;
-  pickupDate: string; // Ready Date
-  transitTime: string;
-  price: number;
-  loadType: 'PTL' | 'FTL';
-  truckType?: 'open' | 'closed' | 'flatbed' | 'reefer'; // Body type
-  vehicleType?: 'Bike' | 'Van' | 'Mini Truck' | 'Truck' | '14 ft Truck' | '17 ft Truck' | '20 ft Truck' | '32 ft SXL' | '32 ft MXL' | 'Container Truck' | 'Trailer'; // Specific vehicle type
-  features: string[];
-  status: 'Available' | 'Limited' | 'Full';
+  serviceProvider: string;
+  vehicleType: string;
 }
 
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  gstin: string;
+  kycType: string;
+  insurance: boolean;
+}
+
+/**
+ * BRAND CONSISTENT ICONS
+ */
+const Icons = {
+  ArrowLeft: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>,
+  ArrowRight: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>,
+  Truck: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1" /></svg>,
+  CheckCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  CloudUpload: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+};
+
 const TruckBookingDetailsPage: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const brandColor = "bg-[#3B82F6]";
+  const brandText = "text-[#3B82F6]";
 
-  // Retrieve data passed from TruckResultsPage
-  const selectedResult = location.state?.selectedResult as TruckServiceOffer | undefined;
-  const originalFormData = location.state?.originalFormData as TruckFormData | undefined; // Correctly type originalFormData
-
-  // State for contact and KYC details
-  const [contactPersonName, setContactPersonName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [gstin, setGstin] = useState('');
-  const [kycDocType, setKycDocType] = useState('');
-  const [specialInstructions, setSpecialInstructions] = useState('');
-
-  // Options for KYC Document Type
-  const kycDocOptions = [
-    'Select Document Type',
-    'Passport',
-    'Aadhaar Card',
-    'Driving License',
-    'PAN Card',
-    'Other'
-  ];
-
-  // State for Add-on Options (Insurance only)
-  // Initialize from formData if it exists, otherwise set default
-  const [insuranceRequired, setInsuranceRequired] = useState<boolean>(originalFormData?.insuranceRequired || false);
-
-  // Handle form submission
-  const handleFinalConfirmBooking = () => {
-    // Basic validation
-    if (!contactPersonName || !contactEmail || !contactPhone) {
-      console.error('Please fill in Full Name, Email, and Phone Number to confirm booking.'); // Replaced alert
-      // In a real app, you'd show a user-friendly modal or inline error message
-      return;
-    }
-    if (!selectedResult || !originalFormData) {
-      console.error('Booking details are missing. Please go back to search results.'); // Replaced alert
-      return;
-    }
-
-    // Construct the final booking details object to pass to confirmation page
-    const bookingDetails = {
-      selectedResult: { // Map Truck result to a generic structure for confirmation page
-        id: selectedResult.id,
-        serviceName: selectedResult.serviceProvider, // Using serviceProvider from TruckServiceOffer
-        origin: selectedResult.pickupPincode, // Use pickupPincode from TruckServiceOffer
-        destination: selectedResult.dropoffPincode, // Use dropoffPincode from TruckServiceOffer
-        readyDate: selectedResult.pickupDate, // Use pickupDate from TruckServiceOffer
-        transitTime: selectedResult.transitTime,
-        price: selectedResult.price,
-        loadType: selectedResult.loadType,
-        truckType: selectedResult.truckType,
-        vehicleType: selectedResult.vehicleType,
-        features: selectedResult.features,
-        serviceProvider: selectedResult.serviceProvider,
-        status: selectedResult.status,
-      },
-      originalFormData: originalFormData,
-      contactDetails: {
-        fullName: contactPersonName,
-        email: contactEmail,
-        phone: contactPhone,
-        companyName: companyName || 'N/A',
-        gstin: gstin || 'N/A',
-        kycDocType: kycDocType || 'N/A',
-        specialInstructions: specialInstructions || 'N/A',
-      },
-      bookingDate: new Date().toLocaleDateString('en-IN'),
-      bookingTime: new Date().toLocaleTimeString('en-IN'),
-      bookingId: `TRK-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`,
-    };
-
-    // Navigate to confirmation page
-    navigate('/booking-confirmation', { state: { bookingDetails } });
+  const selectedResult: SelectedResult = {
+    price: 12500,
+    pickupPincode: '400001',
+    dropoffPincode: '560001',
+    serviceProvider: 'BlueDart Logistics',
+    vehicleType: '32ft MX Container'
   };
 
-  // If no data is passed, redirect back or show an error
-  if (!selectedResult || !originalFormData) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 flex flex-col items-center justify-center font-inter">
-        <div className="bg-white p-8 rounded-2xl shadow-xl text-center border border-gray-200">
-          <FaInfoCircle className="text-red-500 text-6xl mb-4 mx-auto" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Booking details missing.</h2>
-          <p className="text-gray-600 mb-6">Please go back to search results and select a service.</p>
-          <button
-            onClick={() => navigate('/truck-results')} // Navigate back to Truck results
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-md transition-all duration-300 transform hover:scale-105"
-          >
-            <FaArrowLeft className="inline-block mr-2" /> Back to Results
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const [formData, setFormData] = useState<FormData>({
+    name: '', email: '', phone: '', company: '', gstin: '',
+    kycType: 'GST Certificate', insurance: true
+  });
+  const [kycFile, setKycFile] = useState<File | null>(null);
 
-  // Helper function to render a detail row with label and value
-  const DetailRow: React.FC<{ label: string; value: string | number | boolean | undefined; icon?: React.ElementType; format?: (val: any) => string; span?: number }> = ({ label, value, icon: Icon, format, span }) => {
-    const displayValue = value === true ? 'Yes' : value === false ? 'No' : value === undefined || value === null || value === '' ? 'N/A' : format ? format(value) : String(value);
-    return (
-      <div className={`flex items-start ${span ? `lg:col-span-${span}` : ''}`}>
-        {Icon && <Icon className="mr-2 text-blue-500 mt-1 flex-shrink-0" />}
-        <div className="flex justify-between w-full">
-          <span className="font-semibold text-gray-700 text-sm flex-shrink-0">{label}:</span>
-          <span className="text-gray-800 font-medium text-base text-right whitespace-nowrap ml-2 flex-grow">{displayValue}</span>
-        </div>
-      </div>
-    );
-  };
+  const insuranceAmount = formData.insurance ? Math.round(selectedResult.price * 0.02) : 0;
+  const totalAmount = selectedResult.price + insuranceAmount;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 flex flex-col items-center font-inter">
-      <div className="w-full max-w-7xl bg-white rounded-2xl shadow-xl">
-        {/* Header */}
-        <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Complete Your Truck Booking</h1>
-          <button
-            onClick={() => navigate(-1)} // Go back to previous page (results)
-            className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105"
-          >
-            <FaArrowLeft className="mr-2" /> Back to Results
+    <div className="min-h-screen bg-[#FDFDFD] text-slate-700 font-inter">
+      {/* Navigation */}
+      <nav className="bg-white border-b sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <button className="flex items-center text-slate-500 hover:text-[#3B82F6] font-medium transition-colors group">
+            <span className="group-hover:-translate-x-1 transition-transform"><Icons.ArrowLeft /></span>
+            <span className="ml-2">Back to Rates</span>
           </button>
-        </div>
-
-        {/* Step Indicators */}
-        <div className="flex justify-around mb-8 text-center p-6 border-b border-gray-200 bg-white">
-          <div className="flex-1 text-gray-400"> {/* Previous step is now gray */}
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
-              <FaCheckCircle className="text-green-500" /> {/* Show check for completed step */}
-            </div>
-            Search Results
-          </div>
-          <div className="flex-1 text-blue-600 font-bold">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-blue-600 bg-blue-100">
-              2
-            </div>
-            Contact & KYC Details
-          </div>
-          <div className="flex-1 text-gray-400">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
-              3
-            </div>
-            Payment & Confirmation
+          <div className="flex items-center gap-8 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
+            <span className={`${brandText} border-b-2 border-[#3B82F6] pb-1`}>01 Details</span>
+            <span>02 Payment</span>
+            <span>03 Confirm</span>
           </div>
         </div>
+      </nav>
 
-        {/* Main Content Area: Two Columns (Details and Summary) */}
-        <div className="flex flex-col md:flex-row gap-6 p-4 sm:p-6">
-          {/* Left Column: Booking Flow Content */}
-          <div className="w-full md:flex-grow">
-            {/* Selected Truck Service Summary */}
-            <div className="bg-blue-50 p-6 rounded-xl border border-blue-200 shadow-md mb-6">
-              <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
-                <FaTruck className="text-blue-600 mr-3 text-2xl" /> Selected Truck Service
+      <main className="max-w-6xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          {/* Form Fields */}
+          <div className="lg:col-span-7 space-y-12">
+            <section>
+              <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
+                <span className={`w-7 h-7 ${brandColor} text-white rounded-md flex items-center justify-center text-xs`}>1</span>
+                Consignor details
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 text-gray-700">
-                <div><strong>Service Name:</strong> {selectedResult.serviceProvider}</div> {/* Use serviceProvider */}
-                <div><strong>Carrier:</strong> {selectedResult.serviceProvider}</div> {/* Use serviceProvider */}
-                <div><strong>Origin Pincode:</strong> {selectedResult.pickupPincode}</div> {/* Use pickupPincode */}
-                <div><strong>Destination Pincode:</strong> {selectedResult.dropoffPincode}</div> {/* Use dropoffPincode */}
-                <div><strong>Pickup Date:</strong> {selectedResult.pickupDate}</div> {/* Use pickupDate */}
-                <div><strong>Transit Duration:</strong> {selectedResult.transitTime}</div>
-                <div><strong>Load Type:</strong> {selectedResult.loadType}</div>
-                {selectedResult.truckType && <div><strong>Truck Body Type:</strong> {selectedResult.truckType}</div>}
-                {selectedResult.vehicleType && <div><strong>Specific Vehicle Type:</strong> {selectedResult.vehicleType}</div>}
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <InputGroup label="Contact name" value={formData.name} onChange={(v: any) => setFormData({...formData, name: v})} placeholder="e.g. Rahul Sharma" required />
+                <InputGroup label="Phone number" value={formData.phone} onChange={(v: any) => setFormData({...formData, phone: v})} placeholder="+91" required />
                 <div className="md:col-span-2">
-                  <strong>Features:</strong> {selectedResult.features.join(', ') || 'N/A'}
+                  <InputGroup label="Email address" value={formData.email} onChange={(v: any) => setFormData({...formData, email: v})} placeholder="rahul@company.com" required />
                 </div>
-                <div className="md:col-span-2 text-2xl font-bold text-blue-700 flex items-center mt-2">
-                  <FaRupeeSign className="text-xl mr-1" />Price: {selectedResult.price.toLocaleString('en-IN')}
-                </div>
+                <InputGroup label="Company name" value={formData.company} onChange={(v: any) => setFormData({...formData, company: v})} placeholder="Business name" required={false} />
+                <InputGroup label="GST number" value={formData.gstin} onChange={(v: any) => setFormData({...formData, gstin: v})} placeholder="Optional" required={false} />
               </div>
-            </div>
+            </section>
 
-            {/* Original Quote Details Section */}
-            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-md mb-8">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                <FaClipboardList className="text-gray-600 mr-3 text-2xl" /> Original Quote Details
+            <section>
+              <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
+                <span className={`w-7 h-7 ${brandColor} text-white rounded-md flex items-center justify-center text-xs`}>2</span>
+                KYC verification
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2 text-gray-700">
-                <DetailRow label="Pickup Pincode" value={originalFormData.pickupPincode} icon={FaMapMarkerAlt} />
-                <DetailRow label="Drop Off Pincode" value={originalFormData.dropoffPincode} icon={FaMapMarkerAlt} />
-                <DetailRow label="Pickup Date" value={originalFormData.readyDate} icon={FaCalendarAlt} />
-                <DetailRow label="Load Type" value={originalFormData.loadType} icon={FaTruck} />
-                <DetailRow label="Number of Trucks" value={originalFormData.numberOfTrucks} icon={FaTruck} />
-                <DetailRow label="Cargo Type" value={originalFormData.cargoType} icon={FaBoxes} /> {/* Corrected FaBox to FaBoxes */}
-                <DetailRow label="Gross Weight" value={originalFormData.totalWeight} icon={FaWeight} format={(val) => `${val} Kgs`} />
-                <DetailRow label="No. of Pieces" value={originalFormData.numberOfPieces} icon={FaBoxes} />
-                <DetailRow label="Dimensions" value={originalFormData.dimensions} icon={FaRulerCombined} />
-                <DetailRow label="Product Declared Value" value={originalFormData.cargoValue} icon={FaDollarSign} format={(val) => `INR ${val ? val.toLocaleString('en-IN') : 'N/A'}`} />
-                <DetailRow label="Truck Body Type" value={originalFormData.truckType} icon={FaTruck} />
-                <DetailRow label="Specific Vehicle Type" value={originalFormData.vehicleType} icon={FaTruck} />
-                <DetailRow label="Hazardous Cargo" value={originalFormData.hazardousCargo} icon={FaInfoCircle} />
-                <DetailRow label="Insurance Required" value={originalFormData.insuranceRequired} icon={FaShieldAlt} />
-                <DetailRow label="Special Instructions" value={originalFormData.specialInstructions} icon={FaFileAlt} span={3} />
-              </div>
-            </div>
-
-            {/* Contact & KYC Details Section */}
-            <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-              <FaUser className="text-blue-500 mr-3 text-3xl" /> Contact & KYC Details
-            </h3>
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 mb-8">
-              <p className="text-gray-600 mb-4">Please provide the contact and KYC details for this cargo booking.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-                <div>
-                  <label htmlFor="contactPersonName" className="block text-sm font-medium text-gray-700 mb-1">Contact Person Name<span className="text-red-500">*</span></label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaUser className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      id="contactPersonName"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md p-2"
-                      placeholder="Full Name"
-                      value={contactPersonName}
-                      onChange={(e) => setContactPersonName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">Email Address<span className="text-red-500">*</span></label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaEnvelope className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="email"
-                      id="contactEmail"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md p-2"
-                      placeholder="your.email@example.com"
-                      value={contactEmail}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number<span className="text-red-500">*</span></label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaPhone className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="tel"
-                      id="contactPhone"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md p-2"
-                      placeholder="+91-XXXXXXXXXX"
-                      value={contactPhone}
-                      onChange={(e) => setContactPhone(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name (Optional)</label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaBuilding className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      id="companyName"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md p-2"
-                      placeholder="Your Company Name"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="gstin" className="block text-sm font-medium text-gray-700 mb-1">GST Number (Optional)</label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaClipboardList className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      id="gstin"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md p-2"
-                      placeholder="GSTIN (e.g., 22AAAAA0000A1Z5)"
-                      value={gstin}
-                      onChange={(e) => setGstin(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="kycDocType" className="block text-sm font-medium text-gray-700 mb-1">KYC Document Type (Optional)</label>
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FaFileAlt className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <select
-                      id="kycDocType"
-                      className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md p-2"
-                      value={kycDocType}
-                      onChange={(e) => setKycDocType(e.target.value)}
-                    >
-                      {kycDocOptions.map(option => (
-                        <option key={option} value={option === 'Select Document Type' ? '' : option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Special Instructions for Booking */}
-              <div className="mt-4">
-                <label htmlFor="bookingSpecialInstructions" className="block text-sm font-medium text-gray-700 mb-1">Special Instructions for Booking (Optional)</label>
-                <textarea
-                  id="bookingSpecialInstructions"
-                  rows={3}
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md p-2"
-                  placeholder="Any specific delivery instructions, handling notes, etc."
-                  value={specialInstructions}
-                  onChange={(e) => setSpecialInstructions(e.target.value)}
-                ></textarea>
-              </div>
-
-              {/* Add-on Options: Insurance */}
-              <div className="mt-6 border-t pt-4 border-gray-200">
-                <h4 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
-                  <FaShieldAlt className="mr-2 text-blue-500" /> Add-on Options
-                </h4>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="insuranceAddon"
-                    checked={insuranceRequired}
-                    onChange={(e) => setInsuranceRequired(e.target.checked)}
-                    className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="insuranceAddon" className="ml-3 block text-base text-gray-900">
-                    Cargo Insurance Required (Optional)
-                  </label>
-                </div>
-                <p className="text-sm text-gray-500 mt-1 ml-8">
-                  Protect your cargo against loss or damage during transit.
-                </p>
-              </div>
-            </div>
-
-            {/* Final Confirmation Button */}
-            <div className="flex justify-end mt-8">
-              <button
-                onClick={handleFinalConfirmBooking}
-                className="flex items-center px-8 py-4 bg-green-600 text-white font-bold text-xl rounded-xl shadow-lg
-                           hover:bg-green-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center transition-all cursor-pointer 
+                  ${kycFile ? 'bg-green-50/30 border-green-200' : 'bg-slate-50/50 border-slate-200 hover:border-[#3B82F6]'}`}
               >
-                Confirm Booking & Proceed to Payment <FaArrowRight className="ml-3" />
+                <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => setKycFile(e.target.files?.[0] || null)} />
+                <div className={`mb-3 ${kycFile ? 'text-green-500' : brandText}`}>
+                   {kycFile ? <Icons.CheckCircle /> : <Icons.CloudUpload />}
+                </div>
+                <p className="text-sm font-semibold text-slate-700">{kycFile ? kycFile.name : "Upload business certificate (GST/Trade)"}</p>
+                <p className="text-[11px] text-slate-400 mt-1 uppercase tracking-tight">PDF or Image up to 5MB</p>
+              </div>
+            </section>
+
+            {/* Refined Insurance Toggle */}
+            <section className="bg-slate-50/80 p-5 rounded-xl border border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <input 
+                  type="checkbox" 
+                  checked={formData.insurance} 
+                  onChange={() => setFormData({...formData, insurance: !formData.insurance})}
+                  className="w-4 h-4 rounded border-slate-300 text-[#3B82F6] focus:ring-[#3B82F6]" 
+                />
+                <div>
+                  <p className="text-sm font-bold text-slate-800">Add transit insurance</p>
+                  <p className="text-xs text-slate-500">Protection against theft, damage & transit loss</p>
+                </div>
+              </div>
+              <p className={`text-sm font-bold ${brandText}`}>+ ₹{insuranceAmount.toLocaleString()}</p>
+            </section>
+          </div>
+
+          {/* Sticky Summary Card */}
+          <div className="lg:col-span-5">
+            <div className="sticky top-28 bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Booking summary</h3>
+              
+              <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-50">
+                <div className="text-center">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Origin</p>
+                  <p className="text-sm font-bold text-slate-800">{selectedResult.pickupPincode}</p>
+                </div>
+                <div className="flex-1 flex flex-col items-center opacity-20">
+                  <Icons.Truck />
+                  <div className="w-full h-px bg-slate-400 mt-2"></div>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Dropoff</p>
+                  <p className="text-sm font-bold text-slate-800">{selectedResult.dropoffPincode}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <SummaryRow label="Carrier" value={selectedResult.serviceProvider} />
+                <SummaryRow label="Vehicle" value={selectedResult.vehicleType} />
+                <div className="pt-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-500">Base freight</span>
+                    <span className="font-semibold text-slate-800">₹{selectedResult.price.toLocaleString()}</span>
+                  </div>
+                  {formData.insurance && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-500">Insurance</span>
+                      <span className="font-semibold text-slate-800">₹{insuranceAmount.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 mb-8">
+                <div className="flex justify-between items-end">
+                  <span className="text-sm font-bold text-slate-800">Total payable</span>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-slate-900 leading-none">₹{totalAmount.toLocaleString()}</p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-1">Inclusive of all taxes</p>
+                  </div>
+                </div>
+              </div>
+
+              <button className={`w-full ${brandColor} hover:opacity-90 text-white py-4 rounded-xl font-bold text-md transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 group`}>
+                Proceed to payment 
+                <span className="group-hover:translate-x-1 transition-transform"><Icons.ArrowRight /></span>
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
+
+const SummaryRow = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex justify-between items-center text-xs">
+    <span className="text-slate-400 font-semibold uppercase tracking-wider">{label}</span>
+    <span className="font-bold text-slate-700">{value}</span>
+  </div>
+);
+
+const InputGroup = ({ label, value, onChange, placeholder, required }: any) => (
+  <div className="flex flex-col gap-2">
+    <label className="text-xs font-bold text-slate-500 ml-0.5">
+      {label} {required && <span className="text-red-400">*</span>}
+    </label>
+    <input 
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/5 focus:border-[#3B82F6] transition-all"
+    />
+  </div>
+);
 
 export default TruckBookingDetailsPage;
