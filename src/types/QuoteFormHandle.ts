@@ -229,8 +229,8 @@ export type AllFormData =
 // ===========================================
 // 4. Imperative Handle
 // ===========================================
-export interface QuoteFormHandle {
-  submit: () => AllFormData | null;
+  export interface QuoteFormHandle {
+  submit: () => AllFormData | null | Promise<AllFormData | null>;
   reset: () => void;
 }
 

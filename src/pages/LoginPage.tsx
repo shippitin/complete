@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/loginUser';
+import { authAPI } from '../services/api';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -8,15 +8,25 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     setError('');
+    setLoading(true);
     try {
-      await loginUser(email, password);
-      navigate('/'); // ✅ redirect to homepage after login
+      const response = await authAPI.login({ email, password });
+      const { token, user } = response.data.data;
+      
+      // Save token and user to localStorage
+      localStorage.setItem('shippitin_token', token);
+      localStorage.setItem('shippitin_user', JSON.stringify(user));
+      
+      navigate('/');
     } catch (err: any) {
-      console.error('Login failed:', err.message);
-      setError(err.message || 'Login failed');
+      const message = err.response?.data?.message || 'Login failed';
+      setError(message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,13 +52,26 @@ const LoginPage = () => {
         />
 
         <button
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold disabled:opacity-50"
           onClick={handleLogin}
+          disabled={loading}
         >
-          Login
+          {loading ? 'Logging in...' : 'Login'}
         </button>
 
-        {error && <p className="mt-4 text-red-600 text-center">Firebase: Error ({error})</p>}
+        {error && (
+          <p className="mt-4 text-red-600 text-center">{error}</p>
+        )}
+
+        <p className="mt-4 text-center text-gray-600">
+          Don't have an account?{' '}
+          <span
+            className="text-blue-600 cursor-pointer hover:underline"
+            onClick={() => navigate('/signup')}
+          >
+            Sign up
+          </span>
+        </p>
       </div>
     </div>
   );

@@ -12,22 +12,34 @@ import {
   FaSignOutAlt,
   FaInfoCircle,
   FaHome,
-  FaTimes // Added FaTimes for mobile menu close icon
+  FaTimes
 } from "react-icons/fa";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../firebase/firebaseConfig";
 
 const Header: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State for mobile menu
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false); // State for profile dropdown
-  // Removed isCurrencyLangMenuOpen, selectedCurrency, selectedLanguage states as they are no longer needed
+  const [userName, setUserName] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
-  const location = useLocation(); // Hook to get current URL location
+  const location = useLocation();
 
   useEffect(() => {
+    // Check localStorage for backend token
+    const token = localStorage.getItem('shippitin_token');
+    const userStr = localStorage.getItem('shippitin_user');
+    if (token) {
+      setIsLoggedIn(true);
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setUserName(user.full_name?.split(' ')[0] || 'User');
+      }
+    }
+
+    // Also keep Firebase auth for backward compatibility
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoggedIn(!!user);
+      if (user) setIsLoggedIn(true);
     });
     return () => unsubscribe();
   }, []);
@@ -35,23 +47,20 @@ const Header: React.FC = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      localStorage.removeItem("user");
-      window.location.reload(); // Keeping reload for full state reset as per previous pattern
+      localStorage.removeItem('shippitin_token');
+      localStorage.removeItem('shippitin_user');
+      setIsLoggedIn(false);
+      window.location.href = '/';
     } catch (error) {
       console.error("Error logging out:", error);
-      console.error("Failed to log out. Please try again.");
     }
   };
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
-
   const toggleProfileMenu = () => setIsProfileMenuOpen(!isProfileMenuOpen);
   const closeProfileMenu = () => setIsProfileMenuOpen(false);
 
-  // Removed toggleCurrencyLangMenu, closeCurrencyLangMenu, handleLanguageChange, handleCurrencyChange functions
-
-  // Helper function to determine if a NavLink should be active
   const isActiveLink = (path: string) => {
     return location.pathname.startsWith(path);
   };
@@ -118,25 +127,20 @@ const Header: React.FC = () => {
             </NavLink>
           </nav>
 
-          {/* Removed Language / Currency Selectors section */}
-          {/* <div className="hidden lg:flex items-center gap-2 relative">...</div> */}
-
           {/* Auth Button / Dropdown */}
           {isLoggedIn ? (
             <div className="relative group">
               <button
                 onClick={toggleProfileMenu}
-                // Changed text-blue-700 to text-gray-700 for the main button
                 className="flex items-center gap-2 bg-blue-50 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-blue-100 transition shadow-sm md:shadow-md ml-2 relative"
               >
-                <FaUser /> Hi Shippitin
+                <FaUser /> Hi {userName || 'Shippitin'}
                 <FaChevronDown className="ml-1 text-xs" />
               </button>
               {isProfileMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 text-sm origin-top-right animate-fade-in-down">
                   <Link
                     to="/profile"
-                    // Changed hover:text-blue-700 to hover:text-black for dropdown links
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors"
                     onClick={closeProfileMenu}
                   >
@@ -144,7 +148,6 @@ const Header: React.FC = () => {
                   </Link>
                   <Link
                     to="/dashboard"
-                    // Changed hover:text-blue-700 to hover:text-black for dropdown links
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors"
                     onClick={closeProfileMenu}
                   >
@@ -152,7 +155,6 @@ const Header: React.FC = () => {
                   </Link>
                   <Link
                     to="/my-wallet"
-                    // Changed hover:text-blue-700 to hover:text-black for dropdown links
                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors"
                     onClick={closeProfileMenu}
                   >
@@ -171,7 +173,6 @@ const Header: React.FC = () => {
           ) : (
             <Link
               to="/login"
-              // Changed text-blue-700 to text-gray-700 for the login button
               className="flex items-center gap-2 bg-blue-50 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-blue-100 transition shadow-sm md:shadow-md ml-2"
             >
               <FaUser /> Login / Sign Up
@@ -194,7 +195,6 @@ const Header: React.FC = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden fixed top-0 right-0 w-64 h-full bg-white shadow-lg p-4 z-50 transform transition-transform duration-300 ease-in-out">
           <div className="flex justify-between items-center mb-6">
-            {/* Kept text-blue-800 for "Menu" heading as it's a heading */}
             <h3 className="text-xl font-bold text-blue-800">Menu</h3>
             <button onClick={closeMobileMenu} className="text-gray-700 hover:text-blue-600">
               <FaTimes className="h-6 w-6" />
@@ -252,17 +252,16 @@ const Header: React.FC = () => {
               <FaQuestionCircle /> Support
             </NavLink>
 
-            {/* Mobile Profile/Auth Links */}
             <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
               {isLoggedIn ? (
                 <>
-                  <Link to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}> {/* Changed hover:text-blue-700 to hover:text-black */}
+                  <Link to="/profile" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}>
                     <FaUser /> My Profile
                   </Link>
-                  <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}> {/* Changed hover:text-blue-700 to hover:text-black */}
+                  <Link to="/dashboard" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}>
                     <FaHome /> My Dashboard
                   </Link>
-                  <Link to="/my-wallet" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}> {/* Changed hover:text-blue-700 to hover:text-black */}
+                  <Link to="/my-wallet" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}>
                     <FaGift /> My Wallet
                   </Link>
                   <button
@@ -273,14 +272,11 @@ const Header: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <Link to="/login" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}> {/* Changed hover:text-blue-700 to hover:text-black */}
+                <Link to="/login" className="flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-black hover:bg-blue-50" onClick={closeMobileMenu}>
                   <FaUser /> Login / Sign Up
                 </Link>
               )}
             </div>
-
-            {/* Removed Mobile Language/Currency Selectors */}
-            {/* <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">...</div> */}
           </nav>
         </div>
       )}

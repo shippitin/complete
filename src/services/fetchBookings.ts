@@ -1,25 +1,38 @@
 // src/services/fetchBookings.ts
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
 import type { QuoteFormData } from '../types/QuoteData';
 
 export const fetchBookingHistory = async (): Promise<QuoteFormData[]> => {
-  const snapshot = await getDocs(collection(db, 'quotes'));
-  return snapshot.docs.map((doc) => {
-    const raw = doc.data();
-    return {
-      bookingId: doc.id,
-      baseRate: raw.baseRate ?? 0,
-      weightCharge: raw.weightCharge ?? 0,
-      serviceCharge: raw.serviceCharge ?? 0,
-      insurance: raw.insurance ?? 0,
-      taxes: raw.taxes ?? 0,
-      total: raw.total ?? 0,
-      from: raw.from ?? '',
-      to: raw.to ?? '',
-      weight: raw.weight ?? 0,
-      date: raw.date ?? '',
-      mode: raw.mode ?? 'Road',
-    };
+  const token = localStorage.getItem('shippitin_token');
+  
+  if (!token) {
+    return [];
+  }
+
+  const response = await fetch('http://localhost:5000/api/bookings', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
   });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch bookings');
+  }
+
+  const result = await response.json();
+  
+  return result.data.map((booking: any) => ({
+    bookingId: booking.id,
+    bookingNumber: booking.booking_number,
+    baseRate: 0,
+    weightCharge: 0,
+    serviceCharge: 0,
+    insurance: 0,
+    taxes: 0,
+    total: booking.estimated_price ?? 0,
+    from: booking.origin ?? '',
+    to: booking.destination ?? '',
+    weight: booking.weight ?? 0,
+    date: booking.booking_date ?? '',
+    mode: booking.service_type ?? 'Rail',
+  }));
 };

@@ -117,6 +117,7 @@ const TrackPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const [copySuccess, setCopySuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const idFromUrl = searchParams.get('id');
@@ -126,11 +127,59 @@ const TrackPage: React.FC = () => {
     }
   }, [searchParams]);
 
-  const handleTrack = (idToTrack: string = trackingId) => {
+  const handleTrack = async (idToTrack: string = trackingId) => {
     setError(null);
     setShipment(null);
     if (!idToTrack) return;
 
+    setLoading(true);
+
+    // First try real backend
+    try {
+      const response = await fetch(`http://localhost:5000/api/tracking/${idToTrack.trim()}`);
+      if (response.ok) {
+        const result = await response.json();
+        const booking = result.data;
+
+        // Map backend data to Shipment interface
+        const realShipment: Shipment = {
+          id: booking.booking_number,
+          carrier: 'CONCOR',
+          currentLocation: booking.tracking_events?.length > 0
+            ? booking.tracking_events[0].location
+            : booking.origin,
+          status: booking.status || 'Pending',
+          estimatedDelivery: booking.booking_date,
+          shipmentType: 'Rail',
+          path: [[20.5937, 78.9629], [28.6139, 77.2090]],
+          statusTimeline: booking.tracking_events?.length > 0
+            ? booking.tracking_events.map((event: any) => ({
+                date: new Date(event.timestamp).toLocaleDateString('en-IN'),
+                status: event.status,
+                location: event.location,
+              }))
+            : [{
+                date: new Date(booking.booking_date).toLocaleDateString('en-IN'),
+                status: 'Booked',
+                location: booking.origin,
+              }],
+          documents: [],
+          reliabilityScore: 90,
+          riskLevel: 'Low',
+          predictionMessage: `Shipment from ${booking.origin} to ${booking.destination}. Status: ${booking.status}.`,
+          co2Emissions: 12.5,
+          co2Saved: 85.0,
+        };
+
+        setShipment(realShipment);
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      // Backend not available, fall through to dummy data
+    }
+
+    // Fall back to dummy data
     const found = dummyShipments.find(
       (s) => s.id.trim().toUpperCase() === idToTrack.trim().toUpperCase()
     );
@@ -140,6 +189,8 @@ const TrackPage: React.FC = () => {
     } else {
       setError(`ID "${idToTrack}" not found. Try TRK001, AIR002, SEA003, or RAIL006.`);
     }
+
+    setLoading(false);
   };
 
   const getShareLink = () => `${window.location.origin}${window.location.pathname}?id=${shipment?.id}`;
@@ -179,8 +230,17 @@ const TrackPage: React.FC = () => {
               onChange={(e) => setTrackingId(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
             />
-            <button onClick={() => handleTrack()} className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center">
-              <FaSearch className="mr-2" /> Track
+            <button
+              onClick={() => handleTrack()}
+              disabled={loading}
+              className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center disabled:opacity-50"
+            >
+              {loading ? (
+                <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></span>
+              ) : (
+                <FaSearch className="mr-2" />
+              )}
+              {loading ? 'Searching...' : 'Track'}
             </button>
           </div>
           {error && <div className="p-4 bg-red-50 text-red-600 text-center font-medium border-t">{error}</div>}
@@ -209,7 +269,6 @@ const TrackPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Rest of the UI (Status, AI, Sustainability, Map) remains the same as previous version... */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
@@ -240,7 +299,6 @@ const TrackPage: React.FC = () => {
               </div>
             </div>
 
-            {/* AI and Map Sections as per previous high-quality build... */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
                 <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center"><FaRobot className="mr-3 text-blue-600" /> AI Insights</h3>
@@ -262,15 +320,19 @@ const TrackPage: React.FC = () => {
                   <span className="text-[9px] font-bold bg-green-100 text-green-700 px-3 py-1 rounded-full"><FaLock className="inline mr-1" /> SECURED</span>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                  {shipment.documents.map((doc, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                      <div className="flex items-center">
-                        <FaFilePdf className="text-red-500 mr-3" />
-                        <span className="text-xs font-bold text-gray-700">{doc.name}</span>
+                  {shipment.documents.length > 0 ? (
+                    shipment.documents.map((doc, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div className="flex items-center">
+                          <FaFilePdf className="text-red-500 mr-3" />
+                          <span className="text-xs font-bold text-gray-700">{doc.name}</span>
+                        </div>
+                        <FaDownload className="text-gray-400 hover:text-blue-600 cursor-pointer" />
                       </div>
-                      <FaDownload className="text-gray-400 hover:text-blue-600 cursor-pointer" />
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No documents available yet.</p>
+                  )}
                 </div>
               </div>
             </div>
