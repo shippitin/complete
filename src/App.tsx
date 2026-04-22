@@ -7,6 +7,7 @@ import { auth } from './firebase/firebaseConfig';
 // Layout Components
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Pages
 import HomeLandingPage from './pages/HomeLandingPage';
@@ -46,7 +47,7 @@ import ParcelDetailPage from './pages/ParcelDetailPage';
 
 // Quote Form Imports
 import RailQuoteForm from './components/QuoteForms/RailQuoteForm';
-import PortServicesQuoteForm from './components/QuoteForms/PortServicesQuoteForm'; // ADDED
+import PortServicesQuoteForm from './components/QuoteForms/PortServicesQuoteForm';
 import InsuranceQuoteForm from './components/QuoteForms/InsuranceQuoteForm';
 import FirstLastMileQuoteForm from './components/QuoteForms/FirstLastMileQuoteForm';
 
@@ -61,7 +62,7 @@ import ParcelResultsPage from './pages/ParcelResultsPage';
 import TrainResultsPage from './pages/TrainResultsPage';
 import InsuranceResultsPage from './pages/InsuranceResultsPage';
 import FirstLastMileResultsPage from './pages/FirstLastMileResultsPage';
-import PortResultsPage from './pages/PortResultsPage'; // ADDED (You will create this page)
+import PortResultsPage from './pages/PortResultsPage';
 
 // Booking Details Pages
 import AirBookingDetailsPage from './pages/AirBookingDetailsPage';
@@ -92,10 +93,10 @@ const InsuranceQuoteFormPageWrapper: React.FC = () => {
   const insuranceFormRef = useRef<QuoteFormHandle>(null);
   const navigate = useNavigate();
 
-  const handleSubmitInsurance = () => {
+  const handleSubmitInsurance = async () => {
     if (insuranceFormRef.current) {
-      const data = insuranceFormRef.current.submit();
-      if (data && data.bookingType === 'Insurance') {
+      const data = await insuranceFormRef.current.submit();
+      if (data && (data as any).bookingType === 'Insurance') {
         navigate('/insurance-results', { state: { formData: data } });
       }
     }
@@ -123,7 +124,7 @@ const FirstLastMileQuoteFormPageWrapper: React.FC = () => {
   const handleSubmitFirstLastMile = () => {
     if (firstLastMileFormRef.current) {
       const data = firstLastMileFormRef.current.submit();
-      if (data && data.bookingType === 'First/Last Mile') {
+      if (data && (data as any).bookingType === 'First/Last Mile') {
         navigate('/first-last-mile-results', { state: { formData: data } });
       }
     }
@@ -176,7 +177,7 @@ const AppContent: React.FC = () => {
       case 'Air': targetPath = '/air-booking'; break;
       case 'Sea': targetPath = '/sea-booking'; break;
       case 'Rail': targetPath = '/train-booking'; break;
-      case 'Port Services': targetPath = '/port-booking'; break; // ADDED
+      case 'Port Services': targetPath = '/port-booking'; break;
       case 'Parcel': targetPath = '/parcel-booking'; break;
       case 'Customs': targetPath = '/customs-booking'; break;
       case 'Insurance': targetPath = '/insurance-booking'; break;
@@ -206,8 +207,7 @@ const AppContent: React.FC = () => {
       <main className="flex-grow w-full">
         <Routes>
           <Route path="/" element={<HomeLandingPage prefillData={voicePrefillData} />} />
-          <Route path="/my-wallet" element={<div className="max-w-7xl mx-auto px-4 py-10"><MyWalletPage /></div>} />
-          
+
           {/* General Pages */}
           <Route path="/aboutus" element={<AboutUsPage />} />
           <Route path="/investors" element={<div className="max-w-7xl mx-auto px-4 py-10"><InvestorLandingPage /></div>} />
@@ -241,14 +241,14 @@ const AppContent: React.FC = () => {
           <Route path="/door-to-door-booking" element={<div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Door to Door" prefillData={voicePrefillData} /></div>} />
           <Route path="/lcl-booking" element={<div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="LCL" prefillData={voicePrefillData} /></div>} />
           <Route path="/customs-booking" element={<div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="Customs" prefillData={voicePrefillData} /></div>} />
-          
+
           {/* Rail Flow */}
           <Route path="/train-booking" element={<div className="max-w-4xl mx-auto py-10"><RailQuoteForm initialActiveService="container" prefillData={voicePrefillData} /></div>} />
           <Route path="/train-results" element={<TrainResultsPage />} />
           <Route path="/train-service-details" element={<RailServiceDetailsPage />} />
           <Route path="/rail-booking-confirmation" element={<RailBookingConfirmationPage />} />
 
-          {/* Port Services Flow - ADDED */}
+          {/* Port Services Flow */}
           <Route path="/port-booking" element={<div className="max-w-4xl mx-auto py-10"><PortServicesQuoteForm /></div>} />
           <Route path="/port-results" element={<PortResultsPage />} />
 
@@ -275,14 +275,17 @@ const AppContent: React.FC = () => {
           <Route path="/customs-results" element={<CustomsResultsPage />} />
           <Route path="/customs-booking-details" element={<CustomsBookingDetailsPage />} />
 
-          {/* User & Auth */}
-          <Route path="/booking-confirmation" element={<div className="max-w-7xl mx-auto px-4 py-10"><BookingConfirmationPage /></div>} />
-          <Route path="/my-bookings" element={<div className="max-w-7xl mx-auto px-4 py-10"><BookingHistoryPage /></div>} />
-          <Route path="/booking-summary" element={<div className="max-w-7xl mx-auto px-4 py-10"><BookingSummaryPage /></div>} />
-          <Route path="/profile" element={<div className="max-w-7xl mx-auto px-4 py-10"><ProfilePage /></div>} />
-          <Route path="/dashboard" element={<div className="max-w-7xl mx-auto px-4 py-10"><DashboardPage /></div>} />
+          {/* Auth Pages — Public */}
           <Route path="/login" element={<div className="max-w-7xl mx-auto px-4 py-10"><LoginPage /></div>} />
           <Route path="/signup" element={<div className="max-w-7xl mx-auto px-4 py-10"><SignupPage /></div>} />
+
+          {/* Protected Pages — Login Required */}
+          <Route path="/my-wallet" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><MyWalletPage /></div></ProtectedRoute>} />
+          <Route path="/booking-confirmation" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingConfirmationPage /></div></ProtectedRoute>} />
+          <Route path="/my-bookings" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingHistoryPage /></div></ProtectedRoute>} />
+          <Route path="/booking-summary" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingSummaryPage /></div></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><ProfilePage /></div></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><DashboardPage /></div></ProtectedRoute>} />
 
           <Route path="*" element={<div className="max-w-7xl mx-auto px-4 py-20 text-center text-3xl font-semibold text-gray-700">404 - Page Not Found</div>} />
         </Routes>
