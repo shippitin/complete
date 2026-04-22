@@ -1,68 +1,104 @@
 // src/components/Profile/ResetPassword.tsx
 import React, { useState } from 'react';
-import styles from '../../pages/ProfilePage.module.css'; // Assuming common input styles
+import { userAPI } from '../../services/api';
+
+const inputClass = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
 
 const ResetPassword: React.FC = () => {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccessMessage('');
+    setErrorMessage('');
+
     if (newPassword !== confirmPassword) {
-      alert('New password and confirm password do not match.');
+      setErrorMessage('New password and confirm password do not match.');
       return;
     }
-    console.log('Reset Password Attempt:', { oldPassword, newPassword });
-    alert('Password reset initiated. Check your email for confirmation.');
-    // Implement actual password reset logic
+
+    if (newPassword.length < 6) {
+      setErrorMessage('New password must be at least 6 characters.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await userAPI.changePassword({
+        current_password: oldPassword,
+        new_password: newPassword,
+      });
+      setSuccessMessage('✅ Password changed successfully!');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error: any) {
+      setErrorMessage(error.response?.data?.message || 'Failed to change password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 sm:p-8">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Reset Password</h1>
+
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-md text-sm mb-4">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md text-sm mb-4">
+          {errorMessage}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
         <div>
-          <label htmlFor="oldPassword" className="block text-gray-600 text-sm mb-1">Current Password</label>
+          <label className="block text-gray-600 text-sm mb-1">Current Password</label>
           <input
-            id="oldPassword"
             type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
-            className={styles.input}
+            className={inputClass}
             placeholder="Enter current password"
             required
           />
         </div>
         <div>
-          <label htmlFor="newPassword" className="block text-gray-600 text-sm mb-1">New Password</label>
+          <label className="block text-gray-600 text-sm mb-1">New Password</label>
           <input
-            id="newPassword"
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className={styles.input}
-            placeholder="Enter new password"
+            className={inputClass}
+            placeholder="Enter new password (min 6 characters)"
             required
           />
         </div>
         <div>
-          <label htmlFor="confirmPassword" className="block text-gray-600 text-sm mb-1">Confirm New Password</label>
+          <label className="block text-gray-600 text-sm mb-1">Confirm New Password</label>
           <input
-            id="confirmPassword"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className={styles.input}
+            className={inputClass}
             placeholder="Confirm new password"
             required
           />
         </div>
         <button
           type="submit"
-          className="bg-blue-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-blue-700 transition-colors shadow"
+          disabled={loading}
+          className="bg-blue-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-blue-700 transition-colors shadow disabled:opacity-50"
         >
-          Change Password
+          {loading ? 'Changing...' : 'Change Password'}
         </button>
       </form>
     </div>
