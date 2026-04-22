@@ -15,7 +15,6 @@ const BookingConfirmationPage: React.FC = () => {
   useEffect(() => {
     let details = location.state?.bookingDetails;
     
-    // Recovery logic: if user refreshes, try to get data from session storage
     if (!details) {
       const storedDetails = sessionStorage.getItem('lastBookingDetails');
       if (storedDetails) details = JSON.parse(storedDetails);
@@ -24,6 +23,36 @@ const BookingConfirmationPage: React.FC = () => {
     if (details) {
       setBookingDetails(details);
       sessionStorage.setItem('lastBookingDetails', JSON.stringify(details));
+      
+      // Save booking to backend
+      const saveBooking = async () => {
+        try {
+          const token = localStorage.getItem('shippitin_token');
+          if (token && details.bookingId) {
+            await fetch('http://localhost:5000/api/bookings', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                booking_number: details.bookingId,
+                service_type: details.selectedResult?.mode || 'General',
+                origin: details.selectedResult?.pickupPincode || 'Origin',
+                destination: details.selectedResult?.dropoffPincode || 'Destination',
+                cargo_type: details.originalFormData?.loadType || 'General',
+                weight: details.originalFormData?.weight || 0,
+                booking_date: new Date().toISOString().split('T')[0],
+                estimated_price: details.finalAmount || 0,
+                status: 'confirmed',
+              }),
+            });
+          }
+        } catch (error) {
+          console.error('Failed to save booking:', error);
+        }
+      };
+      saveBooking();
     }
     setLoading(false);
   }, [location.state]);
@@ -31,9 +60,6 @@ const BookingConfirmationPage: React.FC = () => {
   if (loading) return <LoadingState />;
   if (!bookingDetails) return <ErrorState navigate={navigate} />;
 
-  // --- SAFETY DESTRUCTURING ---
-  // We use "= {}" and default values to prevent the app from crashing 
-  // if the previous page didn't send a specific field.
   const { 
     selectedResult = {}, 
     kycDetails = {}, 
@@ -44,7 +70,6 @@ const BookingConfirmationPage: React.FC = () => {
     finalAmount = 0, 
   } = bookingDetails;
 
-  // Determine which icon to show based on the transport mode
   const mode = selectedResult.mode?.toLowerCase() || 'truck'; 
   
   const theme = {
@@ -137,10 +162,16 @@ const BookingConfirmationPage: React.FC = () => {
               <FaHome /> Back to Home
             </button>
             <button 
-              onClick={() => navigate('/track')}
+              onClick={() => navigate('/my-bookings')}
               className="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black shadow-xl shadow-blue-900/40 transition-all flex items-center justify-center gap-2"
             >
-              Track Live Shipment <FaHistory />
+              My Bookings <FaHistory />
+            </button>
+            <button 
+              onClick={() => navigate('/track')}
+              className="flex-1 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black shadow-xl transition-all flex items-center justify-center gap-2"
+            >
+              Track Shipment <FaHistory />
             </button>
           </div>
         </div>
@@ -158,8 +189,6 @@ const BookingConfirmationPage: React.FC = () => {
     </div>
   );
 };
-
-// --- SUB-COMPONENTS ---
 
 const SummaryRow = ({ label, value }: { label: string, value: string }) => (
   <div className="flex justify-between items-start gap-4">
