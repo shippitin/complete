@@ -166,5 +166,22 @@ export const parcelAPI = {
   book: (data: any) => api.post('/quotes/parcel/book', data),
   track: (awbNumber: string) => api.get(`/quotes/parcel/track/${awbNumber}`),
 };
+// ============================================
+// PAYMENTS — RAZORPAY
+// ============================================
+export const paymentAPI = {
+  createOrder: (data: { amount: number; bookingId: string; currency?: string }) =>
+    api.post('/payments/create-order', data),
+  verify: (data: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+    bookingId: string;
+    amount: number;
+  }) => api.post('/payments/verify', data),
+  refund: (data: { paymentId: string; amount: number; bookingId: string }) =>
+    api.post('/payments/refund', data),
+  getStatus: (bookingId: string) => api.get(`/payments/status/${bookingId}`),
+};
 
 export default api;
