@@ -1,10 +1,10 @@
 // src/pages/SeaBookingDetailsPage.tsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaUser, FaBuilding, FaIdCard, FaEnvelope, FaPhone, FaCommentDots, FaSave, FaArrowLeft, FaInfoCircle } from 'react-icons/fa'; // Added FaShip icon
-import type { AllFormData } from '../types/QuoteFormHandle'; // Import AllFormData
+import { FaUser, FaBuilding, FaIdCard, FaEnvelope, FaPhone, FaCommentDots, FaSave, FaArrowLeft, FaInfoCircle } from 'react-icons/fa';
+import type { AllFormData } from '../types/QuoteFormHandle';
+import { bookingAPI } from '../services/api';
 
-// Define the structure for a Sea service result, matching what's passed from SeaResultsPage
 interface SeaServiceResult {
   id: string;
   serviceName: string;
@@ -19,41 +19,27 @@ interface SeaServiceResult {
   status: 'Available' | 'Limited' | 'Full';
 }
 
-interface BookingDetailsPageProps {
-  // Props will be passed via location.state
-}
-
-const SeaBookingDetailsPage: React.FC<BookingDetailsPageProps> = () => {
+const SeaBookingDetailsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Retrieve data passed from SeaResultsPage, now explicitly typed as SeaServiceResult
   const selectedResult = location.state?.selectedResult as SeaServiceResult | undefined;
   const originalFormData = location.state?.originalFormData as AllFormData | undefined;
 
-  // State for contact and KYC details
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [gstin, setGstin] = useState('');
-  const [kycDocType, setKycDocType] = useState('Passport'); // Default KYC doc type
+  const [kycDocType, setKycDocType] = useState('Passport');
   const [specialInstructions, setSpecialInstructions] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Options for KYC Document Type
-  const kycDocOptions = [
-    'Passport',
-    'Aadhaar Card',
-    'Driving License',
-    'PAN Card',
-    'Other'
-  ];
+  const kycDocOptions = ['Passport', 'Aadhaar Card', 'Driving License', 'PAN Card', 'Other'];
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
     if (!fullName || !email || !phone) {
       alert('Please fill in your Full Name, Email, and Phone Number.');
       return;
@@ -63,42 +49,61 @@ const SeaBookingDetailsPage: React.FC<BookingDetailsPageProps> = () => {
       return;
     }
 
-    // Construct the final booking details object to pass to confirmation page
+    setLoading(true);
+
+    const bookingId = `SEA-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+
+    try {
+      // Save booking to backend
+      await bookingAPI.create({
+        booking_number: bookingId,
+        service_type: 'Sea',
+        origin: selectedResult.originPort,
+        destination: selectedResult.destinationPort,
+        cargo_type: (originalFormData as any).cargoType || 'General',
+        weight: (originalFormData as any).weight || 0,
+        container_type: selectedResult.containerSize,
+        booking_date: new Date().toISOString().split('T')[0],
+        estimated_price: selectedResult.price,
+        special_instructions: specialInstructions,
+        status: 'confirmed',
+      });
+    } catch (error) {
+      console.error('Failed to save booking to backend:', error);
+      // Continue anyway — don't block the user
+    } finally {
+      setLoading(false);
+    }
+
     const bookingDetails = {
-      selectedResult: { // Map Sea result to a generic structure for confirmation page if needed, or directly pass it
+      selectedResult: {
         id: selectedResult.id,
         serviceName: selectedResult.serviceName,
-        originStation: selectedResult.originPort, // Use originPort from SeaServiceResult
-        destinationStation: selectedResult.destinationPort, // Use destinationPort from SeaServiceResult
-        departureTime: 'N/A', // Sea might not have fixed departure times
-        arrivalTime: 'N/A', // Sea might not have fixed arrival times
+        originStation: selectedResult.originPort,
+        destinationStation: selectedResult.destinationPort,
         transitTime: selectedResult.transitTime,
         price: selectedResult.price,
-        availableCapacity: selectedResult.containerSize, // Using container size as capacity indicator
         features: selectedResult.features,
-        operator: selectedResult.carrier, // Use carrier from SeaServiceResult
+        operator: selectedResult.carrier,
         status: selectedResult.status,
+        mode: 'sea',
       },
-      originalFormData: originalFormData,
-      contactDetails: {
-        fullName,
-        email,
-        phone,
+      originalFormData,
+      kycDetails: {
         companyName: companyName || 'N/A',
         gstin: gstin || 'N/A',
-        kycDocType: kycDocType || 'N/A',
-        specialInstructions: specialInstructions || 'N/A',
+        mobile: phone,
+        email,
       },
       bookingDate: new Date().toLocaleDateString('en-IN'),
       bookingTime: new Date().toLocaleTimeString('en-IN'),
-      bookingId: `SEA-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`,
+      bookingId,
+      finalAmount: selectedResult.price,
     };
 
-    // Navigate to confirmation page
     navigate('/booking-confirmation', { state: { bookingDetails } });
   };
 
-  // If no data is passed, redirect back or show an error
   if (!selectedResult || !originalFormData) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center justify-center">
@@ -120,40 +125,31 @@ const SeaBookingDetailsPage: React.FC<BookingDetailsPageProps> = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Header */}
         <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
           <h1 className="text-3xl font-bold">Sea Booking Details</h1>
           <button
-            onClick={() => navigate(-1)} // Go back to previous page (results)
+            onClick={() => navigate(-1)}
             className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-full text-sm font-semibold transition duration-200"
           >
             <FaArrowLeft className="mr-2" /> Back
           </button>
         </div>
 
-        {/* Step Indicators */}
         <div className="flex justify-around mb-8 text-center p-6 border-b border-gray-200 bg-white">
           <div className="flex-1 text-gray-400">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
-              1
-            </div>
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">1</div>
             Search Results
           </div>
           <div className="flex-1 text-blue-600 font-bold">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-blue-600 bg-blue-100">
-              2
-            </div>
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-blue-600 bg-blue-100">2</div>
             Booking Details
           </div>
           <div className="flex-1 text-gray-400">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
-              3
-            </div>
-            Payment & Confirmation
+            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">3</div>
+            Confirmation
           </div>
         </div>
 
-        {/* Booking Summary Card (Optional, but good for context) */}
         <div className="p-4 sm:p-6 border-b border-gray-200">
           <div className="bg-blue-50 p-6 rounded-xl border border-blue-200 shadow-md">
             <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
@@ -161,147 +157,92 @@ const SeaBookingDetailsPage: React.FC<BookingDetailsPageProps> = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-gray-700">
               <div><strong>Service:</strong> {selectedResult.serviceName} ({selectedResult.carrier})</div>
-              <div><strong>Route:</strong> {selectedResult.originPort} to {selectedResult.destinationPort}</div> {/* Corrected to originPort/destinationPort */}
-              <div><strong>Departure Date:</strong> {selectedResult.departureDate}</div> {/* Corrected to departureDate */}
+              <div><strong>Route:</strong> {selectedResult.originPort} → {selectedResult.destinationPort}</div>
+              <div><strong>Departure:</strong> {selectedResult.departureDate}</div>
               <div><strong>Transit Time:</strong> {selectedResult.transitTime}</div>
-              <div><strong>Container Size:</strong> {selectedResult.containerSize}</div> {/* Corrected to containerSize */}
+              <div><strong>Container:</strong> {selectedResult.containerSize}</div>
               <div><strong>Price:</strong> ₹{selectedResult.price.toLocaleString('en-IN')}</div>
             </div>
           </div>
         </div>
 
-        {/* Contact and KYC Form */}
         <form onSubmit={handleSubmit} className="p-4 sm:p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
             <FaUser className="mr-3 text-blue-600" /> Your Contact & KYC Details
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-8">
-            {/* Full Name */}
             <div className="flex flex-col">
-              <label htmlFor="fullName" className="text-sm font-medium text-gray-600 mb-1">Full Name <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-gray-600 mb-1">Full Name <span className="text-red-500">*</span></label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
                 <FaUser className="text-gray-400 mr-3" />
-                <input
-                  type="text"
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Your full name"
-                  className="flex-1 bg-transparent outline-none text-gray-800"
-                  required
-                />
+                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name" className="flex-1 bg-transparent outline-none text-gray-800" required />
               </div>
             </div>
 
-            {/* Email */}
             <div className="flex flex-col">
-              <label htmlFor="email" className="text-sm font-medium text-gray-600 mb-1">Email <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-gray-600 mb-1">Email <span className="text-red-500">*</span></label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
                 <FaEnvelope className="text-gray-400 mr-3" />
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your.email@example.com"
-                  className="flex-1 bg-transparent outline-none text-gray-800"
-                  required
-                />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="your.email@example.com" className="flex-1 bg-transparent outline-none text-gray-800" required />
               </div>
             </div>
 
-            {/* Phone */}
             <div className="flex flex-col">
-              <label htmlFor="phone" className="text-sm font-medium text-gray-600 mb-1">Phone Number <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-gray-600 mb-1">Phone Number <span className="text-red-500">*</span></label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
                 <FaPhone className="text-gray-400 mr-3" />
-                <input
-                  type="tel"
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g., +91 9876543210"
-                  className="flex-1 bg-transparent outline-none text-gray-800"
-                  required
-                />
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 9876543210" className="flex-1 bg-transparent outline-none text-gray-800" required />
               </div>
             </div>
 
-            {/* Company Name */}
             <div className="flex flex-col">
-              <label htmlFor="companyName" className="text-sm font-medium text-gray-600 mb-1">Company Name (Optional)</label>
+              <label className="text-sm font-medium text-gray-600 mb-1">Company Name (Optional)</label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
                 <FaBuilding className="text-gray-400 mr-3" />
-                <input
-                  type="text"
-                  id="companyName"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Your company name"
-                  className="flex-1 bg-transparent outline-none text-gray-800"
-                />
+                <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Your company name" className="flex-1 bg-transparent outline-none text-gray-800" />
               </div>
             </div>
 
-            {/* GSTIN */}
             <div className="flex flex-col">
-              <label htmlFor="gstin" className="text-sm font-medium text-gray-600 mb-1">GSTIN (Optional)</label>
+              <label className="text-sm font-medium text-gray-600 mb-1">GSTIN (Optional)</label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
                 <FaIdCard className="text-gray-400 mr-3" />
-                <input
-                  type="text"
-                  id="gstin"
-                  value={gstin}
-                  onChange={(e) => setGstin(e.target.value)}
-                  placeholder="e.g., 22AAAAA0000A1Z5"
-                  className="flex-1 bg-transparent outline-none text-gray-800"
-                />
+                <input type="text" value={gstin} onChange={e => setGstin(e.target.value)} placeholder="22AAAAA0000A1Z5" className="flex-1 bg-transparent outline-none text-gray-800" />
               </div>
             </div>
 
-            {/* KYC Document Type */}
             <div className="flex flex-col">
-              <label htmlFor="kycDocType" className="text-sm font-medium text-gray-600 mb-1">KYC Document Type (Optional)</label>
+              <label className="text-sm font-medium text-gray-600 mb-1">KYC Document Type</label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
                 <FaIdCard className="text-gray-400 mr-3" />
-                <select
-                  id="kycDocType"
-                  value={kycDocType}
-                  onChange={(e) => setKycDocType(e.target.value)}
-                  className="flex-1 bg-transparent outline-none text-gray-800"
-                >
-                  {kycDocOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
+                <select value={kycDocType} onChange={e => setKycDocType(e.target.value)} className="flex-1 bg-transparent outline-none text-gray-800">
+                  {kycDocOptions.map(option => <option key={option} value={option}>{option}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* Special Instructions */}
             <div className="flex flex-col md:col-span-2">
-              <label htmlFor="specialInstructions" className="text-sm font-medium text-gray-600 mb-1">Special Instructions (Optional)</label>
+              <label className="text-sm font-medium text-gray-600 mb-1">Special Instructions (Optional)</label>
               <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 bg-gray-50">
                 <FaCommentDots className="text-gray-400 mr-3" />
-                <textarea
-                  id="specialInstructions"
-                  value={specialInstructions}
-                  onChange={(e) => setSpecialInstructions(e.target.value)}
-                  placeholder="Any special handling instructions or notes for your shipment."
-                  rows={3}
-                  className="flex-1 bg-transparent outline-none text-gray-800 resize-y"
-                />
+                <textarea value={specialInstructions} onChange={e => setSpecialInstructions(e.target.value)} placeholder="Any special handling instructions." rows={3} className="flex-1 bg-transparent outline-none text-gray-800 resize-y" />
               </div>
             </div>
           </div>
 
-          {/* Submit Button */}
           <div className="text-center mt-6">
             <button
               type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 flex items-center justify-center mx-auto"
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 flex items-center justify-center mx-auto disabled:opacity-50"
             >
-              <FaSave className="mr-2" /> Confirm & Proceed
+              {loading ? (
+                <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></span>
+              ) : (
+                <FaSave className="mr-2" />
+              )}
+              {loading ? 'Saving...' : 'Confirm & Proceed'}
             </button>
           </div>
         </form>

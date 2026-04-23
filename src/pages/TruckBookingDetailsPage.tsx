@@ -1,14 +1,14 @@
 import React, { useState, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { bookingAPI } from '../services/api';
 
-/**
- * REFINED INTERFACES
- */
 interface SelectedResult {
   price: number;
   pickupPincode: string;
   dropoffPincode: string;
   serviceProvider: string;
   vehicleType: string;
+  mode?: string;
 }
 
 interface FormData {
@@ -21,9 +21,6 @@ interface FormData {
   insurance: boolean;
 }
 
-/**
- * BRAND CONSISTENT ICONS
- */
 const Icons = {
   ArrowLeft: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>,
   ArrowRight: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>,
@@ -33,17 +30,21 @@ const Icons = {
 };
 
 const TruckBookingDetailsPage: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const brandColor = "bg-[#3B82F6]";
-  const brandText = "text-[#3B82F6]";
 
-  const selectedResult: SelectedResult = {
+  // Get real data from location state or fall back to defaults
+  const stateResult = location.state?.selectedResult;
+  const originalFormData = location.state?.originalFormData;
+
+  const selectedResult: SelectedResult = stateResult || {
     price: 12500,
     pickupPincode: '400001',
     dropoffPincode: '560001',
     serviceProvider: 'BlueDart Logistics',
-    vehicleType: '32ft MX Container'
+    vehicleType: '32ft MX Container',
+    mode: 'truck',
   };
 
   const [formData, setFormData] = useState<FormData>({
@@ -51,21 +52,72 @@ const TruckBookingDetailsPage: React.FC = () => {
     kycType: 'GST Certificate', insurance: true
   });
   const [kycFile, setKycFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const insuranceAmount = formData.insurance ? Math.round(selectedResult.price * 0.02) : 0;
   const totalAmount = selectedResult.price + insuranceAmount;
 
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.email || !formData.phone) {
+      alert('Please fill in your Name, Email, and Phone Number.');
+      return;
+    }
+
+    setLoading(true);
+
+    const bookingId = `TRK-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
+
+    try {
+      await bookingAPI.create({
+        booking_number: bookingId,
+        service_type: 'Truck',
+        origin: selectedResult.pickupPincode,
+        destination: selectedResult.dropoffPincode,
+        cargo_type: (originalFormData as any)?.cargoType || 'General',
+        weight: (originalFormData as any)?.weight || 0,
+        booking_date: new Date().toISOString().split('T')[0],
+        estimated_price: totalAmount,
+        special_instructions: '',
+        status: 'confirmed',
+      });
+    } catch (error) {
+      console.error('Failed to save booking:', error);
+    } finally {
+      setLoading(false);
+    }
+
+    const bookingDetails = {
+      selectedResult: {
+        ...selectedResult,
+        mode: 'truck',
+        operator: selectedResult.serviceProvider,
+      },
+      originalFormData,
+      kycDetails: {
+        companyName: formData.company || 'N/A',
+        gstin: formData.gstin || 'N/A',
+        mobile: formData.phone,
+        email: formData.email,
+      },
+      bookingDate: new Date().toLocaleDateString('en-IN'),
+      bookingTime: new Date().toLocaleTimeString('en-IN'),
+      bookingId,
+      finalAmount: totalAmount,
+    };
+
+    navigate('/booking-confirmation', { state: { bookingDetails } });
+  };
+
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-700 font-inter">
-      {/* Navigation */}
+    <div className="min-h-screen bg-[#FDFDFD] text-slate-700">
       <nav className="bg-white border-b sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <button className="flex items-center text-slate-500 hover:text-[#3B82F6] font-medium transition-colors group">
+          <button onClick={() => navigate(-1)} className="flex items-center text-slate-500 hover:text-blue-600 font-medium transition-colors group">
             <span className="group-hover:-translate-x-1 transition-transform"><Icons.ArrowLeft /></span>
             <span className="ml-2">Back to Rates</span>
           </button>
           <div className="flex items-center gap-8 text-[11px] font-bold tracking-widest text-slate-400 uppercase">
-            <span className={`${brandText} border-b-2 border-[#3B82F6] pb-1`}>01 Details</span>
+            <span className="text-blue-600 border-b-2 border-blue-600 pb-1">01 Details</span>
             <span>02 Payment</span>
             <span>03 Confirm</span>
           </div>
@@ -75,63 +127,53 @@ const TruckBookingDetailsPage: React.FC = () => {
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
-          {/* Form Fields */}
           <div className="lg:col-span-7 space-y-12">
             <section>
               <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
-                <span className={`w-7 h-7 ${brandColor} text-white rounded-md flex items-center justify-center text-xs`}>1</span>
+                <span className="w-7 h-7 bg-blue-600 text-white rounded-md flex items-center justify-center text-xs">1</span>
                 Consignor details
               </h2>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <InputGroup label="Contact name" value={formData.name} onChange={(v: any) => setFormData({...formData, name: v})} placeholder="e.g. Rahul Sharma" required />
-                <InputGroup label="Phone number" value={formData.phone} onChange={(v: any) => setFormData({...formData, phone: v})} placeholder="+91" required />
+                <InputGroup label="Contact name" value={formData.name} onChange={(v: string) => setFormData({...formData, name: v})} placeholder="e.g. Rahul Sharma" required />
+                <InputGroup label="Phone number" value={formData.phone} onChange={(v: string) => setFormData({...formData, phone: v})} placeholder="+91" required />
                 <div className="md:col-span-2">
-                  <InputGroup label="Email address" value={formData.email} onChange={(v: any) => setFormData({...formData, email: v})} placeholder="rahul@company.com" required />
+                  <InputGroup label="Email address" value={formData.email} onChange={(v: string) => setFormData({...formData, email: v})} placeholder="rahul@company.com" required />
                 </div>
-                <InputGroup label="Company name" value={formData.company} onChange={(v: any) => setFormData({...formData, company: v})} placeholder="Business name" required={false} />
-                <InputGroup label="GST number" value={formData.gstin} onChange={(v: any) => setFormData({...formData, gstin: v})} placeholder="Optional" required={false} />
+                <InputGroup label="Company name" value={formData.company} onChange={(v: string) => setFormData({...formData, company: v})} placeholder="Business name" required={false} />
+                <InputGroup label="GST number" value={formData.gstin} onChange={(v: string) => setFormData({...formData, gstin: v})} placeholder="Optional" required={false} />
               </div>
             </section>
 
             <section>
               <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-                <span className={`w-7 h-7 ${brandColor} text-white rounded-md flex items-center justify-center text-xs`}>2</span>
+                <span className="w-7 h-7 bg-blue-600 text-white rounded-md flex items-center justify-center text-xs">2</span>
                 KYC verification
               </h2>
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center transition-all cursor-pointer 
-                  ${kycFile ? 'bg-green-50/30 border-green-200' : 'bg-slate-50/50 border-slate-200 hover:border-[#3B82F6]'}`}
+                className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center transition-all cursor-pointer ${kycFile ? 'bg-green-50/30 border-green-200' : 'bg-slate-50/50 border-slate-200 hover:border-blue-600'}`}
               >
                 <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => setKycFile(e.target.files?.[0] || null)} />
-                <div className={`mb-3 ${kycFile ? 'text-green-500' : brandText}`}>
-                   {kycFile ? <Icons.CheckCircle /> : <Icons.CloudUpload />}
+                <div className={`mb-3 ${kycFile ? 'text-green-500' : 'text-blue-600'}`}>
+                  {kycFile ? <Icons.CheckCircle /> : <Icons.CloudUpload />}
                 </div>
                 <p className="text-sm font-semibold text-slate-700">{kycFile ? kycFile.name : "Upload business certificate (GST/Trade)"}</p>
                 <p className="text-[11px] text-slate-400 mt-1 uppercase tracking-tight">PDF or Image up to 5MB</p>
               </div>
             </section>
 
-            {/* Refined Insurance Toggle */}
             <section className="bg-slate-50/80 p-5 rounded-xl border border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <input 
-                  type="checkbox" 
-                  checked={formData.insurance} 
-                  onChange={() => setFormData({...formData, insurance: !formData.insurance})}
-                  className="w-4 h-4 rounded border-slate-300 text-[#3B82F6] focus:ring-[#3B82F6]" 
-                />
+                <input type="checkbox" checked={formData.insurance} onChange={() => setFormData({...formData, insurance: !formData.insurance})} className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
                 <div>
                   <p className="text-sm font-bold text-slate-800">Add transit insurance</p>
                   <p className="text-xs text-slate-500">Protection against theft, damage & transit loss</p>
                 </div>
               </div>
-              <p className={`text-sm font-bold ${brandText}`}>+ ₹{insuranceAmount.toLocaleString()}</p>
+              <p className="text-sm font-bold text-blue-600">+ ₹{insuranceAmount.toLocaleString()}</p>
             </section>
           </div>
 
-          {/* Sticky Summary Card */}
           <div className="lg:col-span-5">
             <div className="sticky top-28 bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Booking summary</h3>
@@ -178,9 +220,16 @@ const TruckBookingDetailsPage: React.FC = () => {
                 </div>
               </div>
 
-              <button className={`w-full ${brandColor} hover:opacity-90 text-white py-4 rounded-xl font-bold text-md transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 group`}>
-                Proceed to payment 
-                <span className="group-hover:translate-x-1 transition-transform"><Icons.ArrowRight /></span>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full bg-blue-600 hover:opacity-90 text-white py-4 rounded-xl font-bold text-md transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 group disabled:opacity-50"
+              >
+                {loading ? (
+                  <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+                ) : (
+                  <>Proceed to payment <span className="group-hover:translate-x-1 transition-transform"><Icons.ArrowRight /></span></>
+                )}
               </button>
             </div>
           </div>
@@ -202,12 +251,12 @@ const InputGroup = ({ label, value, onChange, placeholder, required }: any) => (
     <label className="text-xs font-bold text-slate-500 ml-0.5">
       {label} {required && <span className="text-red-400">*</span>}
     </label>
-    <input 
+    <input
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#3B82F6]/5 focus:border-[#3B82F6] transition-all"
+      className="bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-3.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/5 focus:border-blue-600 transition-all"
     />
   </div>
 );
