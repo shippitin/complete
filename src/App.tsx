@@ -80,6 +80,8 @@ import RailServiceDetailsPage from './pages/RailServiceDetailsPage';
 import BookingConfirmationPage from './pages/BookingConfirmationPage';
 import RailBookingConfirmationPage from './pages/RailBookingConfirmationPage';
 import AdminPage from './pages/AdminPage';
+import PaymentPage from './pages/PaymentPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
 
 // Voice Assistant
 import VoiceAssistant from './components/VoiceAssistant';
@@ -295,6 +297,8 @@ const AppContent: React.FC = () => {
           <Route path="/dashboard" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><DashboardPage /></div></ProtectedRoute>} />
 
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/payment" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentPage /></div></ProtectedRoute>} />
+          <Route path="/payment-success" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentSuccessPage /></div></ProtectedRoute>} />
 
           <Route path="*" element={<div className="max-w-7xl mx-auto px-4 py-20 text-center text-3xl font-semibold text-gray-700">404 - Page Not Found</div>} />
         </Routes>
