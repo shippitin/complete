@@ -121,9 +121,9 @@ const FirstLastMileQuoteFormPageWrapper: React.FC = () => {
   const firstLastMileFormRef = useRef<QuoteFormHandle>(null);
   const navigate = useNavigate();
 
-  const handleSubmitFirstLastMile = () => {
+  const handleSubmitFirstLastMile = async () => {
     if (firstLastMileFormRef.current) {
-      const data = firstLastMileFormRef.current.submit();
+      const data = await firstLastMileFormRef.current.submit();
       if (data && (data as any).bookingType === 'First/Last Mile') {
         navigate('/first-last-mile-results', { state: { formData: data } });
       }
@@ -208,7 +208,7 @@ const AppContent: React.FC = () => {
         <Routes>
           <Route path="/" element={<HomeLandingPage prefillData={voicePrefillData} />} />
 
-          {/* General Pages */}
+          {/* Public Pages */}
           <Route path="/aboutus" element={<AboutUsPage />} />
           <Route path="/investors" element={<div className="max-w-7xl mx-auto px-4 py-10"><InvestorLandingPage /></div>} />
           <Route path="/services" element={<ServicesPage />} />
@@ -222,7 +222,7 @@ const AppContent: React.FC = () => {
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/cookies" element={<CookiePolicyPage />} />
 
-          {/* Service Details */}
+          {/* Service Detail Pages — Public */}
           <Route path="/door-to-door-details" element={<DoorToDoorDetailPage />} />
           <Route path="/truck-details" element={<TruckDetailPage />} />
           <Route path="/rail-details" element={<RailDetailPage />} />
@@ -233,53 +233,57 @@ const AppContent: React.FC = () => {
           <Route path="/lcl-details" element={<LCLDetailPage />} />
           <Route path="/parcel-details" element={<ParcelDetailPage />} />
 
-          {/* Booking Forms */}
-          <Route path="/truck-booking" element={<div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Truck" prefillData={voicePrefillData} /></div>} />
-          <Route path="/air-booking" element={<div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Air" prefillData={voicePrefillData} /></div>} />
-          <Route path="/sea-booking" element={<div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Sea" prefillData={voicePrefillData} /></div>} />
-          <Route path="/parcel-booking" element={<div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Parcel" prefillData={voicePrefillData} /></div>} />
-          <Route path="/door-to-door-booking" element={<div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Door to Door" prefillData={voicePrefillData} /></div>} />
-          <Route path="/lcl-booking" element={<div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="LCL" prefillData={voicePrefillData} /></div>} />
-          <Route path="/customs-booking" element={<div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="Customs" prefillData={voicePrefillData} /></div>} />
-
-          {/* Rail Flow */}
-          <Route path="/train-booking" element={<div className="max-w-4xl mx-auto py-10"><RailQuoteForm initialActiveService="container" prefillData={voicePrefillData} /></div>} />
-          <Route path="/train-results" element={<TrainResultsPage />} />
-          <Route path="/train-service-details" element={<RailServiceDetailsPage />} />
-          <Route path="/rail-booking-confirmation" element={<RailBookingConfirmationPage />} />
-
-          {/* Port Services Flow */}
-          <Route path="/port-booking" element={<div className="max-w-4xl mx-auto py-10"><PortServicesQuoteForm /></div>} />
-          <Route path="/port-results" element={<PortResultsPage />} />
-
-          {/* Other Flows */}
-          <Route path="/insurance-booking" element={<InsuranceQuoteFormPageWrapper />} />
-          <Route path="/insurance-results" element={<InsuranceResultsPage />} />
-          <Route path="/insurance-booking-details" element={<InsuranceBookingDetailsPage />} />
-          <Route path="/first-last-mile-booking" element={<FirstLastMileQuoteFormPageWrapper />} />
-          <Route path="/first-last-mile-results" element={<FirstLastMileResultsPage />} />
-          <Route path="/first-last-mile-booking-details" element={<FirstLastMileBookingDetailsPage />} />
-          <Route path="/parcel-results" element={<ParcelResultsPage />} />
-          <Route path="/parcel-booking-details" element={<ParcelBookingDetailsPage />} />
-
-          {/* Results Pages */}
-          <Route path="/door-to-door-results" element={<DoorToDoorResultsPage />} />
-          <Route path="/sea-results" element={<SeaResultsPage />} />
-          <Route path="/sea-booking-details" element={<SeaBookingDetailsPage />} />
-          <Route path="/air-results" element={<AirResultsPage />} />
-          <Route path="/air-booking-details" element={<AirBookingDetailsPage />} />
-          <Route path="/truck-results" element={<TruckResultsPage />} />
-          <Route path="/truck-booking-details" element={<TruckBookingDetailsPage />} />
-          <Route path="/lcl-results" element={<LCLResultsPage />} />
-          <Route path="/lcl-booking-details" element={<LCLBookingDetailsPage />} />
-          <Route path="/customs-results" element={<CustomsResultsPage />} />
-          <Route path="/customs-booking-details" element={<CustomsBookingDetailsPage />} />
-
           {/* Auth Pages — Public */}
           <Route path="/login" element={<div className="max-w-7xl mx-auto px-4 py-10"><LoginPage /></div>} />
           <Route path="/signup" element={<div className="max-w-7xl mx-auto px-4 py-10"><SignupPage /></div>} />
 
-          {/* Protected Pages — Login Required */}
+          {/* Booking Forms — Protected */}
+          <Route path="/truck-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Truck" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/air-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Air" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/sea-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Sea" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/parcel-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Parcel" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/door-to-door-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Door to Door" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/lcl-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="LCL" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/customs-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="Customs" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+
+          {/* Rail Flow — Protected */}
+          <Route path="/train-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><RailQuoteForm initialActiveService="container" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/train-results" element={<ProtectedRoute><TrainResultsPage /></ProtectedRoute>} />
+          <Route path="/train-service-details" element={<ProtectedRoute><RailServiceDetailsPage /></ProtectedRoute>} />
+          <Route path="/rail-booking-confirmation" element={<ProtectedRoute><RailBookingConfirmationPage /></ProtectedRoute>} />
+
+          {/* Port Services Flow — Protected */}
+          <Route path="/port-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><PortServicesQuoteForm /></div></ProtectedRoute>} />
+          <Route path="/port-results" element={<ProtectedRoute><PortResultsPage /></ProtectedRoute>} />
+
+          {/* Insurance Flow — Protected */}
+          <Route path="/insurance-booking" element={<ProtectedRoute><InsuranceQuoteFormPageWrapper /></ProtectedRoute>} />
+          <Route path="/insurance-results" element={<ProtectedRoute><InsuranceResultsPage /></ProtectedRoute>} />
+          <Route path="/insurance-booking-details" element={<ProtectedRoute><InsuranceBookingDetailsPage /></ProtectedRoute>} />
+
+          {/* First/Last Mile Flow — Protected */}
+          <Route path="/first-last-mile-booking" element={<ProtectedRoute><FirstLastMileQuoteFormPageWrapper /></ProtectedRoute>} />
+          <Route path="/first-last-mile-results" element={<ProtectedRoute><FirstLastMileResultsPage /></ProtectedRoute>} />
+          <Route path="/first-last-mile-booking-details" element={<ProtectedRoute><FirstLastMileBookingDetailsPage /></ProtectedRoute>} />
+
+          {/* Parcel Flow — Protected */}
+          <Route path="/parcel-results" element={<ProtectedRoute><ParcelResultsPage /></ProtectedRoute>} />
+          <Route path="/parcel-booking-details" element={<ProtectedRoute><ParcelBookingDetailsPage /></ProtectedRoute>} />
+
+          {/* Results Pages — Protected */}
+          <Route path="/door-to-door-results" element={<ProtectedRoute><DoorToDoorResultsPage /></ProtectedRoute>} />
+          <Route path="/sea-results" element={<ProtectedRoute><SeaResultsPage /></ProtectedRoute>} />
+          <Route path="/sea-booking-details" element={<ProtectedRoute><SeaBookingDetailsPage /></ProtectedRoute>} />
+          <Route path="/air-results" element={<ProtectedRoute><AirResultsPage /></ProtectedRoute>} />
+          <Route path="/air-booking-details" element={<ProtectedRoute><AirBookingDetailsPage /></ProtectedRoute>} />
+          <Route path="/truck-results" element={<ProtectedRoute><TruckResultsPage /></ProtectedRoute>} />
+          <Route path="/truck-booking-details" element={<ProtectedRoute><TruckBookingDetailsPage /></ProtectedRoute>} />
+          <Route path="/lcl-results" element={<ProtectedRoute><LCLResultsPage /></ProtectedRoute>} />
+          <Route path="/lcl-booking-details" element={<ProtectedRoute><LCLBookingDetailsPage /></ProtectedRoute>} />
+          <Route path="/customs-results" element={<ProtectedRoute><CustomsResultsPage /></ProtectedRoute>} />
+          <Route path="/customs-booking-details" element={<ProtectedRoute><CustomsBookingDetailsPage /></ProtectedRoute>} />
+
+          {/* User Pages — Protected */}
           <Route path="/my-wallet" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><MyWalletPage /></div></ProtectedRoute>} />
           <Route path="/booking-confirmation" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingConfirmationPage /></div></ProtectedRoute>} />
           <Route path="/my-bookings" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingHistoryPage /></div></ProtectedRoute>} />
