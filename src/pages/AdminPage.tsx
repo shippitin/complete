@@ -1,6 +1,7 @@
 // src/pages/AdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaUsers, FaClipboardList, FaChartBar, FaSearch, FaUserCog } from 'react-icons/fa';
 import api from '../services/api';
 
 interface Stats {
@@ -33,18 +34,18 @@ interface Booking {
   status: string;
   estimated_price: number;
   booking_date: string;
-  created_at: string;
 }
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  let classes = 'px-2 py-1 text-xs font-bold rounded-full uppercase';
+  let classes = 'px-3 py-1 text-xs font-semibold rounded-full uppercase';
   switch (status.toLowerCase()) {
-    case 'pending': classes += ' bg-yellow-100 text-yellow-800'; break;
-    case 'confirmed': classes += ' bg-green-100 text-green-800'; break;
-    case 'delivered': classes += ' bg-blue-100 text-blue-800'; break;
-    case 'cancelled': classes += ' bg-red-100 text-red-800'; break;
-    case 'admin': classes += ' bg-purple-100 text-purple-800'; break;
-    default: classes += ' bg-gray-100 text-gray-800';
+    case 'pending': classes += ' bg-gray-100 text-gray-600'; break;
+    case 'confirmed': classes += ' bg-blue-100 text-blue-700'; break;
+    case 'in_transit': classes += ' bg-blue-50 text-blue-600'; break;
+    case 'delivered': classes += ' bg-gray-100 text-gray-700'; break;
+    case 'cancelled': classes += ' bg-red-50 text-red-500'; break;
+    case 'admin': classes += ' bg-blue-600 text-white'; break;
+    default: classes += ' bg-gray-100 text-gray-600';
   }
   return <span className={classes}>{status}</span>;
 };
@@ -56,9 +57,9 @@ const AdminPage: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Check if user is admin
     const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
     if (user.role !== 'admin') {
       navigate('/');
@@ -104,6 +105,7 @@ const AdminPage: React.FC = () => {
 
   const handleTabChange = (tab: 'stats' | 'bookings' | 'users') => {
     setActiveTab(tab);
+    setSearchTerm('');
     if (tab === 'bookings') fetchBookings();
     if (tab === 'users') fetchUsers();
   };
@@ -126,172 +128,204 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  if (loading && activeTab === 'stats') {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-      </div>
-    );
-  }
+  const filteredBookings = bookings.filter(b =>
+    b.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    b.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    b.service_type?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredUsers = users.filter(u =>
+    u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="bg-gray-900 text-white p-6 rounded-xl mb-6">
-          <h1 className="text-3xl font-black">⚙️ Shippitin Admin Panel</h1>
-          <p className="text-gray-400 mt-1">Manage bookings, users and platform data</p>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FaUserCog className="text-blue-600 text-2xl" />
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">Admin Panel</h1>
+              <p className="text-gray-400 text-sm">Manage bookings, users and platform data</p>
+            </div>
+          </div>
+          <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2 rounded-full">
+            Admin Access
+          </span>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {(['stats', 'bookings', 'users'] as const).map(tab => (
+        {/* Tabs — same style as your service tabs */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-1.5 flex gap-1">
+          {[
+            { id: 'stats', label: 'Dashboard', icon: <FaChartBar className="text-sm" /> },
+            { id: 'bookings', label: 'Bookings', icon: <FaClipboardList className="text-sm" /> },
+            { id: 'users', label: 'Users', icon: <FaUsers className="text-sm" /> },
+          ].map(tab => (
             <button
-              key={tab}
-              onClick={() => handleTabChange(tab)}
-              className={`px-6 py-2 rounded-lg font-semibold capitalize transition ${
-                activeTab === tab
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id as any)}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                activeTab === tab.id
                   ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50'
+                  : 'text-gray-500 hover:bg-gray-50'
               }`}
             >
-              {tab}
+              {tab.icon} {tab.label}
             </button>
           ))}
         </div>
 
         {/* Stats Tab */}
-        {activeTab === 'stats' && stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <p className="text-gray-500 text-sm">Total Users</p>
-              <p className="text-4xl font-black text-blue-600">{stats.totalUsers}</p>
+        {activeTab === 'stats' && (
+          loading ? (
+            <div className="flex justify-center py-16">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
             </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <p className="text-gray-500 text-sm">Total Bookings</p>
-              <p className="text-4xl font-black text-gray-800">{stats.totalBookings}</p>
+          ) : stats && (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { label: 'Total Users', value: stats.totalUsers },
+                { label: 'Total Bookings', value: stats.totalBookings },
+                { label: 'Pending', value: stats.pendingBookings },
+                { label: 'Confirmed', value: stats.confirmedBookings },
+                { label: 'Delivered', value: stats.deliveredBookings },
+                { label: 'Cancelled', value: stats.cancelledBookings },
+              ].map(stat => (
+                <div key={stat.label} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <p className="text-gray-400 text-sm">{stat.label}</p>
+                  <p className="text-4xl font-black text-gray-800 mt-2">{stat.value}</p>
+                </div>
+              ))}
             </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <p className="text-gray-500 text-sm">Pending</p>
-              <p className="text-4xl font-black text-yellow-600">{stats.pendingBookings}</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <p className="text-gray-500 text-sm">Confirmed</p>
-              <p className="text-4xl font-black text-green-600">{stats.confirmedBookings}</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <p className="text-gray-500 text-sm">Delivered</p>
-              <p className="text-4xl font-black text-blue-600">{stats.deliveredBookings}</p>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <p className="text-gray-500 text-sm">Cancelled</p>
-              <p className="text-4xl font-black text-red-600">{stats.cancelledBookings}</p>
-            </div>
-          </div>
+          )
         )}
 
         {/* Bookings Tab */}
         {activeTab === 'bookings' && (
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="p-4 border-b">
-              <h2 className="text-xl font-bold">All Bookings ({bookings.length})</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="font-bold text-gray-800">All Bookings ({filteredBookings.length})</h2>
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48"
+                />
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Booking ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Route</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {bookings.map(booking => (
-                    <tr key={booking.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium text-blue-600">{booking.booking_number}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <p className="font-medium">{booking.full_name}</p>
-                        <p className="text-gray-400 text-xs">{booking.email}</p>
-                      </td>
-                      <td className="px-4 py-3 text-sm">{booking.service_type}</td>
-                      <td className="px-4 py-3 text-sm text-gray-500">{booking.origin} → {booking.destination}</td>
-                      <td className="px-4 py-3 text-sm"><StatusBadge status={booking.status} /></td>
-                      <td className="px-4 py-3 text-sm font-bold">₹{(booking.estimated_price || 0).toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <select
-                          className="border rounded px-2 py-1 text-xs"
-                          value={booking.status}
-                          onChange={(e) => updateBookingStatus(booking.id, e.target.value)}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirmed</option>
-                          <option value="in_transit">In Transit</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
-                      </td>
+            {loading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      {['Booking ID', 'Customer', 'Service', 'Route', 'Status', 'Amount', 'Update'].map(h => (
+                        <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {bookings.length === 0 && (
-                <p className="text-center py-8 text-gray-500">No bookings yet.</p>
-              )}
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filteredBookings.length > 0 ? filteredBookings.map(booking => (
+                      <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-4 text-sm font-bold text-blue-600">{booking.booking_number}</td>
+                        <td className="px-5 py-4 text-sm">
+                          <p className="font-medium text-gray-800">{booking.full_name}</p>
+                          <p className="text-gray-400 text-xs">{booking.email}</p>
+                        </td>
+                        <td className="px-5 py-4 text-sm text-gray-600">{booking.service_type}</td>
+                        <td className="px-5 py-4 text-sm text-gray-400">{booking.origin} → {booking.destination}</td>
+                        <td className="px-5 py-4"><StatusBadge status={booking.status} /></td>
+                        <td className="px-5 py-4 text-sm font-semibold text-gray-800">₹{(booking.estimated_price || 0).toLocaleString('en-IN')}</td>
+                        <td className="px-5 py-4">
+                          <select
+                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white"
+                            value={booking.status}
+                            onChange={e => updateBookingStatus(booking.id, e.target.value)}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="in_transit">In Transit</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400 text-sm">No bookings found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
         {/* Users Tab */}
         {activeTab === 'users' && (
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="p-4 border-b">
-              <h2 className="text-xl font-bold">All Users ({users.length})</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="font-bold text-gray-800">All Users ({filteredUsers.length})</h2>
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48"
+                />
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {users.map(user => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm font-medium">{user.full_name}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{user.email}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{user.phone}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{user.company_name || '-'}</td>
-                      <td className="px-4 py-3 text-sm"><StatusBadge status={user.role} /></td>
-                      <td className="px-4 py-3 text-sm text-gray-500">{new Date(user.created_at).toLocaleDateString('en-IN')}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {user.role !== 'admin' && (
-                          <button
-                            onClick={() => makeAdmin(user.id)}
-                            className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded hover:bg-purple-200 transition"
-                          >
-                            Make Admin
-                          </button>
-                        )}
-                      </td>
+            {loading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      {['Name', 'Email', 'Phone', 'Company', 'Role', 'Joined', 'Actions'].map(h => (
+                        <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-              {users.length === 0 && (
-                <p className="text-center py-8 text-gray-500">No users yet.</p>
-              )}
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {filteredUsers.length > 0 ? filteredUsers.map(user => (
+                      <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-4 text-sm font-medium text-gray-800">{user.full_name}</td>
+                        <td className="px-5 py-4 text-sm text-gray-500">{user.email}</td>
+                        <td className="px-5 py-4 text-sm text-gray-500">{user.phone}</td>
+                        <td className="px-5 py-4 text-sm text-gray-400">{user.company_name || '—'}</td>
+                        <td className="px-5 py-4"><StatusBadge status={user.role} /></td>
+                        <td className="px-5 py-4 text-sm text-gray-400">{new Date(user.created_at).toLocaleDateString('en-IN')}</td>
+                        <td className="px-5 py-4">
+                          {user.role !== 'admin' && (
+                            <button
+                              onClick={() => makeAdmin(user.id)}
+                              className="text-xs border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-blue-300 hover:text-blue-600 transition"
+                            >
+                              Make Admin
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400 text-sm">No users found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
