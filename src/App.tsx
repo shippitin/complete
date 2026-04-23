@@ -64,6 +64,7 @@ import InsuranceResultsPage from './pages/InsuranceResultsPage';
 import FirstLastMileResultsPage from './pages/FirstLastMileResultsPage';
 import PortResultsPage from './pages/PortResultsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
 
 // Booking Details Pages
 import AirBookingDetailsPage from './pages/AirBookingDetailsPage';
@@ -299,7 +300,7 @@ const AppContent: React.FC = () => {
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/payment" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentPage /></div></ProtectedRoute>} />
           <Route path="/payment-success" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentSuccessPage /></div></ProtectedRoute>} />
-
+          <Route path="/verify-email" element={<EmailVerificationPage />} />  
           <Route path="*" element={<div className="max-w-7xl mx-auto px-4 py-20 text-center text-3xl font-semibold text-gray-700">404 - Page Not Found</div>} />
         </Routes>
       </main>

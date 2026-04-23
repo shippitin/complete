@@ -38,7 +38,7 @@ const SignUpPage: React.FC = () => {
       localStorage.setItem('shippitin_user', JSON.stringify(user));
 
       toast.success(`Welcome to Shippitin, ${user.full_name?.split(' ')[0]}! 🎉`);
-      navigate('/dashboard');
+navigate('/verify-email');
     } catch (err: any) {
       const message = err.response?.data?.message || 'Signup failed';
       toast.error(message);
