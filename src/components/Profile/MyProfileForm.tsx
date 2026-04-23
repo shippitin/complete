@@ -1,6 +1,7 @@
 // src/components/Profile/MyProfileForm.tsx
 import React, { useState, useEffect } from 'react';
 import { userAPI } from '../../services/api';
+import toast from 'react-hot-toast';
 
 interface LogisticsUserProfileData {
   firstName: string;
@@ -24,78 +25,50 @@ const inputClass = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm f
 
 const MyProfileForm: React.FC = () => {
   const [form, setForm] = useState<LogisticsUserProfileData>({
-    firstName: '',
-    lastName: '',
-    companyName: '',
-    cityOfResidence: '',
-    state: '',
-    email: '',
-    mobileNumber: '',
-    gstNumber: '',
-    panNumber: '',
-    companyRegistrationId: '',
-    address: '',
-    preferredShipmentMode: '',
-    usualCargoType: '',
-    preferredLoadSize: '',
-    carrierLicenseNumber: '',
+    firstName: '', lastName: '', companyName: '', cityOfResidence: '',
+    state: '', email: '', mobileNumber: '', gstNumber: '', panNumber: '',
+    companyRegistrationId: '', address: '', preferredShipmentMode: '',
+    usualCargoType: '', preferredLoadSize: '', carrierLicenseNumber: '',
   });
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await userAPI.getProfile();
         const user = response.data.data;
-
-        // Split full_name into first and last
         const nameParts = (user.full_name || '').split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-
-        setForm({
-          firstName,
-          lastName,
+        setForm(prev => ({
+          ...prev,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
           companyName: user.company_name || '',
           cityOfResidence: user.city || '',
           state: user.state || '',
           email: user.email || '',
           mobileNumber: user.phone || '',
           gstNumber: user.gstin || '',
-          panNumber: '',
-          companyRegistrationId: '',
           address: user.address || '',
-          preferredShipmentMode: '',
-          usualCargoType: '',
-          preferredLoadSize: '',
-          carrierLicenseNumber: '',
-        });
+        }));
       } catch (error) {
-        console.error('Failed to load profile:', error);
-        setErrorMessage('Failed to load profile data.');
+        toast.error('Failed to load profile data.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchProfile();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setSuccessMessage('');
-    setErrorMessage('');
-
     try {
       await userAPI.updateProfile({
         full_name: `${form.firstName} ${form.lastName}`.trim(),
@@ -106,11 +79,9 @@ const MyProfileForm: React.FC = () => {
         city: form.cityOfResidence,
         state: form.state,
       });
-
-      setSuccessMessage('✅ Profile updated successfully!');
-      setTimeout(() => setSuccessMessage(''), 3000);
+      toast.success('Profile updated successfully!');
     } catch (error) {
-      setErrorMessage('Failed to save profile. Please try again.');
+      toast.error('Failed to save profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -138,42 +109,22 @@ const MyProfileForm: React.FC = () => {
       <div className="px-6 py-6 sm:px-8 sm:py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={saving}
-            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md font-semibold text-sm border border-gray-300 hover:bg-gray-200 transition-colors disabled:opacity-50"
-          >
+          <button type="button" onClick={handleSubmit} disabled={saving}
+            className="bg-gray-100 text-gray-700 px-4 py-2 rounded-md font-semibold text-sm border border-gray-300 hover:bg-gray-200 transition-colors disabled:opacity-50">
             {saving ? 'Saving...' : 'SAVE'}
           </button>
         </div>
 
-        {/* Success/Error messages */}
-        {successMessage && (
-          <div className="bg-green-50 border border-green-200 text-green-800 p-3 rounded-md text-sm mb-4">
-            {successMessage}
-          </div>
-        )}
-        {errorMessage && (
-          <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-md text-sm mb-4">
-            {errorMessage}
-          </div>
-        )}
-
-        {/* Profile completion banner */}
         <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-md flex items-center justify-between text-sm mb-6">
           <div className="flex items-center">
             <span className="font-bold mr-2">{completion}%</span>
-            <span>Complete your profile. Share your Email ID to receive booking updates and other critical information.</span>
+            <span>Complete your profile. Share your Email ID to receive booking updates.</span>
           </div>
-          {!form.email && (
-            <button className="text-blue-600 hover:underline font-semibold">Add Email</button>
-          )}
+          {!form.email && <button className="text-blue-600 hover:underline font-semibold">Add Email</button>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
 
-          {/* General Information */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">General Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -201,7 +152,6 @@ const MyProfileForm: React.FC = () => {
             </div>
           </section>
 
-          {/* Contact Details */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Contact Details</h2>
             <p className="text-sm text-gray-600 mb-4">Add contact information to receive booking details & other alerts</p>
@@ -219,19 +169,11 @@ const MyProfileForm: React.FC = () => {
               </div>
               <div>
                 <label className="block text-gray-600 text-sm mb-1">Email Address</label>
-                <div className="relative">
-                  <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="E.g., your.email@example.com" />
-                  {!form.email && (
-                    <button type="button" className="absolute right-0 top-0 h-full px-4 text-blue-600 hover:underline font-semibold text-sm">
-                      ADD EMAIL ID
-                    </button>
-                  )}
-                </div>
+                <input name="email" type="email" value={form.email} onChange={handleChange} className={inputClass} placeholder="your.email@example.com" />
               </div>
             </div>
           </section>
 
-          {/* Business & Compliance */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Business & Compliance</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -242,7 +184,7 @@ const MyProfileForm: React.FC = () => {
               <div>
                 <label className="block text-gray-600 text-sm mb-1">PAN Number</label>
                 <input name="panNumber" type="text" value={form.panNumber} onChange={handleChange} className={inputClass} placeholder="PAN Number" />
-                <p className="text-xs text-gray-500 mt-1">NOTE: Your PAN No. will only be used for international bookings as per RBI Guidelines</p>
+                <p className="text-xs text-gray-500 mt-1">Used for international bookings as per RBI Guidelines</p>
               </div>
               <div>
                 <label className="block text-gray-600 text-sm mb-1">Company Registration ID</label>
@@ -255,7 +197,6 @@ const MyProfileForm: React.FC = () => {
             </div>
           </section>
 
-          {/* Logistics Preferences */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Logistics Preferences</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -280,7 +221,6 @@ const MyProfileForm: React.FC = () => {
             </div>
           </section>
 
-          {/* Carrier Details */}
           <section className="pb-6">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Carrier/Service Provider Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -292,11 +232,8 @@ const MyProfileForm: React.FC = () => {
           </section>
 
           <div className="flex justify-center pt-8">
-            <button
-              type="submit"
-              disabled={saving}
-              className="bg-blue-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-blue-700 transition-colors shadow disabled:opacity-50"
-            >
+            <button type="submit" disabled={saving}
+              className="bg-blue-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-blue-700 transition-colors shadow disabled:opacity-50">
               {saving ? 'Saving...' : 'Save Profile'}
             </button>
           </div>

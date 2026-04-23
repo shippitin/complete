@@ -1,30 +1,33 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
+import toast from 'react-hot-toast';
 
 const LoginPage = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    setError('');
+    if (!email || !password) {
+      toast.error('Please enter your email and password.');
+      return;
+    }
     setLoading(true);
     try {
       const response = await authAPI.login({ email, password });
       const { token, user } = response.data.data;
       
-      // Save token and user to localStorage
       localStorage.setItem('shippitin_token', token);
       localStorage.setItem('shippitin_user', JSON.stringify(user));
       
-      navigate('/');
+      toast.success(`Welcome back, ${user.full_name?.split(' ')[0]}!`);
+      navigate('/dashboard');
     } catch (err: any) {
       const message = err.response?.data?.message || 'Login failed';
-      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -41,6 +44,7 @@ const LoginPage = () => {
           className="w-full mb-4 px-4 py-2 border border-gray-300 rounded focus:outline-none"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
         />
 
         <input
@@ -49,6 +53,7 @@ const LoginPage = () => {
           className="w-full mb-4 px-4 py-2 border border-gray-300 rounded focus:outline-none"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
         />
 
         <button
@@ -59,9 +64,14 @@ const LoginPage = () => {
           {loading ? 'Logging in...' : 'Login'}
         </button>
 
-        {error && (
-          <p className="mt-4 text-red-600 text-center">{error}</p>
-        )}
+        <div className="mt-4 text-center">
+          <span
+            className="text-blue-600 cursor-pointer hover:underline text-sm"
+            onClick={() => navigate('/forgot-password')}
+          >
+            Forgot password?
+          </span>
+        </div>
 
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{' '}
