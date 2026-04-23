@@ -63,6 +63,7 @@ import TrainResultsPage from './pages/TrainResultsPage';
 import InsuranceResultsPage from './pages/InsuranceResultsPage';
 import FirstLastMileResultsPage from './pages/FirstLastMileResultsPage';
 import PortResultsPage from './pages/PortResultsPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 // Booking Details Pages
 import AirBookingDetailsPage from './pages/AirBookingDetailsPage';
@@ -237,6 +238,7 @@ const AppContent: React.FC = () => {
           {/* Auth Pages — Public */}
           <Route path="/login" element={<div className="max-w-7xl mx-auto px-4 py-10"><LoginPage /></div>} />
           <Route path="/signup" element={<div className="max-w-7xl mx-auto px-4 py-10"><SignupPage /></div>} />
+          <Route path="/forgot-password" element={<div className="max-w-7xl mx-auto px-4 py-10"><ForgotPasswordPage /></div>} />
 
           {/* Booking Forms — Protected */}
           <Route path="/truck-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Truck" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
