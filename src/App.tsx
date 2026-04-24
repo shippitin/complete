@@ -63,8 +63,6 @@ import TrainResultsPage from './pages/TrainResultsPage';
 import InsuranceResultsPage from './pages/InsuranceResultsPage';
 import FirstLastMileResultsPage from './pages/FirstLastMileResultsPage';
 import PortResultsPage from './pages/PortResultsPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import EmailVerificationPage from './pages/EmailVerificationPage';
 
 // Booking Details Pages
 import AirBookingDetailsPage from './pages/AirBookingDetailsPage';
@@ -88,6 +86,7 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import VoiceAssistant from './components/VoiceAssistant';
 import { ParsedVoiceCommand } from './types/QuoteFormHandle';
 import type { QuoteFormHandle } from './types/QuoteFormHandle';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 declare const __firebase_config: string | undefined;
 declare const __initial_auth_token: string | undefined;
@@ -239,9 +238,9 @@ const AppContent: React.FC = () => {
           <Route path="/parcel-details" element={<ParcelDetailPage />} />
 
           {/* Auth Pages — Public */}
-          <Route path="/login" element={<div className="max-w-7xl mx-auto px-4 py-10"><LoginPage /></div>} />
-          <Route path="/signup" element={<div className="max-w-7xl mx-auto px-4 py-10"><SignupPage /></div>} />
-          <Route path="/forgot-password" element={<div className="max-w-7xl mx-auto px-4 py-10"><ForgotPasswordPage /></div>} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Booking Forms — Protected */}
           <Route path="/truck-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Truck" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
@@ -300,7 +299,7 @@ const AppContent: React.FC = () => {
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/payment" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentPage /></div></ProtectedRoute>} />
           <Route path="/payment-success" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentSuccessPage /></div></ProtectedRoute>} />
-          <Route path="/verify-email" element={<EmailVerificationPage />} />  
+
           <Route path="*" element={<div className="max-w-7xl mx-auto px-4 py-20 text-center text-3xl font-semibold text-gray-700">404 - Page Not Found</div>} />
         </Routes>
       </main>
