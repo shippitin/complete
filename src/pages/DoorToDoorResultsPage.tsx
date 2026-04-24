@@ -31,7 +31,8 @@ const DoorToDoorResultsPage: React.FC = () => {
   // Dummy data generation for Door to Door services
   const generateDummyResults = (data: DoorToDoorFormData): DoorToDoorServiceResult[] => {
     const basePrice = 5000;
-    const effectiveWeight = data.weight && data.weight > 0 ? data.weight : 100;
+    const parsedWeight = Number(data.weight);
+    const effectiveWeight = parsedWeight > 0 ? parsedWeight : 100;
     const weightFactor = effectiveWeight / 100;
     const distanceFactor = 1.5;
 

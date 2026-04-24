@@ -183,5 +183,16 @@ export const paymentAPI = {
     api.post('/payments/refund', data),
   getStatus: (bookingId: string) => api.get(`/payments/status/${bookingId}`),
 };
+// ============================================
+// RATE CARDS — Shippitin managed quotes
+// ============================================
+export const rateCardsAPI = {
+  search: (params: { serviceType: string; origin: string; destination: string; weight?: number; numberOfContainers?: number; containerType?: string }) =>
+    api.get('/quotes/rate-cards/search', { params }),
+  getAll: () => api.get('/quotes/rate-cards'),
+  create: (data: any) => api.post('/quotes/rate-cards', data),
+  update: (id: string, data: any) => api.put(`/quotes/rate-cards/${id}`, data),
+  delete: (id: string) => api.delete(`/quotes/rate-cards/${id}`),
+};
 
 export default api;

@@ -50,6 +50,10 @@ export interface PortServicesFormData extends BaseFormData {
 }
 
 export interface DoorToDoorFormData extends BaseFormData {
+  weight: boolean;
+  origin: any;
+  destination: any;
+  isDomestic: any;
   bookingType: 'Door to Door';
   originAddress: string;
   destinationAddress: string;
@@ -94,6 +98,8 @@ export interface TrainParcelFormData extends BaseFormData {
 }
 
 export interface SeaFormData extends BaseFormData {
+  description: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
+  description: import("react/jsx-runtime").JSX.Element;
   bookingType: 'Sea';
   activityType: 'Port to Port' | 'Port to Door' | 'Door to Port' | 'Door to Door';
   shipmentMode: 'LCL' | 'FCL';
@@ -144,6 +150,8 @@ export interface TruckFormData extends BaseFormData {
 }
 
 export interface LCLFormData extends BaseFormData {
+  weight: any;
+  date: string;
   bookingType: 'LCL';
   origin: string;
   destination: string;
@@ -171,6 +179,8 @@ export interface ParcelFormData extends BaseFormData {
 }
 
 export interface CustomsFormData extends BaseFormData {
+  documentType: string;
+  country: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
   bookingType: 'Customs';
   serviceType: CustomsServiceType;
   cargoValue: number;
@@ -183,6 +193,10 @@ export interface CustomsFormData extends BaseFormData {
 }
 
 export interface InsuranceFormData extends BaseFormData {
+  insuranceValue: any;
+  coverageType: string;
+  weight: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
+  date: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
   bookingType: 'Insurance';
   cargoValue: number;
   origin: string;
@@ -196,6 +210,11 @@ export interface InsuranceFormData extends BaseFormData {
 }
 
 export interface FirstLastMileFormData extends BaseFormData {
+  vehicleType: "Van" | "Pickup Truck" | "Small Truck (e.g., Tata Ace)" | "Medium Truck (e.g., Eicher)" | "Large Truck (e.g., Ashok Leyland)";
+  origin: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
+  destination: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
+  date: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
+  weight: number;
   bookingType: 'First/Last Mile';
   serviceType: FirstLastMileServiceType;
   pickupLocation: string;

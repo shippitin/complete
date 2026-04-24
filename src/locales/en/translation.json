@@ -152,6 +152,123 @@
   "weight_in_ton": "Weight in Ton",
   "back_button": "Back",
 
+  "sea_results_page": {
+    "title": "Sea Freight Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "origin_port": "Origin Port",
+    "destination_port": "Destination Port",
+    "activity_type": "Activity Type",
+    "shipment_mode": "Shipment Mode",
+    "ready_date": "Ready Date",
+    "total_weight": "Total Weight",
+    "commodity_category": "Commodity Category",
+    "commodity": "Commodity",
+    "hazardous_cargo": "Hazardous Cargo",
+    "insurance_required": "Insurance Required",
+    "filters": "Filters",
+    "all": "All",
+    "activity_type_filter": "Activity Type",
+    "shipment_mode_filter": "Shipment Mode",
+    "transit_time": "Transit Time",
+    "carrier": "Carrier",
+    "book_now": "Book Now",
+    "view_details": "View Details",
+    "no_offers_found": "No offers found for your criteria.",
+    "home_button": "Go to Home",
+    "previous_button": "Go Back to Form",
+    "container_size": "Container Size",
+    "departure_date": "Departure Date",
+    "included_services": "Included Services",
+    "pickup": "Pickup",
+    "origin_clearance": "Origin Clearance",
+    "freight": "Freight",
+    "destination_clearance": "Destination Clearance",
+    "delivery": "Delivery"
+  },
+
+  "truck_results_page": {
+    "title": "Truck Freight Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "pickup_pincode": "Pickup Pincode",
+    "dropoff_pincode": "Dropoff Pincode",
+    "vehicle_type": "Vehicle Type",
+    "load_type": "Load Type",
+    "weight": "Weight",
+    "filters": "Filters",
+    "all": "All",
+    "transit_time": "Transit Time",
+    "carrier": "Carrier",
+    "book_now": "Book Now",
+    "no_offers_found": "No offers found for your criteria."
+  },
+
+  "lcl_results_page": {
+    "title": "LCL Freight Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "origin": "Origin",
+    "destination": "Destination",
+    "ready_date": "Ready Date",
+    "weight": "Weight",
+    "dimensions": "Dimensions",
+    "filters": "Filters",
+    "all": "All",
+    "transit_time": "Transit Time",
+    "carrier": "Carrier",
+    "book_now": "Book Now",
+    "no_offers_found": "No offers found for your criteria."
+  },
+
+  "customs_results_page": {
+    "title": "Customs Clearance Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "document_type": "Document Type",
+    "country": "Country",
+    "cargo_type": "Cargo Type",
+    "filters": "Filters",
+    "all": "All",
+    "book_now": "Book Now",
+    "no_offers_found": "No offers found for your criteria."
+  },
+
+  "parcel_results_page": {
+    "title": "Parcel Delivery Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "origin": "Origin",
+    "destination": "Destination",
+    "weight": "Weight",
+    "filters": "Filters",
+    "all": "All",
+    "transit_time": "Transit Time",
+    "carrier": "Carrier",
+    "book_now": "Book Now",
+    "no_offers_found": "No offers found for your criteria."
+  },
+
+  "insurance_results_page": {
+    "title": "Cargo Insurance Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "coverage_type": "Coverage Type",
+    "cargo_type": "Cargo Type",
+    "insurance_value": "Insurance Value",
+    "filters": "Filters",
+    "all": "All",
+    "book_now": "Book Now",
+    "no_offers_found": "No offers found for your criteria."
+  },
+
+  "first_last_mile_results_page": {
+    "title": "First/Last Mile Quote Results",
+    "your_shipment_details": "Your Shipment Details",
+    "origin": "Origin",
+    "destination": "Destination",
+    "vehicle_type": "Vehicle Type",
+    "weight": "Weight",
+    "filters": "Filters",
+    "all": "All",
+    "book_now": "Book Now",
+    "no_offers_found": "No offers found for your criteria."
+  },
+
   "air_results_page": {
     "title": "Air Freight Quote Results",
     "your_shipment_details": "Your Shipment Details",
