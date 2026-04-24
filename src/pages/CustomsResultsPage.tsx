@@ -1,10 +1,10 @@
 // src/pages/CustomsResultsPage.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaStamp, FaInfoCircle, FaArrowLeft, FaRupeeSign, FaGlobe, FaFileAlt, FaClock } from 'react-icons/fa';
 import type { CustomsFormData } from '../types/QuoteFormHandle';
+import { rateCardsAPI } from '../services/api';
 
-// Define the structure for a Customs service result
 interface CustomsServiceResult {
   id: string;
   serviceName: string;
@@ -15,86 +15,59 @@ interface CustomsServiceResult {
   status: 'Available' | 'Limited' | 'Full';
 }
 
-interface CustomsResultsPageProps {
-  // formData will be passed via location.state
-}
-
-const CustomsResultsPage: React.FC<CustomsResultsPageProps> = () => {
+const CustomsResultsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const formData = location.state?.formData as CustomsFormData | undefined; // Access formData from location.state
+  const formData = location.state?.formData as CustomsFormData | undefined;
 
-  // Function to go back to the QuoteFormPage
-  const handleBackToForm = () => {
-    navigate('/train-booking', { state: { activeService: 'Customs' } }); // Navigate back to QuoteFormPage with Customs selected
-  };
+  const [results, setResults] = useState<CustomsServiceResult[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Dummy data generation for Customs services
-  const generateDummyResults = (data: CustomsFormData): CustomsServiceResult[] => {
-    const basePrice = 25000; // Example base price for Customs
+  const getDummyResults = (data: CustomsFormData): CustomsServiceResult[] => {
+    const basePrice = 25000;
     const documentTypeFactor = data.documentType === 'Import Declaration' ? 1.2 : (data.documentType === 'Export Declaration' ? 1.0 : 0.8);
-
     return [
-      {
-        id: 'CUST-001',
-        serviceName: 'Express Customs Clearance',
-        provider: 'Global Customs Solutions',
-        estimatedTime: '1-2 Days',
-        price: basePrice * documentTypeFactor * 1.5, // Premium for express
-        features: ['Priority Processing', 'Dedicated Agent', '24/7 Support'],
-        status: 'Available',
-      },
-      {
-        id: 'CUST-002',
-        serviceName: 'Standard Customs Service',
-        provider: 'Reliable Customs Brokers',
-        estimatedTime: '3-5 Days',
-        price: basePrice * documentTypeFactor,
-        features: ['Comprehensive Documentation', 'Online Tracking'],
-        status: 'Available',
-      },
-      {
-        id: 'CUST-003',
-        serviceName: 'Economy Customs Filing',
-        provider: 'Budget Clearance Hub',
-        estimatedTime: '5-7 Days',
-        price: basePrice * documentTypeFactor * 0.7, // Cheapest
-        features: ['Cost-Effective', 'Standard Processing'],
-        status: 'Limited',
-      },
-      {
-        id: 'CUST-004',
-        serviceName: 'Specialized Import Clearance (Full)',
-        provider: 'Elite Trade Services',
-        estimatedTime: '2-3 Days',
-        price: basePrice * documentTypeFactor * 1.8,
-        features: ['Complex Cargo Handling', 'Legal Consultation'],
-        status: 'Full',
-      },
+      { id: 'CUST-001', serviceName: 'Express Customs Clearance', provider: 'Global Customs Solutions', estimatedTime: '1-2 Days', price: Math.round(basePrice * documentTypeFactor * 1.5), features: ['Priority Processing', 'Dedicated Agent', '24/7 Support'], status: 'Available' },
+      { id: 'CUST-002', serviceName: 'Standard Customs Service', provider: 'Reliable Customs Brokers', estimatedTime: '3-5 Days', price: Math.round(basePrice * documentTypeFactor), features: ['Comprehensive Documentation', 'Online Tracking'], status: 'Available' },
+      { id: 'CUST-003', serviceName: 'Economy Customs Filing', provider: 'Budget Clearance Hub', estimatedTime: '5-7 Days', price: Math.round(basePrice * documentTypeFactor * 0.7), features: ['Cost-Effective', 'Standard Processing'], status: 'Limited' },
     ];
   };
 
-  if (!formData) {
-    return (
-      <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center justify-center">
-        <div className="bg-white p-8 rounded-2xl shadow-xl text-center">
-          <FaInfoCircle className="text-red-500 text-6xl mb-4 mx-auto" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Customs booking data found.</h2>
-          <p className="text-gray-600 mb-6">Please go back and submit a quote from the form.</p>
-          <button
-            onClick={handleBackToForm}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300"
-          >
-            <FaArrowLeft className="inline-block mr-2" /> Back to Form
-          </button>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!formData) { navigate('/customs-booking'); return; }
 
-  const dummyResults = generateDummyResults(formData);
+    (async () => {
+      setLoading(true);
+      try {
+        const response = await rateCardsAPI.search({
+          serviceType: 'Customs',
+          origin: formData.country || '',
+          destination: formData.country || '',
+        });
 
-  const getStatusBadgeClass = (status: 'Available' | 'Limited' | 'Full') => {
+        if (response.data.data.length > 0) {
+          const mapped: CustomsServiceResult[] = response.data.data.map((r: any) => ({
+            id: r.id,
+            serviceName: r.carrier,
+            provider: r.carrier,
+            estimatedTime: r.transitTime,
+            price: r.totalPrice,
+            features: ['Online Tracking', 'Dedicated Agent'],
+            status: 'Available' as const,
+          }));
+          setResults(mapped);
+        } else {
+          setResults(getDummyResults(formData));
+        }
+      } catch (error) {
+        setResults(getDummyResults(formData));
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [formData, navigate]);
+
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'Available': return 'bg-green-100 text-green-800';
       case 'Limited': return 'bg-yellow-100 text-yellow-800';
@@ -104,189 +77,67 @@ const CustomsResultsPage: React.FC<CustomsResultsPageProps> = () => {
   };
 
   const handleBookNow = (result: CustomsServiceResult) => {
-    // Navigate to the new CustomsBookingDetailsPage, passing selected result and original form data
-    navigate(`/customs-booking-details`, {
-      state: {
-        selectedResult: result,
-        originalFormData: formData,
-      }
+    navigate('/customs-booking-details', {
+      state: { selectedResult: result, originalFormData: formData }
     });
   };
+
+  if (!formData) return null;
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full max-w-7xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Header for Results Page */}
         <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
           <h1 className="text-3xl font-bold">Customs Clearance Results</h1>
-          <button
-            onClick={handleBackToForm}
-            className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-full text-sm font-semibold transition duration-200"
-          >
-            <FaArrowLeft className="mr-2" /> Back to Form
+          <button onClick={() => navigate(-1)} className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-full text-sm font-semibold transition">
+            <FaArrowLeft className="mr-2" /> Back
           </button>
         </div>
 
-        {/* Step Indicators for the overall booking flow */}
-        <div className="flex justify-around mb-8 text-center p-6 border-b border-gray-200 bg-white">
-          <div className="flex-1 text-blue-600 font-bold">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-blue-600 bg-blue-100">
-              1
-            </div>
-            Search Results
-          </div>
-          <div className="flex-1 text-gray-400">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
-              2
-            </div>
-            Booking Details
-          </div>
-          <div className="flex-1 text-gray-400">
-            <div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">
-              3
-            </div>
-            Payment & Confirmation
-          </div>
+        <div className="flex justify-around text-center p-6 border-b border-gray-200">
+          <div className="flex-1 text-blue-600 font-bold"><div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-blue-600 bg-blue-100">1</div>Search Results</div>
+          <div className="flex-1 text-gray-400"><div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">2</div>Booking Details</div>
+          <div className="flex-1 text-gray-400"><div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">3</div>Confirmation</div>
         </div>
 
-        {/* Main Content Area: Two Columns for Filters and Results */}
-        <div className="flex flex-col md:flex-row gap-6 p-4 sm:p-6">
-          {/* Left Column: Filters Sidebar (Placeholder) */}
-          <div className="w-full md:w-1/4 bg-white rounded-xl shadow-md border border-gray-200 p-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <FaInfoCircle className="mr-2 text-blue-600" /> Customs Filters
-            </h2>
-            <div className="space-y-4 text-gray-700">
-              <p className="font-semibold">Filter options coming soon!</p>
-              {/* Example filters for Customs */}
-              <div className="border-b border-gray-200 pb-4">
-                <p className="font-semibold text-gray-700 mb-2">Price Range</p>
-                <input type="range" className="w-full accent-blue-600" />
-                <div className="flex justify-between text-sm text-gray-500 mt-1">
-                  <span>₹10,000</span>
-                  <span>₹50,000+</span>
-                </div>
-              </div>
-              <div className="border-b border-gray-200 pb-4">
-                <p className="font-semibold text-gray-700 mb-2">Estimated Time</p>
-                <label className="flex items-center text-gray-700">
-                  <input type="checkbox" className="form-checkbox text-blue-600 rounded mr-2" />
-                  <span>&lt; 3 Days</span>
-                </label>
-                <label className="flex items-center text-gray-700 mt-1">
-                  <input type="checkbox" className="form-checkbox text-blue-600 rounded mr-2" />
-                  <span>3-5 Days</span>
-                </label>
-                <label className="flex items-center text-gray-700 mt-1">
-                  <input type="checkbox" className="form-checkbox text-blue-600 rounded mr-2" />
-                  <span>&gt; 5 Days</span>
-                </label>
-              </div>
-              <div>
-                <p className="font-semibold text-gray-700 mb-2">Provider</p>
-                <label className="flex items-center text-gray-700">
-                  <input type="checkbox" className="form-checkbox text-blue-600 rounded mr-2" />
-                  <span>Global Customs Solutions</span>
-                </label>
-                <label className="flex items-center text-gray-700 mt-1">
-                  <input type="checkbox" className="form-checkbox text-blue-600 rounded mr-2" />
-                  <span>Reliable Customs Brokers</span>
-                </label>
-              </div>
+        <div className="p-4 sm:p-6">
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+              <p className="text-gray-500 text-lg">Fetching best rates...</p>
             </div>
-          </div>
-
-          {/* Right Column: Results List */}
-          <div className="w-full md:w-3/4">
-            {dummyResults.length > 0 ? (
-              <div className="grid grid-cols-1 gap-6"> {/* Single column layout for results cards */}
-                {dummyResults.map((result) => (
-                  <div key={result.id} className="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 flex flex-col justify-between
-                                                  hover:shadow-2xl hover:transform hover:scale-[1.01] transition-all duration-300 ease-in-out">
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-bold text-gray-900 flex items-center">
-                          <FaStamp className="text-yellow-600 mr-2" /> {result.serviceName}
-                        </h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(result.status)}`}>
-                          {result.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4 ml-8">{result.provider}</p>
-
-                      <div className="grid grid-cols-2 gap-y-3 mb-6 text-gray-700">
-                        <div className="flex items-center col-span-2">
-                          <FaFileAlt className="text-gray-500 mr-3 text-lg" />
-                          <div>
-                            <p className="text-sm font-medium">Document Type:</p>
-                            <p className="font-semibold">{formData.documentType}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center col-span-2">
-                          <FaGlobe className="text-gray-500 mr-3 text-lg" />
-                          <div>
-                            <p className="text-sm font-medium">Country:</p>
-                            <p className="font-semibold">{formData.country}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center col-span-2">
-                          <FaInfoCircle className="text-gray-500 mr-3 text-lg" />
-                          <div>
-                            <p className="text-sm font-medium">Incoterms:</p>
-                            <p className="font-semibold">{formData.incoterms || 'N/A'}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center col-span-2">
-                          <FaClock className="text-gray-500 mr-3 text-lg" />
-                          <div>
-                            <p className="text-sm font-medium">Estimated Time:</p>
-                            <p className="font-semibold">{result.estimatedTime}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center col-span-2">
-                          <FaInfoCircle className="text-gray-500 mr-3 text-lg" />
-                          <div>
-                            <p className="text-sm font-medium">Features:</p>
-                            <p className="font-semibold">{result.features.join(', ')}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex justify-between items-center mt-4">
-                        <div className="flex items-center">
-                          <FaStamp className="text-gray-500 mr-2 text-xl" />
-                          <span className="text-lg font-semibold text-gray-800">Customs Service</span>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-3xl font-bold text-blue-800 flex items-center">
-                            <FaRupeeSign className="text-2xl mr-1" />{result.price.toLocaleString('en-IN')}
-                          </p>
-                        </div>
-                      </div>
+          ) : results.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6">
+              {results.map(result => (
+                <div key={result.id} className="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 flex flex-col justify-between hover:shadow-2xl transition-all duration-300">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 flex items-center"><FaStamp className="text-yellow-600 mr-2" />{result.serviceName}</h3>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(result.status)}`}>{result.status}</span>
                     </div>
-
-                    {/* Book Now Button */}
-                    <div className="mt-6">
-                      <button
-                        onClick={() => handleBookNow(result)}
-                        className={`w-full py-3 px-6 rounded-full text-white font-bold text-lg shadow-lg transition duration-300 ease-in-out
-                                    ${result.status === 'Full' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-700 hover:bg-blue-800 transform hover:scale-105'}`}
-                        disabled={result.status === 'Full'}
-                      >
-                        {result.status === 'Full' ? 'Fully Booked' : 'Book Now'}
-                      </button>
+                    <p className="text-sm text-gray-600 mb-4 ml-8">{result.provider}</p>
+                    <div className="grid grid-cols-2 gap-y-3 mb-6 text-gray-700">
+                      <div className="flex items-center col-span-2"><FaFileAlt className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Document Type:</p><p className="font-semibold">{formData.documentType}</p></div></div>
+                      <div className="flex items-center col-span-2"><FaGlobe className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Country:</p><p className="font-semibold">{formData.country}</p></div></div>
+                      <div className="flex items-center col-span-2"><FaClock className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Estimated Time:</p><p className="font-semibold">{result.estimatedTime}</p></div></div>
+                      <div className="flex items-center col-span-2"><FaInfoCircle className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Features:</p><p className="font-semibold">{result.features.join(', ')}</p></div></div>
+                    </div>
+                    <div className="flex justify-between items-center mt-4">
+                      <span className="text-lg font-semibold text-gray-800">Customs Service</span>
+                      <p className="text-3xl font-bold text-blue-800 flex items-center"><FaRupeeSign className="text-2xl mr-1" />{result.price.toLocaleString('en-IN')}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10 text-gray-500">
-                <FaInfoCircle className="text-5xl mb-4 mx-auto text-gray-400" />
-                <p className="text-xl font-semibold">No Customs services found for your criteria.</p>
-                <p className="mt-2">Please try adjusting your search parameters.</p>
-              </div>
-            )}
-          </div>
+                  <div className="mt-6">
+                    <button onClick={() => handleBookNow(result)} disabled={result.status === 'Full'} className={`w-full py-3 px-6 rounded-full text-white font-bold text-lg shadow-lg transition duration-300 ${result.status === 'Full' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-700 hover:bg-blue-800'}`}>
+                      {result.status === 'Full' ? 'Fully Booked' : 'Book Now'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-500"><p className="text-xl font-semibold">No Customs services found.</p></div>
+          )}
         </div>
       </div>
     </div>
