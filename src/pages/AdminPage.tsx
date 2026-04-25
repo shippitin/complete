@@ -1,8 +1,9 @@
 // src/pages/AdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUsers, FaClipboardList, FaChartBar, FaSearch, FaUserCog } from 'react-icons/fa';
-import api from '../services/api';
+import { FaUsers, FaClipboardList, FaChartBar, FaSearch, FaUserCog, FaTags, FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff } from 'react-icons/fa';
+import api, { rateCardsAPI } from '../services/api';
+import toast from 'react-hot-toast';
 
 interface Stats {
   totalUsers: number;
@@ -36,6 +37,37 @@ interface Booking {
   booking_date: string;
 }
 
+interface RateCard {
+  id: string;
+  service_type: string;
+  origin: string;
+  destination: string;
+  carrier: string;
+  transit_time: string;
+  base_price: number;
+  price_per_kg: number;
+  price_per_container: number;
+  container_type: string;
+  is_active: boolean;
+  valid_from: string;
+  valid_until: string;
+}
+
+const emptyRateCard = {
+  service_type: 'Rail',
+  origin: '',
+  destination: '',
+  carrier: '',
+  transit_time: '',
+  base_price: 0,
+  price_per_kg: 0,
+  price_per_container: 0,
+  container_type: '',
+  is_active: true,
+  valid_from: '',
+  valid_until: '',
+};
+
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   let classes = 'px-3 py-1 text-xs font-semibold rounded-full uppercase';
   switch (status.toLowerCase()) {
@@ -52,19 +84,21 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'stats' | 'bookings' | 'users'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'bookings' | 'users' | 'rates'>('stats');
   const [stats, setStats] = useState<Stats | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [rateCards, setRateCards] = useState<RateCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showRateForm, setShowRateForm] = useState(false);
+  const [editingRate, setEditingRate] = useState<RateCard | null>(null);
+  const [rateForm, setRateForm] = useState(emptyRateCard);
+  const [rateServiceFilter, setRateServiceFilter] = useState('');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
-    if (user.role !== 'admin') {
-      navigate('/');
-      return;
-    }
+    if (user.role !== 'admin') { navigate('/'); return; }
     fetchStats();
   }, []);
 
@@ -103,11 +137,24 @@ const AdminPage: React.FC = () => {
     }
   };
 
-  const handleTabChange = (tab: 'stats' | 'bookings' | 'users') => {
+  const fetchRateCards = async () => {
+    setLoading(true);
+    try {
+      const res = await rateCardsAPI.getAll();
+      setRateCards(res.data.data);
+    } catch (error) {
+      console.error('Failed to fetch rate cards:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab: 'stats' | 'bookings' | 'users' | 'rates') => {
     setActiveTab(tab);
     setSearchTerm('');
     if (tab === 'bookings') fetchBookings();
     if (tab === 'users') fetchUsers();
+    if (tab === 'rates') fetchRateCards();
   };
 
   const updateBookingStatus = async (bookingId: string, status: string) => {
@@ -128,6 +175,64 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const handleRateFormSubmit = async () => {
+    try {
+      if (editingRate) {
+        await rateCardsAPI.update(editingRate.id, rateForm);
+        toast.success('Rate card updated!');
+      } else {
+        await rateCardsAPI.create(rateForm);
+        toast.success('Rate card created!');
+      }
+      setShowRateForm(false);
+      setEditingRate(null);
+      setRateForm(emptyRateCard);
+      fetchRateCards();
+    } catch (error) {
+      toast.error('Failed to save rate card.');
+    }
+  };
+
+  const handleEditRate = (rate: RateCard) => {
+    setEditingRate(rate);
+    setRateForm({
+      service_type: rate.service_type,
+      origin: rate.origin,
+      destination: rate.destination,
+      carrier: rate.carrier,
+      transit_time: rate.transit_time,
+      base_price: rate.base_price,
+      price_per_kg: rate.price_per_kg,
+      price_per_container: rate.price_per_container,
+      container_type: rate.container_type || '',
+      is_active: rate.is_active,
+      valid_from: rate.valid_from ? rate.valid_from.split('T')[0] : '',
+      valid_until: rate.valid_until ? rate.valid_until.split('T')[0] : '',
+    });
+    setShowRateForm(true);
+  };
+
+  const handleDeleteRate = async (id: string) => {
+    if (!window.confirm('Delete this rate card?')) return;
+    try {
+      await rateCardsAPI.delete(id);
+      toast.success('Rate card deleted.');
+      fetchRateCards();
+    } catch (error) {
+      toast.error('Failed to delete rate card.');
+    }
+  };
+
+  const handleToggleActive = async (rate: RateCard) => {
+    try {
+      await rateCardsAPI.update(rate.id, { ...rate, is_active: !rate.is_active });
+      toast.success(rate.is_active ? 'Rate deactivated.' : 'Rate activated.');
+      fetchRateCards();
+    } catch (error) {
+      toast.error('Failed to update rate.');
+    }
+  };
+
   const filteredBookings = bookings.filter(b =>
     b.booking_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     b.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,6 +242,13 @@ const AdminPage: React.FC = () => {
   const filteredUsers = users.filter(u =>
     u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredRates = rateCards.filter(r =>
+    (!rateServiceFilter || r.service_type === rateServiceFilter) &&
+    (!searchTerm || r.origin.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      r.carrier.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -149,29 +261,24 @@ const AdminPage: React.FC = () => {
             <FaUserCog className="text-blue-600 text-2xl" />
             <div>
               <h1 className="text-xl font-bold text-gray-800">Admin Panel</h1>
-              <p className="text-gray-400 text-sm">Manage bookings, users and platform data</p>
+              <p className="text-gray-400 text-sm">Manage bookings, users, rates and platform data</p>
             </div>
           </div>
-          <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2 rounded-full">
-            Admin Access
-          </span>
+          <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2 rounded-full">Admin Access</span>
         </div>
 
-        {/* Tabs — same style as your service tabs */}
+        {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-1.5 flex gap-1">
           {[
             { id: 'stats', label: 'Dashboard', icon: <FaChartBar className="text-sm" /> },
             { id: 'bookings', label: 'Bookings', icon: <FaClipboardList className="text-sm" /> },
             { id: 'users', label: 'Users', icon: <FaUsers className="text-sm" /> },
+            { id: 'rates', label: 'Rate Cards', icon: <FaTags className="text-sm" /> },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => handleTabChange(tab.id as any)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-500 hover:bg-gray-50'
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
             >
               {tab.icon} {tab.label}
             </button>
@@ -181,9 +288,7 @@ const AdminPage: React.FC = () => {
         {/* Stats Tab */}
         {activeTab === 'stats' && (
           loading ? (
-            <div className="flex justify-center py-16">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
-            </div>
+            <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div></div>
           ) : stats && (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {[
@@ -210,47 +315,28 @@ const AdminPage: React.FC = () => {
               <h2 className="font-bold text-gray-800">All Bookings ({filteredBookings.length})</h2>
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48"
-                />
+                <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48" />
               </div>
             </div>
             {loading ? (
-              <div className="flex justify-center py-16">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
-              </div>
+              <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div></div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      {['Booking ID', 'Customer', 'Service', 'Route', 'Status', 'Amount', 'Update'].map(h => (
-                        <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">{h}</th>
-                      ))}
-                    </tr>
+                    <tr>{['Booking ID', 'Customer', 'Service', 'Route', 'Status', 'Amount', 'Update'].map(h => <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">{h}</th>)}</tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filteredBookings.length > 0 ? filteredBookings.map(booking => (
                       <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-5 py-4 text-sm font-bold text-blue-600">{booking.booking_number}</td>
-                        <td className="px-5 py-4 text-sm">
-                          <p className="font-medium text-gray-800">{booking.full_name}</p>
-                          <p className="text-gray-400 text-xs">{booking.email}</p>
-                        </td>
+                        <td className="px-5 py-4 text-sm"><p className="font-medium text-gray-800">{booking.full_name}</p><p className="text-gray-400 text-xs">{booking.email}</p></td>
                         <td className="px-5 py-4 text-sm text-gray-600">{booking.service_type}</td>
                         <td className="px-5 py-4 text-sm text-gray-400">{booking.origin} → {booking.destination}</td>
                         <td className="px-5 py-4"><StatusBadge status={booking.status} /></td>
                         <td className="px-5 py-4 text-sm font-semibold text-gray-800">₹{(booking.estimated_price || 0).toLocaleString('en-IN')}</td>
                         <td className="px-5 py-4">
-                          <select
-                            className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white"
-                            value={booking.status}
-                            onChange={e => updateBookingStatus(booking.id, e.target.value)}
-                          >
+                          <select className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-200 bg-white" value={booking.status} onChange={e => updateBookingStatus(booking.id, e.target.value)}>
                             <option value="pending">Pending</option>
                             <option value="confirmed">Confirmed</option>
                             <option value="in_transit">In Transit</option>
@@ -259,9 +345,7 @@ const AdminPage: React.FC = () => {
                           </select>
                         </td>
                       </tr>
-                    )) : (
-                      <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400 text-sm">No bookings found.</td></tr>
-                    )}
+                    )) : <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400 text-sm">No bookings found.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -276,28 +360,16 @@ const AdminPage: React.FC = () => {
               <h2 className="font-bold text-gray-800">All Users ({filteredUsers.length})</h2>
               <div className="relative">
                 <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48"
-                />
+                <input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48" />
               </div>
             </div>
             {loading ? (
-              <div className="flex justify-center py-16">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
-              </div>
+              <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div></div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr>
-                      {['Name', 'Email', 'Phone', 'Company', 'Role', 'Joined', 'Actions'].map(h => (
-                        <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">{h}</th>
-                      ))}
-                    </tr>
+                    <tr>{['Name', 'Email', 'Phone', 'Company', 'Role', 'Joined', 'Actions'].map(h => <th key={h} className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">{h}</th>)}</tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {filteredUsers.length > 0 ? filteredUsers.map(user => (
@@ -308,24 +380,153 @@ const AdminPage: React.FC = () => {
                         <td className="px-5 py-4 text-sm text-gray-400">{user.company_name || '—'}</td>
                         <td className="px-5 py-4"><StatusBadge status={user.role} /></td>
                         <td className="px-5 py-4 text-sm text-gray-400">{new Date(user.created_at).toLocaleDateString('en-IN')}</td>
-                        <td className="px-5 py-4">
-                          {user.role !== 'admin' && (
-                            <button
-                              onClick={() => makeAdmin(user.id)}
-                              className="text-xs border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-blue-300 hover:text-blue-600 transition"
-                            >
-                              Make Admin
-                            </button>
-                          )}
-                        </td>
+                        <td className="px-5 py-4">{user.role !== 'admin' && <button onClick={() => makeAdmin(user.id)} className="text-xs border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:border-blue-300 hover:text-blue-600 transition">Make Admin</button>}</td>
                       </tr>
-                    )) : (
-                      <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400 text-sm">No users found.</td></tr>
-                    )}
+                    )) : <tr><td colSpan={7} className="px-5 py-12 text-center text-gray-400 text-sm">No users found.</td></tr>}
                   </tbody>
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Rate Cards Tab */}
+        {activeTab === 'rates' && (
+          <div className="space-y-4">
+            {/* Rate Form Modal */}
+            {showRateForm && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-screen overflow-y-auto">
+                  <h2 className="text-xl font-bold text-gray-800 mb-6">{editingRate ? 'Edit Rate Card' : 'Add New Rate Card'}</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Service Type</label>
+                      <select value={rateForm.service_type} onChange={e => setRateForm({ ...rateForm, service_type: e.target.value })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        {['Rail', 'Sea', 'Air', 'Truck', 'Parcel', 'LCL', 'Customs', 'Insurance', 'DoorToDoor', 'FirstLastMile'].map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Carrier</label>
+                      <input type="text" value={rateForm.carrier} onChange={e => setRateForm({ ...rateForm, carrier: e.target.value })} placeholder="e.g. CONCOR, Maersk" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Origin</label>
+                      <input type="text" value={rateForm.origin} onChange={e => setRateForm({ ...rateForm, origin: e.target.value })} placeholder="e.g. Chennai, INMAA" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Destination</label>
+                      <input type="text" value={rateForm.destination} onChange={e => setRateForm({ ...rateForm, destination: e.target.value })} placeholder="e.g. JNPT, Mumbai" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Transit Time</label>
+                      <input type="text" value={rateForm.transit_time} onChange={e => setRateForm({ ...rateForm, transit_time: e.target.value })} placeholder="e.g. 3-4 Days" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Container Type</label>
+                      <input type="text" value={rateForm.container_type} onChange={e => setRateForm({ ...rateForm, container_type: e.target.value })} placeholder="e.g. 20ft, 40ft" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Base Price (₹)</label>
+                      <input type="number" value={rateForm.base_price} onChange={e => setRateForm({ ...rateForm, base_price: parseFloat(e.target.value) })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Price per KG (₹)</label>
+                      <input type="number" value={rateForm.price_per_kg} onChange={e => setRateForm({ ...rateForm, price_per_kg: parseFloat(e.target.value) })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Price per Container (₹)</label>
+                      <input type="number" value={rateForm.price_per_container} onChange={e => setRateForm({ ...rateForm, price_per_container: parseFloat(e.target.value) })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Valid From</label>
+                      <input type="date" value={rateForm.valid_from} onChange={e => setRateForm({ ...rateForm, valid_from: e.target.value })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Valid Until</label>
+                      <input type="date" value={rateForm.valid_until} onChange={e => setRateForm({ ...rateForm, valid_until: e.target.value })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-medium text-gray-600">Active</label>
+                      <button onClick={() => setRateForm({ ...rateForm, is_active: !rateForm.is_active })} className={`text-2xl ${rateForm.is_active ? 'text-blue-600' : 'text-gray-400'}`}>
+                        {rateForm.is_active ? <FaToggleOn /> : <FaToggleOff />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 mt-6">
+                    <button onClick={handleRateFormSubmit} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+                      {editingRate ? 'Update Rate Card' : 'Add Rate Card'}
+                    </button>
+                    <button onClick={() => { setShowRateForm(false); setEditingRate(null); setRateForm(emptyRateCard); }} className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rate Cards Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-5 border-b border-gray-100 flex flex-wrap gap-3 justify-between items-center">
+                <h2 className="font-bold text-gray-800">Rate Cards ({filteredRates.length})</h2>
+                <div className="flex gap-3 flex-wrap">
+                  <select value={rateServiceFilter} onChange={e => setRateServiceFilter(e.target.value)} className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                    <option value="">All Services</option>
+                    {['Rail', 'Sea', 'Air', 'Truck', 'Parcel', 'LCL', 'Customs', 'Insurance', 'DoorToDoor', 'FirstLastMile'].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <div className="relative">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" />
+                    <input type="text" placeholder="Search origin, dest, carrier..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-56" />
+                  </div>
+                  <button onClick={() => { setShowRateForm(true); setEditingRate(null); setRateForm(emptyRateCard); }} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition">
+                    <FaPlus /> Add Rate
+                  </button>
+                </div>
+              </div>
+              {loading ? (
+                <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div></div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>{['Service', 'Route', 'Carrier', 'Transit', 'Base Price', 'Per KG', 'Per Container', 'Container', 'Valid Until', 'Status', 'Actions'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase whitespace-nowrap">{h}</th>)}</tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {filteredRates.length > 0 ? filteredRates.map(rate => (
+                        <tr key={rate.id} className={`hover:bg-gray-50 transition-colors ${!rate.is_active ? 'opacity-50' : ''}`}>
+                          <td className="px-4 py-3 text-xs font-bold text-blue-600 whitespace-nowrap">{rate.service_type}</td>
+                          <td className="px-4 py-3 text-xs text-gray-700 whitespace-nowrap">{rate.origin} → {rate.destination}</td>
+                          <td className="px-4 py-3 text-xs font-medium text-gray-800 whitespace-nowrap">{rate.carrier}</td>
+                          <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{rate.transit_time}</td>
+                          <td className="px-4 py-3 text-xs font-semibold text-gray-800 whitespace-nowrap">₹{parseFloat(rate.base_price as any).toLocaleString('en-IN')}</td>
+                          <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">₹{parseFloat(rate.price_per_kg as any)}/kg</td>
+                          <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">₹{parseFloat(rate.price_per_container as any).toLocaleString('en-IN')}</td>
+                          <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{rate.container_type || '—'}</td>
+                          <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{rate.valid_until ? new Date(rate.valid_until).toLocaleDateString('en-IN') : '—'}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${rate.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'}`}>
+                              {rate.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => handleToggleActive(rate)} className={`text-lg ${rate.is_active ? 'text-blue-500' : 'text-gray-400'} hover:opacity-70 transition`} title={rate.is_active ? 'Deactivate' : 'Activate'}>
+                                {rate.is_active ? <FaToggleOn /> : <FaToggleOff />}
+                              </button>
+                              <button onClick={() => handleEditRate(rate)} className="text-gray-400 hover:text-blue-600 transition" title="Edit">
+                                <FaEdit />
+                              </button>
+                              <button onClick={() => handleDeleteRate(rate.id)} className="text-gray-400 hover:text-red-500 transition" title="Delete">
+                                <FaTrash />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )) : <tr><td colSpan={11} className="px-5 py-12 text-center text-gray-400 text-sm">No rate cards found. Add one!</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
