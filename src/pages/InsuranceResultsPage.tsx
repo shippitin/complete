@@ -1,116 +1,93 @@
 // src/pages/InsuranceResultsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaShieldAlt, FaInfoCircle, FaArrowLeft, FaRupeeSign, FaCalendarAlt, FaBox, FaWeightHanging, FaDollarSign } from 'react-icons/fa';
+import { FaShieldAlt, FaArrowLeft, FaRupeeSign, FaBox, FaWeightHanging, FaDollarSign, FaLeaf, FaFire, FaChevronRight } from 'react-icons/fa';
 import type { InsuranceFormData } from '../types/QuoteFormHandle';
-import { rateCardsAPI } from '../services/api';
 
-interface InsuranceServiceResult {
-  id: string;
-  policyName: string;
-  provider: string;
-  coverageDetails: string;
-  premium: number;
-  features: string[];
-  status: 'Available' | 'Limited' | 'Full';
+const getBorderColor = (badge: string | null | undefined) => {
+  switch (badge) { case 'best_value': return '#fbbf24'; case 'fastest': return '#38bdf8'; case 'most_popular': return '#fb7185'; default: return 'transparent'; }
+};
+const getBadgeConfig = (badge: string | null | undefined) => {
+  switch (badge) {
+    case 'best_value': return { label: '★ Best Value', pill: 'bg-amber-50 text-amber-700 border border-amber-200' };
+    case 'fastest': return { label: '⚡ Fastest', pill: 'bg-sky-50 text-sky-700 border border-sky-200' };
+    case 'most_popular': return { label: '🔥 Most Popular', pill: 'bg-rose-50 text-rose-700 border border-rose-200' };
+    default: return null;
+  }
+};
+
+interface InsuranceResult {
+  id: string; policyName: string; provider: string; coverageDetails: string;
+  premium: number; features: string[]; status: 'Available' | 'Limited' | 'Full'; badge?: string | null;
 }
 
 const InsuranceResultsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const formData = location.state?.formData as InsuranceFormData | undefined;
-
-  const [results, setResults] = useState<InsuranceServiceResult[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const getDummyResults = (data: InsuranceFormData): InsuranceServiceResult[] => {
-    const basePremium = 500;
-    const valueFactor = data.insuranceValue ? data.insuranceValue / 1000 : 1;
-    const coverageFactor = data.coverageType === 'All Risk' ? 1.5 : (data.coverageType === 'Named Perils' ? 1.0 : 0.7);
-    return [
-      { id: 'INS-001', policyName: 'Comprehensive Cargo Protection', provider: 'GlobalSure Insurance', coverageDetails: 'Covers all risks of loss or damage from external causes.', premium: Math.round(basePremium * valueFactor * coverageFactor * 1.2), features: ['Door-to-Door Coverage', 'Quick Claim Processing', '24/7 Support'], status: 'Available' },
-      { id: 'INS-002', policyName: 'Standard Perils Policy', provider: 'Reliable Cargo Insurers', coverageDetails: 'Covers specified perils like fire, collision, overturning.', premium: Math.round(basePremium * valueFactor * coverageFactor), features: ['Basic Coverage', 'Competitive Rates'], status: 'Available' },
-      { id: 'INS-003', policyName: 'Total Loss Only Policy', provider: 'Budget Shield Insurance', coverageDetails: 'Covers only total loss of the entire cargo.', premium: Math.round(basePremium * valueFactor * coverageFactor * 0.8), features: ['Lowest Premium', 'Simple Coverage'], status: 'Limited' },
-    ];
-  };
+  const [results, setResults] = useState<InsuranceResult[]>([]);
 
   useEffect(() => {
     if (!formData) { navigate('/insurance-booking'); return; }
-    setResults(getDummyResults(formData));
+    const base = 500; const vf = formData.insuranceValue ? formData.insuranceValue / 1000 : 1;
+    const cf = formData.coverageType === 'All Risk' ? 1.5 : formData.coverageType === 'Named Perils' ? 1.0 : 0.7;
+    setResults([
+      { id: 'INS-001', policyName: 'Comprehensive Cargo Protection', provider: 'GlobalSure Insurance', coverageDetails: 'All risks of loss or damage from external causes.', premium: Math.round(base * vf * cf * 1.2), features: ['Door-to-Door', 'Quick Claims', '24/7 Support'], status: 'Available', badge: 'most_popular' },
+      { id: 'INS-002', policyName: 'Standard Perils Policy', provider: 'Reliable Cargo Insurers', coverageDetails: 'Fire, collision, overturning.', premium: Math.round(base * vf * cf), features: ['Basic Coverage', 'Competitive Rates'], status: 'Available', badge: 'best_value' },
+      { id: 'INS-003', policyName: 'Total Loss Only Policy', provider: 'Budget Shield Insurance', coverageDetails: 'Total loss of entire cargo only.', premium: Math.round(base * vf * cf * 0.8), features: ['Lowest Premium'], status: 'Limited', badge: 'fastest' },
+    ]);
   }, [formData, navigate]);
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'Available': return 'bg-green-100 text-green-800';
-      case 'Limited': return 'bg-yellow-100 text-yellow-800';
-      case 'Full': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleBookNow = (result: InsuranceServiceResult) => {
-    navigate('/insurance-booking-details', {
-      state: { selectedResult: result, originalFormData: formData }
-    });
-  };
 
   if (!formData) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center">
-      <div className="w-full max-w-7xl bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Cargo Insurance Quotes</h1>
-          <button onClick={() => navigate(-1)} className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-full text-sm font-semibold transition">
-            <FaArrowLeft className="mr-2" /> Back
-          </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-5 text-sm">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-gray-400 hover:text-blue-600 transition font-medium"><FaArrowLeft className="text-xs" /> Back</button>
+          <div className="h-4 w-px bg-gray-200"></div>
+          <span className="font-semibold text-gray-700">{formData.coverageType} · ₹{formData.insuranceValue?.toLocaleString('en-IN')}</span>
         </div>
-
-        <div className="flex justify-around text-center p-6 border-b border-gray-200">
-          <div className="flex-1 text-blue-600 font-bold"><div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-blue-600 bg-blue-100">1</div>Search Results</div>
-          <div className="flex-1 text-gray-400"><div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">2</div>Booking Details</div>
-          <div className="flex-1 text-gray-400"><div className="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center border-2 border-gray-300 bg-gray-50">3</div>Confirmation</div>
-        </div>
-
-        <div className="p-4 sm:p-6">
-          {loading ? (
-            <div className="text-center py-16">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-              <p className="text-gray-500">Fetching best rates...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6">
-              {results.map(result => (
-                <div key={result.id} className="bg-white p-6 rounded-2xl shadow-xl border border-gray-200 flex flex-col justify-between hover:shadow-2xl transition-all duration-300">
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-gray-900 flex items-center"><FaShieldAlt className="text-lime-600 mr-2" />{result.policyName}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(result.status)}`}>{result.status}</span>
+      </div>
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <div className="mb-5"><h1 className="text-xl font-bold text-gray-800">Cargo Insurance Quotes</h1><p className="text-sm text-gray-400 mt-0.5">{results.length} policies available</p></div>
+        <div className="space-y-4">
+          {results.map(result => {
+            const badgeConfig = getBadgeConfig(result.badge);
+            return (
+              <div key={result.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden" style={{ borderLeft: `4px solid ${getBorderColor(result.badge)}` }}>
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center"><FaShieldAlt className="text-green-600 text-sm" /></div>
+                      <div><h3 className="text-base font-bold text-gray-800">{result.policyName}</h3><p className="text-xs text-gray-400">{result.provider}</p></div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-4 ml-8">{result.provider}</p>
-                    <div className="grid grid-cols-2 gap-y-3 mb-6 text-gray-700">
-                      <div className="flex items-center col-span-2"><FaBox className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Cargo Type:</p><p className="font-semibold">{formData.cargoType}</p></div></div>
-                      <div className="flex items-center col-span-2"><FaWeightHanging className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Weight:</p><p className="font-semibold">{formData.weight} KG</p></div></div>
-                      <div className="flex items-center col-span-2"><FaDollarSign className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Insured Value:</p><p className="font-semibold">₹{formData.insuranceValue?.toLocaleString('en-IN')}</p></div></div>
-                      <div className="flex items-center col-span-2"><FaShieldAlt className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Coverage Type:</p><p className="font-semibold">{formData.coverageType}</p></div></div>
-                      <div className="flex items-center col-span-2"><FaCalendarAlt className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Date:</p><p className="font-semibold">{formData.date}</p></div></div>
-                      <div className="flex items-center col-span-2"><FaInfoCircle className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Coverage Details:</p><p className="font-semibold">{result.coverageDetails}</p></div></div>
-                      <div className="flex items-center col-span-2"><FaInfoCircle className="text-gray-500 mr-3" /><div><p className="text-sm font-medium">Features:</p><p className="font-semibold">{result.features.join(', ')}</p></div></div>
-                    </div>
-                    <div className="flex justify-between items-center mt-4">
-                      <span className="text-lg font-semibold text-gray-800">Insurance Premium</span>
-                      <p className="text-3xl font-bold text-blue-800 flex items-center"><FaRupeeSign className="text-2xl mr-1" />{result.premium.toLocaleString('en-IN')}</p>
+                    <div className="flex items-center gap-2">
+                      {badgeConfig && <span className={`text-xs font-semibold px-3 py-1 rounded-full ${badgeConfig.pill}`}>{badgeConfig.label}</span>}
                     </div>
                   </div>
-                  <div className="mt-6">
-                    <button onClick={() => handleBookNow(result)} disabled={result.status === 'Full'} className={`w-full py-3 px-6 rounded-full text-white font-bold text-lg shadow-lg transition duration-300 ${result.status === 'Full' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-700 hover:bg-blue-800'}`}>
-                      {result.status === 'Full' ? 'Fully Booked' : 'Book Now'}
-                    </button>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div><p className="text-xs text-gray-400 mb-0.5">CARGO TYPE</p><p className="text-sm font-bold text-gray-800">{formData.cargoType}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5">INSURED VALUE</p><p className="text-sm font-semibold text-gray-700">₹{formData.insuranceValue?.toLocaleString('en-IN')}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5">COVERAGE</p><p className="text-sm font-semibold text-gray-700">{formData.coverageType}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5">COVERAGE DETAILS</p><p className="text-xs text-gray-600">{result.coverageDetails}</p></div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {result.features.map((f, i) => <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">{f}</span>)}
+                  </div>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                    <p className="text-xs text-gray-400">Insurance Premium</p>
+                    <div className="flex items-center gap-4">
+                      <p className="text-2xl font-black text-gray-900 flex items-center gap-1"><FaRupeeSign className="text-lg text-blue-500" />{result.premium.toLocaleString('en-IN')}</p>
+                      <button onClick={() => navigate('/insurance-booking-details', { state: { selectedResult: result, originalFormData: formData } })} disabled={result.status === 'Full'} className={`flex items-center gap-2 font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap text-white ${result.status === 'Full' ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                        {result.status === 'Full' ? 'Full' : 'Get Policy'} <FaChevronRight className="text-xs" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
