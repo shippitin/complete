@@ -1,6 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { FaAnchor, FaMapMarkerAlt, FaCalendarAlt, FaConciergeBell, FaClipboardList } from 'react-icons/fa';
+import { FaAnchor, FaCalendarAlt, FaConciergeBell, FaClipboardList } from 'react-icons/fa';
 import { QuoteFormHandle } from '../../types/QuoteFormHandle';
+import LocationAutocomplete from '../LocationAutocomplete';
 
 // This interface solves the TypeScript error in HeroSection
 interface PortServicesProps {
@@ -48,7 +49,7 @@ const PortServicesQuoteForm = forwardRef<QuoteFormHandle, PortServicesProps>((pr
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* Vessel Name */}
         <div className="flex flex-col space-y-1">
           <label className="text-sm font-semibold text-slate-700 flex items-center">
@@ -67,23 +68,14 @@ const PortServicesQuoteForm = forwardRef<QuoteFormHandle, PortServicesProps>((pr
           </div>
         </div>
 
-        {/* Port / Terminal */}
-        <div className="flex flex-col space-y-1">
-          <label className="text-sm font-semibold text-slate-700 flex items-center">
-            Port / Terminal<span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm">
-            <FaMapMarkerAlt className="text-gray-400 mr-3" />
-            <input
-              type="text"
-              name="portTerminal"
-              value={formData.portTerminal}
-              placeholder="e.g. Port of Singapore"
-              className="w-full outline-none text-gray-700 bg-transparent"
-              onChange={handleChange}
-            />
-          </div>
-        </div>
+        {/* --- CHANGED: Port / Terminal → LocationAutocomplete --- */}
+        <LocationAutocomplete
+          label="Port / Terminal*"
+          value={formData.portTerminal}
+          onChange={(v) => setFormData({ ...formData, portTerminal: v })}
+          placeholder="e.g. Port of Singapore, JNPT"
+          locationType="seaport"
+        />
 
         {/* Service Category */}
         <div className="flex flex-col space-y-1">
@@ -138,6 +130,7 @@ const PortServicesQuoteForm = forwardRef<QuoteFormHandle, PortServicesProps>((pr
             />
           </div>
         </div>
+
       </div>
     </div>
   );

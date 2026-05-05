@@ -2,20 +2,9 @@
 import React, { useEffect, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import {
-  FaMapMarkerAlt,
-  FaGift,
-  FaCogs,
-  FaQuestionCircle,
-  FaUser,
-  FaBars,
-  FaChevronDown,
-  FaSignOutAlt,
-  FaInfoCircle,
-  FaHome,
-  FaTimes
+  FaMapMarkerAlt, FaGift, FaCogs, FaQuestionCircle, FaUser,
+  FaBars, FaChevronDown, FaSignOutAlt, FaInfoCircle, FaHome, FaTimes
 } from "react-icons/fa";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
 
 const Header: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,33 +14,35 @@ const Header: React.FC = () => {
 
   const location = useLocation();
 
+  // Re-check auth state on every route change
   useEffect(() => {
     const token = localStorage.getItem('shippitin_token');
     const userStr = localStorage.getItem('shippitin_user');
     if (token) {
       setIsLoggedIn(true);
       if (userStr) {
-        const user = JSON.parse(userStr);
-        setUserName(user.full_name?.split(' ')[0] || 'User');
+        try {
+          const user = JSON.parse(userStr);
+          setUserName(user.full_name?.split(' ')[0] || 'User');
+        } catch {
+          setUserName('User');
+        }
       }
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) setIsLoggedIn(true);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      localStorage.removeItem('shippitin_token');
-      localStorage.removeItem('shippitin_user');
+    } else {
       setIsLoggedIn(false);
-      window.location.href = '/';
-    } catch (error) {
-      console.error("Error logging out:", error);
+      setUserName('');
     }
+  }, [location]); // ← re-runs on every route change
+
+  const handleLogout = () => {
+    // Clear all auth keys
+    localStorage.removeItem('shippitin_token');
+    localStorage.removeItem('shippitin_refresh_token');
+    localStorage.removeItem('shippitin_user');
+    setIsLoggedIn(false);
+    setUserName('');
+    setIsProfileMenuOpen(false);
+    window.location.href = '/';
   };
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -91,27 +82,34 @@ const Header: React.FC = () => {
 
           {/* Auth Button */}
           {isLoggedIn ? (
-            <div className="relative group">
+            <div className="relative">
               <button onClick={toggleProfileMenu} className="flex items-center gap-2 bg-blue-50 text-gray-700 px-4 py-2 rounded-full font-semibold hover:bg-blue-100 transition shadow-sm md:shadow-md ml-2">
-                <FaUser /> Hi {userName || 'Shippitin'}
+                <FaUser /> Hi {userName}
                 <FaChevronDown className="ml-1 text-xs" />
               </button>
               {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 text-sm">
-                  <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
-                    <FaUser /> My Profile
-                  </Link>
-                  <Link to="/dashboard" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
-                    <FaHome /> My Dashboard
-                  </Link>
-                  <Link to="/my-wallet" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
-                    <FaGift /> My Wallet
-                  </Link>
-                  <div className="border-t border-gray-100 my-1"></div>
-                  <button onClick={() => { handleLogout(); closeProfileMenu(); }} className="flex items-center gap-2 w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
-                    <FaSignOutAlt /> Logout
-                  </button>
-                </div>
+                <>
+                  {/* Backdrop to close menu */}
+                  <div className="fixed inset-0 z-40" onClick={closeProfileMenu} />
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 text-sm">
+                    <Link to="/profile" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
+                      <FaUser /> My Profile
+                    </Link>
+                    <Link to="/dashboard" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
+                      <FaHome /> My Dashboard
+                    </Link>
+                    <Link to="/my-wallet" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
+                      <FaGift /> My Wallet
+                    </Link>
+                    <Link to="/my-bookings" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
+                      <FaCogs /> My Bookings
+                    </Link>
+                    <div className="border-t border-gray-100 my-1" />
+                    <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
+                      <FaSignOutAlt /> Logout
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           ) : (
@@ -129,10 +127,10 @@ const Header: React.FC = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={closeMobileMenu}></div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={closeMobileMenu} />
       )}
 
-      {/* Mobile Menu — fixed z-50 above overlay */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed top-0 right-0 w-72 h-full bg-white shadow-2xl p-6 z-50 overflow-y-auto">
           <div className="flex justify-between items-center mb-8">
@@ -169,6 +167,9 @@ const Header: React.FC = () => {
                   </Link>
                   <Link to="/my-wallet" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50" onClick={closeMobileMenu}>
                     <FaGift className="text-blue-500" /> My Wallet
+                  </Link>
+                  <Link to="/my-bookings" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50" onClick={closeMobileMenu}>
+                    <FaCogs className="text-blue-500" /> My Bookings
                   </Link>
                   <button onClick={() => { handleLogout(); closeMobileMenu(); }} className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50">
                     <FaSignOutAlt /> Logout

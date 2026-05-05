@@ -9,6 +9,7 @@ interface LogisticsUserProfileData {
   companyName: string;
   cityOfResidence: string;
   state: string;
+  pincode: string;
   email: string;
   mobileNumber: string;
   gstNumber: string;
@@ -26,9 +27,10 @@ const inputClass = "w-full border border-gray-300 rounded-md px-3 py-2 text-sm f
 const MyProfileForm: React.FC = () => {
   const [form, setForm] = useState<LogisticsUserProfileData>({
     firstName: '', lastName: '', companyName: '', cityOfResidence: '',
-    state: '', email: '', mobileNumber: '', gstNumber: '', panNumber: '',
-    companyRegistrationId: '', address: '', preferredShipmentMode: '',
-    usualCargoType: '', preferredLoadSize: '', carrierLicenseNumber: '',
+    state: '', pincode: '', email: '', mobileNumber: '', gstNumber: '',
+    panNumber: '', companyRegistrationId: '', address: '',
+    preferredShipmentMode: '', usualCargoType: '',
+    preferredLoadSize: '', carrierLicenseNumber: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -42,15 +44,22 @@ const MyProfileForm: React.FC = () => {
         const nameParts = (user.full_name || '').split(' ');
         setForm(prev => ({
           ...prev,
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
-          companyName: user.company_name || '',
-          cityOfResidence: user.city || '',
-          state: user.state || '',
-          email: user.email || '',
-          mobileNumber: user.phone || '',
-          gstNumber: user.gstin || '',
-          address: user.address || '',
+          firstName:            nameParts[0] || '',
+          lastName:             nameParts.slice(1).join(' ') || '',
+          companyName:          user.company_name || '',
+          cityOfResidence:      user.city || '',
+          state:                user.state || '',
+          pincode:              user.pincode || '',
+          email:                user.email || '',
+          mobileNumber:         user.phone || '',
+          gstNumber:            user.gstin || '',
+          panNumber:            user.pan_number || '',
+          companyRegistrationId: user.company_registration_id || '',
+          address:              user.address || '',
+          preferredShipmentMode: user.preferred_shipment_mode || '',
+          usualCargoType:       user.usual_cargo_type || '',
+          preferredLoadSize:    user.preferred_load_size || '',
+          carrierLicenseNumber: user.carrier_license_number || '',
         }));
       } catch (error) {
         toast.error('Failed to load profile data.');
@@ -71,13 +80,20 @@ const MyProfileForm: React.FC = () => {
     setSaving(true);
     try {
       await userAPI.updateProfile({
-        full_name: `${form.firstName} ${form.lastName}`.trim(),
-        phone: form.mobileNumber,
-        company_name: form.companyName,
-        gstin: form.gstNumber,
-        address: form.address,
-        city: form.cityOfResidence,
-        state: form.state,
+        full_name:                `${form.firstName} ${form.lastName}`.trim(),
+        phone:                    form.mobileNumber,
+        company_name:             form.companyName,
+        gstin:                    form.gstNumber,
+        address:                  form.address,
+        city:                     form.cityOfResidence,
+        state:                    form.state,
+        pincode:                  form.pincode,
+        pan_number:               form.panNumber,
+        company_registration_id:  form.companyRegistrationId,
+        preferred_shipment_mode:  form.preferredShipmentMode,
+        usual_cargo_type:         form.usualCargoType,
+        preferred_load_size:      form.preferredLoadSize,
+        carrier_license_number:   form.carrierLicenseNumber,
       });
       toast.success('Profile updated successfully!');
     } catch (error) {
@@ -88,7 +104,11 @@ const MyProfileForm: React.FC = () => {
   };
 
   const profileCompletion = () => {
-    const fields = [form.firstName, form.lastName, form.email, form.mobileNumber, form.companyName, form.gstNumber, form.address];
+    const fields = [
+      form.firstName, form.lastName, form.email, form.mobileNumber,
+      form.companyName, form.gstNumber, form.address, form.panNumber,
+      form.cityOfResidence, form.state,
+    ];
     const filled = fields.filter(Boolean).length;
     return Math.round((filled / fields.length) * 100);
   };
@@ -125,6 +145,7 @@ const MyProfileForm: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-8">
 
+          {/* General Information */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">General Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -149,9 +170,14 @@ const MyProfileForm: React.FC = () => {
                 <input name="state" type="text" value={form.state} onChange={handleChange} className={inputClass} placeholder="State" />
                 <p className="text-xs text-gray-500 mt-1">Required for GST purpose on your tax invoice</p>
               </div>
+              <div>
+                <label className="block text-gray-600 text-sm mb-1">Pincode</label>
+                <input name="pincode" type="text" value={form.pincode} onChange={handleChange} className={inputClass} placeholder="e.g. 522007" />
+              </div>
             </div>
           </section>
 
+          {/* Contact Details */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Contact Details</h2>
             <p className="text-sm text-gray-600 mb-4">Add contact information to receive booking details & other alerts</p>
@@ -174,6 +200,7 @@ const MyProfileForm: React.FC = () => {
             </div>
           </section>
 
+          {/* Business & Compliance */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Business & Compliance</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -197,6 +224,7 @@ const MyProfileForm: React.FC = () => {
             </div>
           </section>
 
+          {/* Logistics Preferences */}
           <section className="pb-6 border-b border-gray-200">
             <h2 className="text-lg font-bold text-gray-800 mb-4">Logistics Preferences</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
@@ -221,8 +249,9 @@ const MyProfileForm: React.FC = () => {
             </div>
           </section>
 
+          {/* Carrier Details */}
           <section className="pb-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">Carrier/Service Provider Details</h2>
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Carrier / Service Provider Details</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
               <div>
                 <label className="block text-gray-600 text-sm mb-1">Carrier License No.</label>

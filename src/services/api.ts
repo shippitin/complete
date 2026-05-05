@@ -21,15 +21,75 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token expiry globally
+// ── Refresh token queue (handles concurrent requests during refresh) ──
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (token: string) => void; reject: (err: any) => void }> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(p => error ? p.reject(error) : p.resolve(token!));
+  failedQueue = [];
+};
+
+const showSessionToast = () => {
+  const toast = document.createElement('div');
+  toast.innerText = '⚠️ Session expired. Please log in again.';
+  toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e40af;color:white;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.2);';
+  document.body.appendChild(toast);
+  setTimeout(() => { window.location.href = '/login'; }, 1500);
+};
+
+// Handle token expiry globally — auto-refresh before redirecting
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('shippitin_token');
-      localStorage.removeItem('shippitin_user');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      const refreshToken = localStorage.getItem('shippitin_refresh_token');
+
+      if (!refreshToken) {
+        localStorage.removeItem('shippitin_token');
+        localStorage.removeItem('shippitin_user');
+        showSessionToast();
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+        const { token, refreshToken: newRefreshToken } = response.data.data;
+
+        localStorage.setItem('shippitin_token', token);
+        localStorage.setItem('shippitin_refresh_token', newRefreshToken);
+
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+
+        processQueue(null, token);
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        localStorage.removeItem('shippitin_token');
+        localStorage.removeItem('shippitin_refresh_token');
+        localStorage.removeItem('shippitin_user');
+        showSessionToast();
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
+
     return Promise.reject(error);
   }
 );
@@ -47,6 +107,10 @@ export const authAPI = {
   }) => api.post('/auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),
+  refresh: (refreshToken: string) =>
+    api.post('/auth/refresh', { refreshToken }),
+  logout: (refreshToken: string) =>
+    api.post('/auth/logout', { refreshToken }),
   getMe: () => api.get('/auth/me'),
 };
 
@@ -166,6 +230,7 @@ export const parcelAPI = {
   book: (data: any) => api.post('/quotes/parcel/book', data),
   track: (awbNumber: string) => api.get(`/quotes/parcel/track/${awbNumber}`),
 };
+
 // ============================================
 // PAYMENTS — RAZORPAY
 // ============================================
@@ -183,12 +248,19 @@ export const paymentAPI = {
     api.post('/payments/refund', data),
   getStatus: (bookingId: string) => api.get(`/payments/status/${bookingId}`),
 };
+
 // ============================================
 // RATE CARDS — Shippitin managed quotes
 // ============================================
 export const rateCardsAPI = {
-  search: (params: { serviceType: string; origin: string; destination: string; weight?: number; numberOfContainers?: number; containerType?: string }) =>
-    api.get('/quotes/rate-cards/search', { params }),
+  search: (params: {
+    serviceType: string;
+    origin: string;
+    destination: string;
+    weight?: number;
+    numberOfContainers?: number;
+    containerType?: string;
+  }) => api.get('/quotes/rate-cards/search', { params }),
   getAll: () => api.get('/quotes/rate-cards'),
   create: (data: any) => api.post('/quotes/rate-cards', data),
   update: (id: string, data: any) => api.put(`/quotes/rate-cards/${id}`, data),

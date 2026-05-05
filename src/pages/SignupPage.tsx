@@ -32,10 +32,10 @@ const SignUpPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await authAPI.register(formData);
-      const { token, user } = response.data.data;
-
-      localStorage.setItem('shippitin_token', token);
-      localStorage.setItem('shippitin_user', JSON.stringify(user));
+     const { token, refreshToken, user } = response.data.data;
+localStorage.setItem('shippitin_token', token);
+localStorage.setItem('shippitin_refresh_token', refreshToken);
+localStorage.setItem('shippitin_user', JSON.stringify(user));
 
       toast.success(`Welcome to Shippitin, ${user.full_name?.split(' ')[0]}! 🎉`);
 navigate('/verify-email');

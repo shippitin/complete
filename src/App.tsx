@@ -74,6 +74,7 @@ import FirstLastMileBookingDetailsPage from './pages/FirstLastMileBookingDetails
 import InsuranceBookingDetailsPage from './pages/InsuranceBookingDetailsPage';
 import ParcelBookingDetailsPage from './pages/ParcelBookingDetailsPage';
 import RailServiceDetailsPage from './pages/RailServiceDetailsPage';
+import PortBookingDetailsPage from './pages/PortBookingDetailsPage';
 
 // Confirmation Pages
 import BookingConfirmationPage from './pages/BookingConfirmationPage';
@@ -143,6 +144,34 @@ const FirstLastMileQuoteFormPageWrapper: React.FC = () => {
       <div className="flex justify-center mt-8">
         <button onClick={handleSubmitFirstLastMile} className="px-8 py-4 bg-purple-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-purple-700 transition duration-300 transform hover:scale-105">
           Search First/Last Mile Services
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const PortServicesQuoteFormPageWrapper: React.FC = () => {
+  const portFormRef = useRef<QuoteFormHandle>(null);
+  const navigate = useNavigate();
+
+  const handleSubmitPort = async () => {
+    if (portFormRef.current) {
+      const data = await portFormRef.current.submit();
+      if (data && (data as any).bookingType === 'Port Services') {
+        navigate('/port-results', { state: { formData: data } });
+      }
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-10">
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Get Your Port Services Quote</h2>
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <PortServicesQuoteForm ref={portFormRef} />
+      </div>
+      <div className="flex justify-center mt-8">
+        <button onClick={handleSubmitPort} className="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">
+          Search Port Services
         </button>
       </div>
     </div>
@@ -258,8 +287,9 @@ const AppContent: React.FC = () => {
           <Route path="/rail-booking-confirmation" element={<ProtectedRoute><RailBookingConfirmationPage /></ProtectedRoute>} />
 
           {/* Port Services Flow — Protected */}
-          <Route path="/port-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><PortServicesQuoteForm /></div></ProtectedRoute>} />
+          <Route path="/port-booking" element={<ProtectedRoute><PortServicesQuoteFormPageWrapper /></ProtectedRoute>} />
           <Route path="/port-results" element={<ProtectedRoute><PortResultsPage /></ProtectedRoute>} />
+          <Route path="/port-booking-details" element={<ProtectedRoute><PortBookingDetailsPage /></ProtectedRoute>} />
 
           {/* Insurance Flow — Protected */}
           <Route path="/insurance-booking" element={<ProtectedRoute><InsuranceQuoteFormPageWrapper /></ProtectedRoute>} />
@@ -309,11 +339,15 @@ const AppContent: React.FC = () => {
   );
 };
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 function App() {
   return (
-    <Router basename="/">
-      <AppContent />
-    </Router>
+    <ErrorBoundary>
+      <Router basename="/">
+        <AppContent />
+      </Router>
+    </ErrorBoundary>
   );
 }
 
