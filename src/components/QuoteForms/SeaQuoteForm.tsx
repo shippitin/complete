@@ -3,7 +3,7 @@ import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'rea
 import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { FaCalendarAlt, FaWeight, FaBox, FaBoxes, FaCube, FaTimesCircle, FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
+import { FaTimesCircle, FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
 import type { SeaFormData, QuoteFormHandle, ParsedVoiceCommand, AllFormData } from '../../types/QuoteFormHandle';
 import { parseNumber } from '../../utils/parseNumber';
 import LocationAutocomplete from '../LocationAutocomplete';
@@ -12,7 +12,6 @@ type ActivityTypeLiteral = 'Port to Port' | 'Door to Door' | 'Door to Port' | 'P
 const validActivityTypes: ActivityTypeLiteral[] = ['Port to Port', 'Door to Door', 'Door to Port', 'Port to Door'];
 
 type ShipmentModeLiteral = 'LCL' | 'FCL';
-const validShipmentModes: ShipmentModeLiteral[] = ['LCL', 'FCL'];
 
 const allCommodities = [
   { label: 'FAK (Freight of All Kinds)', value: 'FAK (Freight of All Kinds)' },
@@ -80,7 +79,6 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
     if (prefillData) {
       if (prefillData.activityType && validActivityTypes.includes(prefillData.activityType as ActivityTypeLiteral)) setActivityType(prefillData.activityType as ActivityTypeLiteral);
       const pd = prefillData as any;
-      if (pd.shipmentMode && validShipmentModes.includes(pd.shipmentMode as ShipmentModeLiteral)) setShipmentMode(pd.shipmentMode as ShipmentModeLiteral);
       setOriginPort(prefillData.origin || pd.originPort || '');
       setDestinationPort(prefillData.destination || pd.destinationPort || '');
       setOriginCityPincode([pd.originCity, pd.originPincode].filter(Boolean).join(', ') || prefillData.origin || '');
@@ -139,9 +137,9 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
       dimensions: undefined, cargoValue: undefined, insuranceRequired: false, incoterms: undefined,
       hsCode: undefined, stuffingPoint: undefined, detailedDescriptionOfGoods: undefined,
       commodityCategory: '', description: undefined, numberOfPieces: undefined, volumeCBM: undefined, containerType: undefined, numberOfContainers: undefined,
+    };
 
-     }
-     if (activityType === 'Port to Port') { formData.originPort = originPort; formData.destinationPort = destinationPort; }
+    if (activityType === 'Port to Port') { formData.originPort = originPort; formData.destinationPort = destinationPort; }
     else if (activityType === 'Door to Port') { formData.originCity = originCityPincode; formData.destinationPort = destinationPort; }
     else if (activityType === 'Port to Door') { formData.originPort = originPort; formData.destinationCity = destinationCityPincode; }
     else if (activityType === 'Door to Door') { formData.originCity = originCityPincode; formData.destinationCity = destinationCityPincode; }
@@ -167,7 +165,6 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
   const inputClass = (hasError: boolean) =>
     `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 ${hasError ? 'border-orange-500' : 'border-gray-300'}`;
 
-  // Origin field
   const renderOrigin = () => {
     if (activityType === 'Port to Port' || activityType === 'Port to Door') {
       return (
@@ -191,7 +188,6 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
     );
   };
 
-  // Destination field
   const renderDestination = () => {
     if (activityType === 'Port to Port' || activityType === 'Door to Port') {
       return (
@@ -216,11 +212,10 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
   };
 
   return (
-    <div className="space-y-6 p-6 bg-white rounded-xl shadow-md border border-gray-200 font-inter">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Sea Freight</h2>
+    <div className="space-y-4 p-5 bg-white rounded-xl shadow-md border border-gray-200 font-inter">
 
       {/* Activity Type */}
-      <div className="mb-4">
+      <div>
         <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${errors.activityType ? 'border-2 border-orange-500 rounded-lg p-1' : ''}`}>
           {validActivityTypes.map(type => (
             <button key={type} type="button"
@@ -234,23 +229,20 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
       </div>
 
       {/* Shipment Mode */}
-      <div className="mb-4">
-        <div className="flex gap-2 w-fit">
-          {['FCL', 'LCL'].map(mode => (
-            <button key={mode} type="button"
-              onClick={() => { setShipmentMode(mode as ShipmentModeLiteral); setErrors(p => ({ ...p, shipmentMode: undefined })); setNumberOfPieces(''); setVolumeCBM(''); setFclContainerType('ALL'); setFclNumberOfContainers(1); }}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${shipmentMode === mode ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-gray-100 text-gray-700 hover:bg-blue-50 border border-gray-300'}`}>
-              {mode}
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-2 w-fit">
+        {['FCL', 'LCL'].map(mode => (
+          <button key={mode} type="button"
+            onClick={() => { setShipmentMode(mode as ShipmentModeLiteral); setErrors(p => ({ ...p, shipmentMode: undefined })); setNumberOfPieces(''); setVolumeCBM(''); setFclContainerType('ALL'); setFclNumberOfContainers(1); }}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${shipmentMode === mode ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-gray-100 text-gray-700 hover:bg-blue-50 border border-gray-300'}`}>
+            {mode}
+          </button>
+        ))}
       </div>
 
-      {/* Row 1: Origin, Destination, Container/Pieces, Date */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+      {/* Row 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
         {renderOrigin()}
         {renderDestination()}
-
         {shipmentMode === 'FCL' ? (
           <div className="md:col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">Container Type<span className="text-red-500">*</span></label>
@@ -268,25 +260,22 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
             {errors.numberOfPieces && <p className="mt-1 text-sm text-orange-600">{errors.numberOfPieces}</p>}
           </div>
         )}
-
         <div className="md:col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Date<span className="text-red-500">*</span></label>
           <DatePicker selected={readyDate} onChange={(date) => { setReadyDate(date); setErrors(p => ({ ...p, readyDate: undefined })); }}
-            dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY"
-            className={inputClass(!!errors.readyDate)} />
+            dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY" className={inputClass(!!errors.readyDate)} />
           {errors.readyDate && <p className="mt-1 text-sm text-orange-600">{errors.readyDate}</p>}
         </div>
       </div>
 
-      {/* Row 2: Weight, Containers/Volume, Commodity, Hazardous */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+      {/* Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
         <div className="md:col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Total Weight (Kgs)<span className="text-red-500">*</span></label>
           <input type="number" className={inputClass(!!errors.totalWeight)} placeholder="e.g., 20000" value={totalWeight}
             onChange={(e) => { setTotalWeight(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, totalWeight: undefined })); }} />
           {errors.totalWeight && <p className="mt-1 text-sm text-orange-600">{errors.totalWeight}</p>}
         </div>
-
         {shipmentMode === 'FCL' ? (
           <div className="md:col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-1">Number of Containers<span className="text-red-500">*</span></label>
@@ -302,7 +291,6 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
             {errors.volumeCBM && <p className="mt-1 text-sm text-orange-600">{errors.volumeCBM}</p>}
           </div>
         )}
-
         <div className="md:col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Select Commodity<span className="text-red-500">*</span></label>
           <select className={inputClass(!!errors.commodity)} value={commodity}
@@ -312,7 +300,6 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
           </select>
           {errors.commodity && <p className="mt-1 text-sm text-orange-600">{errors.commodity}</p>}
         </div>
-
         <div className="flex items-center mt-2 md:col-span-1">
           <input type="checkbox" id="seaHazardousCargo" checked={hazardousCargo}
             onChange={(e) => setHazardousCargo(e.target.checked)}
@@ -322,30 +309,27 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
       </div>
 
       {showButtons && (
-        <div className="flex justify-center space-x-4 mt-8">
-          <button type="button" onClick={handleSubmitLogic} className="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">Search Quotes</button>
-          <button type="button" onClick={resetForm} className="px-8 py-4 bg-gray-300 text-gray-800 font-bold text-xl rounded-xl shadow-lg hover:bg-gray-400 transition duration-300 transform hover:scale-105">Reset Form</button>
+        <div className="flex justify-center space-x-4 mt-6">
+          <button type="button" onClick={handleSubmitLogic} className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition">Search Quotes</button>
+          <button type="button" onClick={resetForm} className="px-8 py-3 bg-gray-200 text-gray-800 font-bold rounded-xl hover:bg-gray-300 transition">Reset</button>
         </div>
       )}
 
       {showValidationMessage && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full relative">
-            <button onClick={() => setShowValidationMessage(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><FaTimesCircle className="h-6 w-6" /></button>
-            <div className="flex items-center mb-4"><FaInfoCircle className="text-orange-500 h-8 w-8 mr-3" /><h4 className="text-xl font-bold text-gray-800">Validation Error</h4></div>
-            <p className="text-gray-700 mb-6">{validationMessage}</p>
-            <button onClick={() => setShowValidationMessage(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full">Got It</button>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
+            <p className="text-gray-700 mb-4">{validationMessage}</p>
+            <button onClick={() => setShowValidationMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
           </div>
         </div>
       )}
 
       {showSuccessMessage && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full relative">
-            <button onClick={() => setShowSuccessMessage(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><FaTimesCircle className="h-6 w-6" /></button>
-            <div className="flex items-center mb-4"><FaCheckCircle className="text-green-500 h-8 w-8 mr-3" /><h4 className="text-xl font-bold text-gray-800">Success!</h4></div>
-            <p className="text-gray-700 mb-6">{successMessage}</p>
-            <button onClick={() => setShowSuccessMessage(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full">OK</button>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center">
+            <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
+            <p className="text-gray-700 mb-4">{successMessage}</p>
+            <button onClick={() => setShowSuccessMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>
           </div>
         </div>
       )}

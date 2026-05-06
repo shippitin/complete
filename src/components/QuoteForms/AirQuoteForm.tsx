@@ -2,7 +2,7 @@
 import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { FaCalendarAlt, FaWeight, FaPlane, FaBox, FaInfoCircle, FaBoxes, FaTag, FaTimesCircle, FaCheckCircle } from 'react-icons/fa';
+import { FaCheckCircle } from 'react-icons/fa';
 import type { AirFormData, QuoteFormHandle, ParsedVoiceCommand, AllFormData } from '../../types/QuoteFormHandle';
 import { parseNumber } from '../../utils/parseNumber';
 import LocationAutocomplete from '../LocationAutocomplete';
@@ -142,7 +142,6 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
   const inputClass = (hasError: boolean) =>
     `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 ${hasError ? 'border-orange-500' : 'border-gray-300'}`;
 
-  // Reusable date picker
   const renderDatePicker = () => (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">Clearance Date<span className="text-red-500">*</span></label>
@@ -154,10 +153,9 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
 
   return (
     <div className="space-y-4 p-5 bg-white rounded-xl shadow-md border border-gray-200 font-inter">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Air Freight</h2>
 
       {/* Activity Type */}
-      <div className="mb-4">
+      <div>
         <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2 ${errors.activityType ? 'border-2 border-orange-500 rounded-lg p-1' : ''}`}>
           {validActivityTypes.map(type => (
             <button key={type} type="button"
@@ -170,9 +168,8 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
         {errors.activityType && <p className="mt-1 text-sm text-orange-600">{errors.activityType}</p>}
       </div>
 
-      {/* Airport to Airport */}
       {activityType === 'Airport to Airport' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3">
           <div>
             <LocationAutocomplete label="Origin Airport" required value={originAirport}
               onChange={(v) => { setOriginAirport(v); setErrors(p => ({ ...p, originAirport: undefined })); }}
@@ -189,9 +186,8 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
         </div>
       )}
 
-      {/* Airport to Door */}
       {activityType === 'Airport to Door' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
           <div>
             <LocationAutocomplete label="Origin Airport" required value={originAirport}
               onChange={(v) => { setOriginAirport(v); setErrors(p => ({ ...p, originAirport: undefined })); }}
@@ -214,9 +210,8 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
         </div>
       )}
 
-      {/* Door to Airport */}
       {activityType === 'Door to Airport' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
           <div>
             <LocationAutocomplete label="Origin (City/Address)" required value={originDoorCombined}
               onChange={(v) => { setOriginDoorCombined(v); setErrors(p => ({ ...p, originCity: undefined })); }}
@@ -239,10 +234,9 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
         </div>
       )}
 
-      {/* Door to Door */}
       {activityType === 'Door to Door' && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
             <div>
               <LocationAutocomplete label="Origin (City/Address)" required value={originDoorCombined}
                 onChange={(v) => { setOriginDoorCombined(v); setErrors(p => ({ ...p, originCity: undefined })); }}
@@ -268,14 +262,14 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
               {errors.destinationAirport && <p className="mt-1 text-sm text-orange-600">{errors.destinationAirport}</p>}
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
             {renderDatePicker()}
           </div>
         </>
       )}
 
       {/* Weight fields */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Gross Weight (Kgs)<span className="text-red-500">*</span></label>
           <input type="number" className={inputClass(!!errors.totalWeight)} placeholder="e.g., 100" value={totalWeight}
@@ -297,7 +291,7 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
       </div>
 
       {/* Commodity fields */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Commodity Category<span className="text-red-500">*</span></label>
           <select className={inputClass(!!errors.commodityCategory)} value={commodityCategory}
@@ -325,42 +319,39 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
       </div>
 
       {/* Checkboxes */}
-      <div className="flex flex-wrap items-center space-x-6 mt-4">
-        <div className="flex items-center">
-          <input type="checkbox" id="hazardousCargo" checked={hazardousCargo} onChange={(e) => setHazardousCargo(e.target.checked)} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
-          <label htmlFor="hazardousCargo" className="ml-2 block text-sm text-gray-900">Hazardous Cargo</label>
-        </div>
-        <div className="flex items-center">
-          <input type="checkbox" id="insuranceRequired" checked={insuranceRequired} onChange={(e) => setInsuranceRequired(e.target.checked)} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
-          <label htmlFor="insuranceRequired" className="ml-2 block text-sm text-gray-900">Insurance Required</label>
-        </div>
+      <div className="flex flex-wrap items-center gap-6">
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input type="checkbox" checked={hazardousCargo} onChange={(e) => setHazardousCargo(e.target.checked)} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+          Hazardous Cargo
+        </label>
+        <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input type="checkbox" checked={insuranceRequired} onChange={(e) => setInsuranceRequired(e.target.checked)} className="h-4 w-4 text-blue-600 border-gray-300 rounded" />
+          Insurance Required
+        </label>
       </div>
 
       {showButtons && (
-        <div className="flex justify-center space-x-4 mt-8">
-          <button type="button" onClick={handleSubmitLogic} className="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">Search Quotes</button>
-          <button type="button" onClick={resetAll} className="px-8 py-4 bg-gray-300 text-gray-800 font-bold text-xl rounded-xl shadow-lg hover:bg-gray-400 transition duration-300 transform hover:scale-105">Reset Form</button>
+        <div className="flex justify-center space-x-4 mt-6">
+          <button type="button" onClick={handleSubmitLogic} className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition">Search Quotes</button>
+          <button type="button" onClick={resetAll} className="px-8 py-3 bg-gray-200 text-gray-800 font-bold rounded-xl hover:bg-gray-300 transition">Reset</button>
         </div>
       )}
 
       {showValidationMessage && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full relative">
-            <button onClick={() => setShowValidationMessage(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><FaTimesCircle className="h-6 w-6" /></button>
-            <div className="flex items-center mb-4"><FaInfoCircle className="text-orange-500 h-8 w-8 mr-3" /><h4 className="text-xl font-bold text-gray-800">Validation Error</h4></div>
-            <p className="text-gray-700 mb-6">{validationMessage}</p>
-            <button onClick={() => setShowValidationMessage(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full">Got It</button>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
+            <p className="text-gray-700 mb-4">{validationMessage}</p>
+            <button onClick={() => setShowValidationMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
           </div>
         </div>
       )}
 
       {showSuccessMessage && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full relative">
-            <button onClick={() => setShowSuccessMessage(false)} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"><FaTimesCircle className="h-6 w-6" /></button>
-            <div className="flex items-center mb-4"><FaCheckCircle className="text-green-500 h-8 w-8 mr-3" /><h4 className="text-xl font-bold text-gray-800">Success!</h4></div>
-            <p className="text-gray-700 mb-6">{successMessage}</p>
-            <button onClick={() => setShowSuccessMessage(false)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full">OK</button>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center">
+            <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
+            <p className="text-gray-700 mb-4">{successMessage}</p>
+            <button onClick={() => setShowSuccessMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>
           </div>
         </div>
       )}

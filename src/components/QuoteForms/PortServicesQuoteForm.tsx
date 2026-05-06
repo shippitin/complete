@@ -1,9 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { FaAnchor, FaCalendarAlt, FaConciergeBell, FaClipboardList } from 'react-icons/fa';
 import { QuoteFormHandle } from '../../types/QuoteFormHandle';
 import LocationAutocomplete from '../LocationAutocomplete';
 
-// This interface solves the TypeScript error in HeroSection
 interface PortServicesProps {
   showButtons?: boolean;
 }
@@ -32,7 +30,6 @@ const PortServicesQuoteForm = forwardRef<QuoteFormHandle, PortServicesProps>((pr
         serviceDate: formData.estimatedDate,
         serviceCategory: formData.serviceCategory,
         specificRequirements: formData.specificRequirements,
-        // Default values for mandatory interface fields
         specificService: formData.serviceCategory,
         readyDate: formData.estimatedDate,
         cargoType: 'N/A',
@@ -46,92 +43,48 @@ const PortServicesQuoteForm = forwardRef<QuoteFormHandle, PortServicesProps>((pr
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const inputClass = `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 border-gray-300`;
+
   return (
-    <div className="space-y-6 animate-fadeIn">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-4 p-5 bg-white rounded-xl shadow-md border border-gray-200 font-inter">
 
-        {/* Vessel Name */}
-        <div className="flex flex-col space-y-1">
-          <label className="text-sm font-semibold text-slate-700 flex items-center">
-            Vessel Name<span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm">
-            <FaAnchor className="text-gray-400 mr-3" />
-            <input
-              type="text"
-              name="vesselName"
-              value={formData.vesselName}
-              placeholder="e.g. Ever Given"
-              className="w-full outline-none text-gray-700 bg-transparent"
-              onChange={handleChange}
-            />
-          </div>
+      {/* Row 1: Vessel Name, Port/Terminal, Service Category, Date */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Vessel Name<span className="text-red-500">*</span></label>
+          <input type="text" name="vesselName" value={formData.vesselName}
+            placeholder="e.g. Ever Given" className={inputClass} onChange={handleChange} />
         </div>
-
-        {/* --- CHANGED: Port / Terminal → LocationAutocomplete --- */}
-        <LocationAutocomplete
-          label="Port / Terminal*"
-          value={formData.portTerminal}
-          onChange={(v) => setFormData({ ...formData, portTerminal: v })}
-          placeholder="e.g. Port of Singapore, JNPT"
-          locationType="seaport"
-        />
-
-        {/* Service Category */}
-        <div className="flex flex-col space-y-1">
-          <label className="text-sm font-semibold text-slate-700 flex items-center">
-            Service Category<span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm">
-            <FaConciergeBell className="text-gray-400 mr-3" />
-            <select
-              name="serviceCategory"
-              value={formData.serviceCategory}
-              className="w-full outline-none text-gray-700 bg-transparent cursor-pointer"
-              onChange={handleChange}
-            >
-              <option>Crew Change / Logistics</option>
-              <option>Bunkering</option>
-              <option>Technical Repairs</option>
-              <option>Provisions & Stores</option>
-            </select>
-          </div>
+        <div>
+          <LocationAutocomplete label="Port / Terminal*" value={formData.portTerminal}
+            onChange={(v) => setFormData({ ...formData, portTerminal: v })}
+            placeholder="e.g. JNPT, Port of Singapore" locationType="seaport" />
         </div>
-
-        {/* Estimated Date */}
-        <div className="flex flex-col space-y-1">
-          <label className="text-sm font-semibold text-slate-700 flex items-center">
-            Date<span className="text-red-500 ml-1">*</span>
-          </label>
-          <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm">
-            <FaCalendarAlt className="text-gray-400 mr-3" />
-            <input
-              type="date"
-              name="estimatedDate"
-              value={formData.estimatedDate}
-              className="w-full outline-none text-gray-700 bg-transparent cursor-pointer"
-              onChange={handleChange}
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Service Category<span className="text-red-500">*</span></label>
+          <select name="serviceCategory" value={formData.serviceCategory}
+            className={inputClass} onChange={handleChange}>
+            <option>Crew Change / Logistics</option>
+            <option>Bunkering</option>
+            <option>Technical Repairs</option>
+            <option>Provisions & Stores</option>
+          </select>
         </div>
-
-        {/* Specific Requirements */}
-        <div className="md:col-span-2 flex flex-col space-y-1">
-          <label className="text-sm font-semibold text-slate-700">Specific Requirements</label>
-          <div className="flex items-center border border-gray-200 rounded-lg p-3 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm">
-            <FaClipboardList className="text-gray-400 mr-3" />
-            <input
-              type="text"
-              name="specificRequirements"
-              value={formData.specificRequirements}
-              placeholder="e.g. Underwater inspection..."
-              className="w-full outline-none text-gray-700 bg-transparent"
-              onChange={handleChange}
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Date<span className="text-red-500">*</span></label>
+          <input type="date" name="estimatedDate" value={formData.estimatedDate}
+            className={inputClass} onChange={handleChange} />
         </div>
-
       </div>
+
+      {/* Row 2: Specific Requirements */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Specific Requirements (Optional)</label>
+        <input type="text" name="specificRequirements" value={formData.specificRequirements}
+          placeholder="e.g. Underwater inspection, special equipment..."
+          className={inputClass} onChange={handleChange} />
+      </div>
+
     </div>
   );
 });
