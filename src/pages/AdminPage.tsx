@@ -1,9 +1,10 @@
 // src/pages/AdminPage.tsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaUsers, FaClipboardList, FaChartBar, FaSearch, FaUserCog, FaTags, FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaFire, FaRoute } from 'react-icons/fa';
+import { FaUsers, FaClipboardList, FaChartBar, FaSearch, FaUserCog, FaTags, FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaFire, FaRoute, FaBell } from 'react-icons/fa';
 import api, { rateCardsAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import ShipmentAlertPanel from '../components/Admin/ShipmentAlertPanel';
 
 interface Stats { totalUsers: number; totalBookings: number; pendingBookings: number; confirmedBookings: number; deliveredBookings: number; cancelledBookings: number; }
 interface User { id: string; full_name: string; email: string; phone: string; company_name: string; role: string; created_at: string; }
@@ -22,6 +23,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     case 'in_transit': classes += ' bg-blue-50 text-blue-600'; break;
     case 'delivered': classes += ' bg-gray-100 text-gray-700'; break;
     case 'cancelled': classes += ' bg-red-50 text-red-500'; break;
+    case 'delayed': classes += ' bg-red-100 text-red-700'; break;
     case 'admin': classes += ' bg-blue-600 text-white'; break;
     default: classes += ' bg-gray-100 text-gray-600';
   }
@@ -30,7 +32,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 
 const AdminPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'stats' | 'bookings' | 'users' | 'rates' | 'demand'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'alerts' | 'bookings' | 'users' | 'rates' | 'demand'>('stats');
   const [stats, setStats] = useState<Stats | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -43,37 +45,46 @@ const AdminPage: React.FC = () => {
   const [editingRate, setEditingRate] = useState<RateCard | null>(null);
   const [rateForm, setRateForm] = useState(emptyRateCard);
   const [rateServiceFilter, setRateServiceFilter] = useState('');
+  const [unresolvedAlertCount, setUnresolvedAlertCount] = useState(0);
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
     if (user.role !== 'admin') { navigate('/'); return; }
     fetchStats();
+    fetchAlertCount();
   }, []);
 
+  const fetchAlertCount = async () => {
+    try {
+      const res = await api.get('/admin/alerts/count');
+      setUnresolvedAlertCount(res.data.count || 0);
+    } catch (e) { /* silent */ }
+  };
+
   const fetchStats = async () => {
-    try { const res = await api.get('/admin/stats'); setStats(res.data.data); } 
-    catch (error) { console.error('Failed to fetch stats:', error); } 
+    try { const res = await api.get('/admin/stats'); setStats(res.data.data); }
+    catch (error) { console.error('Failed to fetch stats:', error); }
     finally { setLoading(false); }
   };
 
   const fetchBookings = async () => {
     setLoading(true);
-    try { const res = await api.get('/admin/bookings'); setBookings(res.data.data); } 
-    catch (error) { console.error(error); } 
+    try { const res = await api.get('/admin/bookings'); setBookings(res.data.data); }
+    catch (error) { console.error(error); }
     finally { setLoading(false); }
   };
 
   const fetchUsers = async () => {
     setLoading(true);
-    try { const res = await api.get('/admin/users'); setUsers(res.data.data); } 
-    catch (error) { console.error(error); } 
+    try { const res = await api.get('/admin/users'); setUsers(res.data.data); }
+    catch (error) { console.error(error); }
     finally { setLoading(false); }
   };
 
   const fetchRateCards = async () => {
     setLoading(true);
-    try { const res = await rateCardsAPI.getAll(); setRateCards(res.data.data); } 
-    catch (error) { console.error(error); } 
+    try { const res = await rateCardsAPI.getAll(); setRateCards(res.data.data); }
+    catch (error) { console.error(error); }
     finally { setLoading(false); }
   };
 
@@ -97,15 +108,16 @@ const AdminPage: React.FC = () => {
     if (tab === 'users') fetchUsers();
     if (tab === 'rates') fetchRateCards();
     if (tab === 'demand') fetchDemandStats();
+    if (tab === 'alerts') fetchAlertCount();
   };
 
   const updateBookingStatus = async (bookingId: string, status: string) => {
-    try { await api.put(`/admin/bookings/${bookingId}/status`, { status }); fetchBookings(); } 
+    try { await api.put(`/admin/bookings/${bookingId}/status`, { status }); fetchBookings(); }
     catch (error) { console.error(error); }
   };
 
   const makeAdmin = async (userId: string) => {
-    try { await api.put(`/admin/users/${userId}/make-admin`); fetchUsers(); } 
+    try { await api.put(`/admin/users/${userId}/make-admin`); fetchUsers(); }
     catch (error) { console.error(error); }
   };
 
@@ -134,12 +146,12 @@ const AdminPage: React.FC = () => {
 
   const handleDeleteRate = async (id: string) => {
     if (!window.confirm('Delete this rate card?')) return;
-    try { await rateCardsAPI.delete(id); toast.success('Rate card deleted.'); fetchRateCards(); } 
+    try { await rateCardsAPI.delete(id); toast.success('Rate card deleted.'); fetchRateCards(); }
     catch (error) { toast.error('Failed to delete.'); }
   };
 
   const handleToggleActive = async (rate: RateCard) => {
-    try { await rateCardsAPI.update(rate.id, { ...rate, is_active: !rate.is_active }); toast.success(rate.is_active ? 'Deactivated.' : 'Activated.'); fetchRateCards(); } 
+    try { await rateCardsAPI.update(rate.id, { ...rate, is_active: !rate.is_active }); toast.success(rate.is_active ? 'Deactivated.' : 'Activated.'); fetchRateCards(); }
     catch (error) { toast.error('Failed to update.'); }
   };
 
@@ -162,31 +174,58 @@ const AdminPage: React.FC = () => {
               <p className="text-gray-400 text-sm">Manage bookings, users, rates and dynamic pricing</p>
             </div>
           </div>
-          <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2 rounded-full">Admin Access</span>
+          <div className="flex items-center gap-3">
+            {unresolvedAlertCount > 0 && (
+              <button onClick={() => handleTabChange('alerts')}
+                className="flex items-center gap-2 bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded-full animate-pulse">
+                <FaBell /> {unresolvedAlertCount} Alert{unresolvedAlertCount > 1 ? 's' : ''}
+              </button>
+            )}
+            <span className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-4 py-2 rounded-full">Admin Access</span>
+          </div>
         </div>
 
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-1.5 flex gap-1 flex-wrap">
           {[
-            { id: 'stats', label: 'Dashboard', icon: <FaChartBar className="text-sm" /> },
-            { id: 'bookings', label: 'Bookings', icon: <FaClipboardList className="text-sm" /> },
-            { id: 'users', label: 'Users', icon: <FaUsers className="text-sm" /> },
-            { id: 'rates', label: 'Rate Cards', icon: <FaTags className="text-sm" /> },
-            { id: 'demand', label: 'Dynamic Pricing', icon: <FaFire className="text-sm" /> },
+            { id: 'stats',    label: 'Dashboard',       icon: <FaChartBar className="text-sm" /> },
+            { id: 'alerts',   label: `Alerts${unresolvedAlertCount > 0 ? ` (${unresolvedAlertCount})` : ''}`, icon: <FaBell className="text-sm" /> },
+            { id: 'bookings', label: 'Bookings',         icon: <FaClipboardList className="text-sm" /> },
+            { id: 'users',    label: 'Users',            icon: <FaUsers className="text-sm" /> },
+            { id: 'rates',    label: 'Rate Cards',       icon: <FaTags className="text-sm" /> },
+            { id: 'demand',   label: 'Dynamic Pricing',  icon: <FaFire className="text-sm" /> },
           ].map(tab => (
             <button key={tab.id} onClick={() => handleTabChange(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all
+                ${activeTab === tab.id
+                  ? tab.id === 'alerts' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
+                  : 'text-gray-500 hover:bg-gray-50'
+                }`}>
               {tab.icon} {tab.label}
             </button>
           ))}
         </div>
+
+        {/* ── ALERTS TAB ── */}
+        {activeTab === 'alerts' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <ShipmentAlertPanel />
+          </div>
+        )}
 
         {/* Stats Tab */}
         {activeTab === 'stats' && (
           loading ? <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div></div>
           : stats && (
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {[{ label: 'Total Users', value: stats.totalUsers }, { label: 'Total Bookings', value: stats.totalBookings }, { label: 'Pending', value: stats.pendingBookings }, { label: 'Confirmed', value: stats.confirmedBookings }, { label: 'Delivered', value: stats.deliveredBookings }, { label: 'Cancelled', value: stats.cancelledBookings }].map(stat => (
+              {[
+                { label: 'Total Users', value: stats.totalUsers },
+                { label: 'Total Bookings', value: stats.totalBookings },
+                { label: 'Pending', value: stats.pendingBookings },
+                { label: 'Confirmed', value: stats.confirmedBookings },
+                { label: 'Delivered', value: stats.deliveredBookings },
+                { label: 'Cancelled', value: stats.cancelledBookings },
+              ].map(stat => (
                 <div key={stat.label} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                   <p className="text-gray-400 text-sm">{stat.label}</p>
                   <p className="text-4xl font-black text-gray-800 mt-2">{stat.value}</p>
@@ -235,7 +274,7 @@ const AdminPage: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center">
               <h2 className="font-bold text-gray-800">All Users ({filteredUsers.length})</h2>
-              <div className="relative"><FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" /><input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48" /></div>
+              <div className="relative"><FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-gray-300 text-xs" /><input type="text" placeholder="Search..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-48" /></div>
             </div>
             {loading ? <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div></div> : (
               <div className="overflow-x-auto">
@@ -283,7 +322,7 @@ const AdminPage: React.FC = () => {
                     <div><label className="block text-sm font-medium text-gray-600 mb-1">Price per Container (₹)</label><input type="number" value={rateForm.price_per_container} onChange={e => setRateForm({ ...rateForm, price_per_container: parseFloat(e.target.value) })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
                     <div><label className="block text-sm font-medium text-gray-600 mb-1">Priority (higher = preferred)</label><input type="number" value={rateForm.priority} onChange={e => setRateForm({ ...rateForm, priority: parseInt(e.target.value) })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
                     <div><label className="block text-sm font-medium text-gray-600 mb-1">Surge Multiplier (1.0 = normal)</label><input type="number" step="0.01" min="0.5" max="3.0" value={rateForm.surge_multiplier} onChange={e => setRateForm({ ...rateForm, surge_multiplier: parseFloat(e.target.value) })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
-                    <div><label className="block text-sm font-medium text-gray-600 mb-1">Surge Reason (shown to customer)</label><input type="text" value={rateForm.surge_reason} onChange={e => setRateForm({ ...rateForm, surge_reason: e.target.value })} placeholder="e.g. Peak Season, High Demand" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
+                    <div><label className="block text-sm font-medium text-gray-600 mb-1">Surge Reason</label><input type="text" value={rateForm.surge_reason} onChange={e => setRateForm({ ...rateForm, surge_reason: e.target.value })} placeholder="e.g. Peak Season" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
                     <div><label className="block text-sm font-medium text-gray-600 mb-1">Valid From</label><input type="date" value={rateForm.valid_from} onChange={e => setRateForm({ ...rateForm, valid_from: e.target.value })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
                     <div><label className="block text-sm font-medium text-gray-600 mb-1">Valid Until</label><input type="date" value={rateForm.valid_until} onChange={e => setRateForm({ ...rateForm, valid_until: e.target.value })} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" /></div>
                     <div className="flex items-center gap-3"><label className="text-sm font-medium text-gray-600">Active</label>
@@ -324,9 +363,9 @@ const AdminPage: React.FC = () => {
                           <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">₹{parseFloat(rate.price_per_kg as any)}/kg</td>
                           <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">₹{parseFloat(rate.price_per_container as any).toLocaleString('en-IN')}</td>
                           <td className="px-4 py-3 text-xs whitespace-nowrap">
-                            {parseFloat(rate.surge_multiplier as any) > 1.0 ? (
-                              <span className="flex items-center gap-1 text-orange-600 font-bold"><FaFire className="text-orange-500" />{rate.surge_multiplier}x</span>
-                            ) : <span className="text-gray-400">Normal</span>}
+                            {parseFloat(rate.surge_multiplier as any) > 1.0
+                              ? <span className="flex items-center gap-1 text-orange-600 font-bold"><FaFire className="text-orange-500" />{rate.surge_multiplier}x</span>
+                              : <span className="text-gray-400">Normal</span>}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap"><span className={`px-2 py-1 text-xs font-semibold rounded-full ${rate.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'}`}>{rate.is_active ? 'Active' : 'Inactive'}</span></td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -349,7 +388,6 @@ const AdminPage: React.FC = () => {
         {/* Dynamic Pricing Tab */}
         {activeTab === 'demand' && (
           <div className="space-y-6">
-            {/* Search Stats */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="p-5 border-b border-gray-100">
                 <h2 className="font-bold text-gray-800 flex items-center gap-2"><FaRoute className="text-blue-600" /> Today's Route Search Stats</h2>
@@ -379,8 +417,6 @@ const AdminPage: React.FC = () => {
                 </div>
               )}
             </div>
-
-            {/* Surge Rules */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="p-5 border-b border-gray-100">
                 <h2 className="font-bold text-gray-800 flex items-center gap-2"><FaFire className="text-orange-500" /> Auto Surge Rules</h2>

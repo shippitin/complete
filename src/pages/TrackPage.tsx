@@ -9,8 +9,6 @@ import {
 } from 'react-icons/fa';
 import Map from '../components/Map';
 
-// --- Interfaces ---
-
 interface ShipmentDoc {
   name: string;
   type: string;
@@ -41,8 +39,6 @@ interface Shipment {
   co2Emissions: number;
   co2Saved: number;
 }
-
-// --- Full Dataset ---
 
 const dummyShipments: Shipment[] = [
   {
@@ -95,21 +91,179 @@ const dummyShipments: Shipment[] = [
   },
   {
     id: 'RAIL006',
-    carrier: 'National Rail',
-    currentLocation: 'Nagpur',
-    status: 'Delayed',
+    carrier: 'CONCOR',
+    currentLocation: 'En Route to Chennai',
+    status: 'In Transit',
     estimatedDelivery: '2025-07-27',
     shipmentType: 'Rail',
-    path: [[22.5726, 88.3639], [21.1458, 79.0882]],
+    path: [[17.3850, 78.4867], [13.0827, 80.2707]],
     statusTimeline: [
-      { date: '2025-07-20', status: 'Booked', location: 'Kolkata' },
-      { date: '2025-07-24', status: 'Delayed', location: 'Nagpur Yard' },
+      { date: '2025-07-20', status: 'Booked', location: 'ICD Sanathnagar, Hyderabad' },
+      { date: '2025-07-21', status: 'Departed', location: 'ICD Sanathnagar, Hyderabad' },
+      { date: '2025-07-24', status: 'In Transit', location: 'En Route to Chennai' },
+      { date: '2025-07-27', status: 'Expected Arrival', location: 'Chennai ICD (INMAA6)' },
     ],
-    documents: [{ name: 'Rail Consignment Note', type: 'e-CMR', date: '2025-07-20', status: 'Verified' }],
-    reliabilityScore: 35, riskLevel: 'High', predictionMessage: "High risk of 48h delay due to maintenance.",
-    co2Emissions: 12.1, co2Saved: 85.4,
+    documents: [
+      { name: 'Rail Consignment Note (RCN)', type: 'RCN', date: '2025-07-20', status: 'Verified' },
+      { name: 'CONCOR Indent Confirmation', type: 'PDF', date: '2025-07-20', status: 'Verified' },
+    ],
+    reliabilityScore: 88, riskLevel: 'Low', predictionMessage: "CONCOR rake on schedule. Hyderabad to Chennai ICD. On-time delivery expected.",
+    co2Emissions: 8.4, co2Saved: 112.6,
   }
 ];
+
+// Generate a dynamic shipment based on booking ID prefix
+const generateDynamicShipment = (idToTrack: string, originParam = '', destParam = ''): Shipment | null => {
+  const upper = idToTrack.trim().toUpperCase();
+  const today    = new Date();
+  const tomorrow = new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000);
+  const day2     = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
+  const day4     = new Date(today.getTime() + 4 * 24 * 60 * 60 * 1000);  // domestic rail ETA
+  const day10    = new Date(today.getTime() + 10 * 24 * 60 * 60 * 1000); // sea ETA
+  const day7     = new Date(today.getTime() + 7  * 24 * 60 * 60 * 1000); // intl rail ETA
+
+  const fmt = (d: Date) => d.toLocaleDateString('en-IN');
+
+  const bookedStr    = fmt(today);
+  const departedStr  = fmt(tomorrow);
+  const inTransitStr = fmt(day2);
+  const etaStr       = fmt(day4);       // default — overridden per mode below
+  const seaEtaStr    = fmt(day10);
+  const intlEtaStr   = fmt(day7);
+
+  if (upper.startsWith('SEA-')) {
+    return {
+      id: idToTrack.trim(),
+      carrier: 'Seabay International Freight Forwarding Ltd',
+      currentLocation: 'In Transit — Arabian Sea',
+      status: 'At Sea',
+      estimatedDelivery: etaStr,
+      shipmentType: 'Sea',
+      path: [[13.0827, 80.2707], [1.3521, 103.8198]], // Chennai → Singapore
+      statusTimeline: [
+        { date: bookedStr,    status: 'Booked',           location: 'Chennai Port (INMAA)' },
+        { date: departedStr,  status: 'Departed',          location: 'Chennai Port (INMAA)' },
+        { date: inTransitStr, status: 'At Sea',            location: 'Bay of Bengal' },
+        { date: seaEtaStr,    status: 'Expected Arrival',  location: 'Singapore (SGSIN)' },
+      ],
+      documents: [
+        { name: 'Bill of Lading', type: 'e-BL', date: bookedStr, status: 'Verified' },
+        { name: 'Packing List', type: 'PDF', date: bookedStr, status: 'Pending' },
+      ],
+      reliabilityScore: 91,
+      riskLevel: 'Low',
+      predictionMessage: 'Shipment on schedule. Clear weather across Indian Ocean corridor. On-time arrival expected at Singapore.',
+      co2Emissions: 42.5,
+      co2Saved: 110.2,
+    };
+  }
+
+  if (upper.startsWith('AIR-')) {
+    return {
+      id: idToTrack.trim(),
+      carrier: 'Air India Cargo',
+      currentLocation: 'In Flight',
+      status: 'In Flight',
+      estimatedDelivery: etaStr,
+      shipmentType: 'Air',
+      path: [[28.5562, 77.1000], [51.5074, -0.1278]], // Delhi → London
+      statusTimeline: [
+        { date: bookedStr,    status: 'Booked',           location: 'Delhi (DEL)' },
+        { date: departedStr,  status: 'Departed',          location: 'Indira Gandhi International Airport' },
+        { date: inTransitStr, status: 'In Flight',         location: 'En Route' },
+        { date: fmt(day2),    status: 'Expected Arrival',  location: 'London Heathrow (LHR)' },
+      ],
+      documents: [
+        { name: 'Air Waybill', type: 'AWB', date: bookedStr, status: 'Verified' },
+      ],
+      reliabilityScore: 94,
+      riskLevel: 'Low',
+      predictionMessage: 'Flight on schedule. Expected to land on time at Heathrow.',
+      co2Emissions: 450.2,
+      co2Saved: 5.4,
+    };
+  }
+
+  if (upper.startsWith('TRK-') || upper.startsWith('TRUCK-')) {
+    return {
+      id: idToTrack.trim(),
+      carrier: 'Shippitin Truck Network',
+      currentLocation: 'En Route',
+      status: 'In Transit',
+      estimatedDelivery: etaStr,
+      shipmentType: 'Truck',
+      path: [[28.7041, 77.1025], [19.0760, 72.8777]], // Delhi → Mumbai
+      statusTimeline: [
+        { date: bookedStr,    status: 'Booked',           location: 'Delhi' },
+        { date: departedStr,  status: 'Departed',          location: 'Delhi' },
+        { date: inTransitStr, status: 'In Transit',        location: 'En Route to Mumbai' },
+        { date: fmt(day4),    status: 'Expected Arrival',  location: 'Mumbai' },
+      ],
+      documents: [
+        { name: 'Lorry Receipt', type: 'LR', date: bookedStr, status: 'Verified' },
+      ],
+      reliabilityScore: 87,
+      riskLevel: 'Low',
+      predictionMessage: 'Truck on schedule. No delays reported on route.',
+      co2Emissions: 18.4,
+      co2Saved: 32.1,
+    };
+  }
+
+  if (upper.startsWith('TRN-') || upper.startsWith('RAIL-') || upper.startsWith('RCN-')) {
+    // Use origin/dest from URL params if available, else fallback
+    const originLabel = originParam || 'Origin ICD';
+    const destLabel   = destParam   || 'Destination ICD';
+
+    return {
+      id: idToTrack.trim(),
+      carrier: 'CONCOR',
+      currentLocation: 'En Route',
+      status: 'In Transit',
+      estimatedDelivery: etaStr,
+      shipmentType: 'Rail',
+      path: [[20.5937, 78.9629], [20.5937, 78.9629]], // geocoded async in handleTrack
+      statusTimeline: [
+        { date: bookedStr,    status: 'Booked',           location: originLabel },
+        { date: departedStr,  status: 'Departed',          location: originLabel },
+        { date: inTransitStr, status: 'In Transit',        location: 'En Route' },
+        { date: etaStr,       status: 'Expected Arrival',  location: destLabel },
+      ],
+      documents: [
+        { name: 'Rail Consignment Note (RCN)', type: 'RCN', date: bookedStr, status: 'Verified' },
+      ],
+      reliabilityScore: 90,
+      riskLevel: 'Low',
+      predictionMessage: `CONCOR rake on schedule. On-time delivery expected at ${destLabel}.`,
+      co2Emissions: 8.4,
+      co2Saved: 112.6,
+    };
+  }
+
+  return null;
+};
+
+
+// ── Geocode any city/location string using Nominatim (no API key needed) ──
+const geocodeCache: Record<string, [number, number]> = {};
+const geocode = async (place: string): Promise<[number, number]> => {
+  const key = place.trim().toLowerCase();
+  if (geocodeCache[key]) return geocodeCache[key];
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1&countrycodes=in`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const data = await res.json();
+    if (data && data[0]) {
+      const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      geocodeCache[key] = coords;
+      return coords;
+    }
+  } catch (e) {}
+  // fallback: India center
+  return [20.5937, 78.9629];
+};
 
 const TrackPage: React.FC = () => {
   const [trackingId, setTrackingId] = useState('');
@@ -120,74 +274,105 @@ const TrackPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const idFromUrl = searchParams.get('id');
+    const idFromUrl     = searchParams.get('id')     || '';
+    const originFromUrl = searchParams.get('origin') || '';
+    const destFromUrl   = searchParams.get('dest')   || '';
+    const typeFromUrl   = searchParams.get('type')   || '';
     if (idFromUrl) {
       setTrackingId(idFromUrl);
-      handleTrack(idFromUrl);
+      handleTrack(idFromUrl, originFromUrl, destFromUrl, typeFromUrl);
     }
   }, [searchParams]);
 
-  const handleTrack = async (idToTrack: string = trackingId) => {
+  const handleTrack = async (idToTrack: string = trackingId, originParam = '', destParam = '', typeParam = '') => {
     setError(null);
     setShipment(null);
     if (!idToTrack) return;
-
     setLoading(true);
 
-    // First try real backend
+    // 1. Try real backend first
     try {
       const response = await fetch(`http://localhost:5000/api/tracking/${idToTrack.trim()}`);
       if (response.ok) {
         const result = await response.json();
         const booking = result.data;
-
-        // Map backend data to Shipment interface
         const realShipment: Shipment = {
           id: booking.booking_number,
-          carrier: 'CONCOR',
+          carrier: booking.service_type === 'Sea' ? 'Seabay International' : 'CONCOR',
           currentLocation: booking.tracking_events?.length > 0
             ? booking.tracking_events[0].location
             : booking.origin,
           status: booking.status || 'Pending',
           estimatedDelivery: booking.booking_date,
-          shipmentType: 'Rail',
-          path: [[20.5937, 78.9629], [28.6139, 77.2090]],
+          shipmentType: booking.service_type === 'Sea' ? 'Sea'
+            : booking.service_type === 'Air' ? 'Air'
+            : booking.service_type === 'Truck' ? 'Truck'
+            : 'Rail',
+          path: booking.service_type === 'Sea'
+            ? [[13.0827, 80.2707], [1.3521, 103.8198]]
+            : [[17.3850, 78.4867], [13.0827, 80.2707]],
           statusTimeline: booking.tracking_events?.length > 0
             ? booking.tracking_events.map((event: any) => ({
                 date: new Date(event.timestamp).toLocaleDateString('en-IN'),
                 status: event.status,
                 location: event.location,
               }))
-            : [{
-                date: new Date(booking.booking_date).toLocaleDateString('en-IN'),
-                status: 'Booked',
-                location: booking.origin,
-              }],
+            : [
+                {
+                  date: new Date(booking.booking_date).toLocaleDateString('en-IN'),
+                  status: 'Booked',
+                  location: booking.origin,
+                },
+                {
+                  date: new Date(booking.booking_date).toLocaleDateString('en-IN'),
+                  status: 'In Transit',
+                  location: 'En Route',
+                },
+                {
+                  date: new Date(booking.booking_date).toLocaleDateString('en-IN'),
+                  status: 'Expected Arrival',
+                  location: booking.destination,
+                },
+              ],
           documents: [],
           reliabilityScore: 90,
           riskLevel: 'Low',
           predictionMessage: `Shipment from ${booking.origin} to ${booking.destination}. Status: ${booking.status}.`,
-          co2Emissions: 12.5,
-          co2Saved: 85.0,
+          co2Emissions: booking.service_type === 'Sea' ? 42.5 : 8.4,
+          co2Saved: booking.service_type === 'Sea' ? 110.2 : 112.6,
         };
-
         setShipment(realShipment);
         setLoading(false);
         return;
       }
     } catch (err) {
-      // Backend not available, fall through to dummy data
+      // Backend not available, fall through
     }
 
-    // Fall back to dummy data
+    // 2. Check static dummy data
     const found = dummyShipments.find(
       (s) => s.id.trim().toUpperCase() === idToTrack.trim().toUpperCase()
     );
-
     if (found) {
       setShipment(found);
+      setLoading(false);
+      return;
+    }
+
+    // 3. Generate dynamic shipment based on ID prefix
+    const dynamic = generateDynamicShipment(idToTrack, originParam, destParam);
+    if (dynamic) {
+      // For rail/sea/air: geocode origin & dest from params for accurate map path
+      if (originParam && destParam && (dynamic.shipmentType === 'Rail' || dynamic.shipmentType === 'Sea' || dynamic.shipmentType === 'Air' || dynamic.shipmentType === 'Truck')) {
+        setShipment(dynamic); // show immediately, then update path
+        Promise.all([geocode(originParam), geocode(destParam)]).then(([oCoords, dCoords]) => {
+          setShipment(prev => prev ? { ...prev, path: [oCoords, dCoords] } : prev);
+        });
+      } else {
+        setShipment(dynamic);
+      }
     } else {
-      setError(`ID "${idToTrack}" not found. Try TRK001, AIR002, SEA003, or RAIL006.`);
+      setError(`ID "${idToTrack}" not found. Try TRK001, AIR002, SEA003, RAIL006, or use your booking ID (SEA-XXXXXX, AIR-XXXXXX etc.)`);
     }
 
     setLoading(false);
@@ -208,6 +393,9 @@ const TrackPage: React.FC = () => {
       case 'delayed': return <FaTimesCircle className="text-white" />;
       case 'in flight': return <FaPlane className="text-white" />;
       case 'at sea': return <FaShip className="text-white" />;
+      case 'departed': return <FaTrain className="text-white" />;
+      case 'in transit': return <FaTrain className="text-white" />;
+      case 'expected arrival': return <FaHourglassHalf className="text-white" />;
       default: return <FaHourglassHalf className="text-white" />;
     }
   };
@@ -225,7 +413,7 @@ const TrackPage: React.FC = () => {
           <div className="p-8 flex flex-col sm:flex-row gap-4">
             <input 
               className="flex-grow p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-400 text-lg"
-              placeholder="Search ID (AIR002, SEA003, RAIL006...)"
+              placeholder="Enter booking ID (SEA-734798, RAIL006, AIR002...)"
               value={trackingId}
               onChange={(e) => setTrackingId(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleTrack()}
@@ -249,23 +437,23 @@ const TrackPage: React.FC = () => {
         {shipment && (
           <div className="animate-fade-in space-y-8">
             
-            {/* Quick Actions / Share Bar */}
+            {/* Share Bar */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center space-x-2">
                 <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Share Tracking:</span>
                 <button onClick={copyToClipboard} className={`p-2 rounded-lg transition-all ${copySuccess ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600'}`}>
                   {copySuccess ? <FaCheckCircle /> : <FaCopy />}
                 </button>
-                <a href={`https://wa.me/?text=Track my ${shipment.carrier} shipment here: ${getShareLink()}`} target="_blank" rel="noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
+                <a href={`https://wa.me/?text=Track my shipment here: ${getShareLink()}`} target="_blank" rel="noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
                   <FaWhatsapp />
                 </a>
-                <a href={`mailto:?subject=Shipment Update: ${shipment.id}&body=You can track this shipment live at: ${getShareLink()}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                <a href={`mailto:?subject=Shipment Update: ${shipment.id}&body=Track live at: ${getShareLink()}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
                   <FaEnvelope />
                 </a>
               </div>
               <div className="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-xl">
-                 <FaShieldAlt className="text-blue-600 text-xs" />
-                 <span className="text-[10px] font-bold text-blue-700 uppercase">Live Public Link Active</span>
+                <FaShieldAlt className="text-blue-600 text-xs" />
+                <span className="text-[10px] font-bold text-blue-700 uppercase">Live Public Link Active</span>
               </div>
             </div>
 
@@ -273,7 +461,7 @@ const TrackPage: React.FC = () => {
               <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Live Status</span>
-                  <p className={`text-2xl font-black ${shipment.status === 'Delayed' ? 'text-red-600' : 'text-green-600'}`}>{shipment.status}</p>
+                  <p className={`text-2xl font-black ${shipment.status === 'Delayed' ? 'text-red-600' : shipment.status === 'Delivered' ? 'text-green-600' : 'text-blue-600'}`}>{shipment.status}</p>
                   <p className="text-sm text-gray-500">{shipment.carrier}</p>
                 </div>
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
@@ -292,7 +480,7 @@ const TrackPage: React.FC = () => {
                     <span className="text-xl font-bold">{shipment.co2Emissions}kg</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-xs opacity-80">Carbon Saved</span>
+                    <span className="text-xs opacity-80">Carbon Saved vs Road</span>
                     <span className="text-xl font-bold text-emerald-200">+{shipment.co2Saved}kg</span>
                   </div>
                 </div>

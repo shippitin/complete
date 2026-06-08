@@ -26,11 +26,13 @@ const AirBookingDetailsPage: React.FC = () => {
   const selectedResult = location.state?.selectedResult as AirServiceResult | undefined;
   const originalFormData = location.state?.originalFormData as AllFormData | undefined;
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [gstin, setGstin] = useState('');
+  // ── auto-fill from logged-in user ──
+  const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
+  const [fullName, setFullName] = useState(user.full_name || '');
+  const [email, setEmail] = useState(user.email || '');
+  const [phone, setPhone] = useState(user.phone || '');
+  const [companyName, setCompanyName] = useState(user.company_name || '');
+  const [gstin, setGstin] = useState(user.gstin || '');
   const [kycDocType, setKycDocType] = useState('Passport');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [loading, setLoading] = useState(false);

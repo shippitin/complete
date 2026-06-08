@@ -81,12 +81,13 @@ const HeroSection: React.FC = () => {
 
     if (currentForm) {
       const formData = await currentForm.submit();
-      if (formData) {
+      if (formData && !(formData instanceof Promise)) {
         switch (formData.bookingType) {
           case 'Train Container Booking':
           case 'Train Goods Booking':
           case 'Train Parcel Booking':
-            navigationPath = '/train-results';
+            // ← KEY CHANGE: goes to recommended services first
+            navigationPath = '/train-recommended-services';
             if (formData.bookingType === 'Train Container Booking') {
               displayComponent = (formData as TrainContainerFormData).isDomestic
                 ? 'DomesticContainerResults' : 'InternationalContainerResults';
@@ -97,7 +98,7 @@ const HeroSection: React.FC = () => {
             }
             break;
           case 'Door to Door':    navigationPath = '/door-to-door-results'; break;
-          case 'Sea':             navigationPath = '/sea-results'; break;
+          case 'Sea':             navigationPath = '/sea-recommended-services'; break;
           case 'Port Services':   navigationPath = '/port-results'; break;
           case 'Air':             navigationPath = '/air-results'; break;
           case 'Truck':           navigationPath = '/truck-results'; break;
@@ -115,17 +116,17 @@ const HeroSection: React.FC = () => {
 
   const renderQuoteForm = () => {
     switch (activeTab) {
-      case 'Door to Door':    return <DoorToDoorQuoteForm   ref={el => formRefs.current['Door to Door']    = el} showButtons={false} />;
-      case 'Rail':            return <RailQuoteForm          ref={el => formRefs.current['Rail']            = el} showButtons={false} />;
-      case 'Sea':             return <SeaQuoteForm           ref={el => formRefs.current['Sea']             = el} showButtons={false} />;
-      case 'Port Services':   return <PortServicesQuoteForm  ref={el => formRefs.current['Port Services']   = el} showButtons={false} />;
-      case 'Air':             return <AirQuoteForm           ref={el => formRefs.current['Air']             = el} showButtons={false} />;
-      case 'Truck':           return <TruckQuoteForm         ref={el => formRefs.current['Truck']           = el} showButtons={false} />;
-      case 'LCL':             return <LCLQuoteForm           ref={el => formRefs.current['LCL']             = el} showButtons={false} />;
-      case 'Parcel':          return <ParcelQuoteForm        ref={el => formRefs.current['Parcel']          = el} showButtons={false} />;
-      case 'Customs':         return <CustomsQuoteForm       ref={el => formRefs.current['Customs']         = el} showButtons={false} />;
-      case 'Insurance':       return <InsuranceQuoteForm     ref={el => formRefs.current['Insurance']       = el} showButtons={false} />;
-      case 'First/Last Mile': return <FirstLastMileQuoteForm ref={el => formRefs.current['First/Last Mile'] = el} showButtons={false} />;
+      case 'Door to Door':    return <DoorToDoorQuoteForm   ref={el => { formRefs.current['Door to Door']    = el; }} showButtons={false} />;
+      case 'Rail':            return <RailQuoteForm          ref={el => { formRefs.current['Rail']            = el; }} showButtons={false} />;
+      case 'Sea':             return <SeaQuoteForm           ref={el => { formRefs.current['Sea']             = el; }} showButtons={false} />;
+      case 'Port Services':   return <PortServicesQuoteForm  ref={el => { formRefs.current['Port Services']   = el; }} showButtons={false} />;
+      case 'Air':             return <AirQuoteForm           ref={el => { formRefs.current['Air']             = el; }} showButtons={false} />;
+      case 'Truck':           return <TruckQuoteForm         ref={el => { formRefs.current['Truck']           = el; }} showButtons={false} />;
+      case 'LCL':             return <LCLQuoteForm           ref={el => { formRefs.current['LCL']             = el; }} showButtons={false} />;
+      case 'Parcel':          return <ParcelQuoteForm        ref={el => { formRefs.current['Parcel']          = el; }} showButtons={false} />;
+      case 'Customs':         return <CustomsQuoteForm       ref={el => { formRefs.current['Customs']         = el; }} showButtons={false} />;
+      case 'Insurance':       return <InsuranceQuoteForm     ref={el => { formRefs.current['Insurance']       = el; }} showButtons={false} />;
+      case 'First/Last Mile': return <FirstLastMileQuoteForm ref={el => { formRefs.current['First/Last Mile'] = el; }} showButtons={false} />;
       default: return null;
     }
   };
@@ -137,7 +138,7 @@ const HeroSection: React.FC = () => {
     >
       <div className="max-w-6xl mx-auto">
 
-        {/* White tab strip — rounded top corners only */}
+        {/* White tab strip */}
         <div
           className="bg-white px-4 py-3 flex flex-wrap justify-center sm:justify-between items-center gap-1"
           style={{ borderRadius: '16px 16px 0 0', borderBottom: '1px solid #e0e7ff' }}
@@ -153,7 +154,7 @@ const HeroSection: React.FC = () => {
           ))}
         </div>
 
-        {/* White form card — rounded bottom corners only, flush with tab strip */}
+        {/* Form card */}
         <div
           className="bg-white px-5 pt-5 pb-5"
           style={{

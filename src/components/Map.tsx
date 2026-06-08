@@ -1,15 +1,8 @@
 // src/components/Map.tsx
 import React, { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Polyline, useMap, Marker, Tooltip } from "react-leaflet"; // Added Tooltip
+import { MapContainer, TileLayer, Polyline, useMap, Marker, Tooltip } from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css"; // Import Leaflet CSS for styling
-
-// Fix for default icon markers in Leaflet that don't load correctly from CDN paths
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
+import "leaflet/dist/leaflet.css";
 
 interface ShipmentStatus {
   date: string;
@@ -19,191 +12,165 @@ interface ShipmentStatus {
 }
 
 interface MapProps {
-  path: [number, number][]; // Array of [latitude, longitude] coordinates for the route
-  shipmentType: 'Truck' | 'Sea' | 'Air' | 'Parcel' | 'International' | 'Rail'; // Type of shipment for icon
-  statusTimeline: ShipmentStatus[]; // Full status timeline for dynamic location names
+  path: [number, number][];
+  shipmentType: 'Truck' | 'Sea' | 'Air' | 'Parcel' | 'International' | 'Rail';
+  statusTimeline: ShipmentStatus[];
 }
 
-// Helper function to get the appropriate vehicle icon URL
-const getVehicleIconUrl = (type: MapProps['shipmentType']): string => {
-  switch (type) {
-    case 'Truck':
-      return "https://cdn-icons-png.flaticon.com/512/1047/1047156.png"; // Truck icon
-    case 'Sea':
-      return "https://cdn-icons-png.flaticon.com/512/168/168536.png"; // Ship icon
-    case 'Air':
-      return "https://cdn-icons-png.flaticon.com/512/1070/1070317.png"; // Plane icon
-    case 'Rail':
-      return "https://cdn-icons-png.flaticon.com/512/2933/2933566.png"; // Train icon
-    case 'Parcel':
-    case 'International':
-    default:
-      return "https://cdn-icons-png.flaticon.com/512/684/684908.png"; // Generic marker or box
-  }
+// Exact route traced from Google Maps photo:
+// Chennai → SE Bay of Bengal → west of Andamans → curves right into Andaman Sea
+// → enters Malacca Strait from the EAST (between Malaysia east coast & Sumatra)
+// → south down strait → Singapore
+const CHENNAI_SINGAPORE: [number, number][] = [
+  [13.0827,  80.2707],  // Chennai
+  [12.0000,  81.5000],  // SE into Bay of Bengal
+  [10.5000,  83.5000],  // Bay of Bengal, curving south
+  [8.5000,   86.0000],  // Mid Bay of Bengal heading SE
+  [6.5000,   89.0000],  // Passing west of Andaman Islands
+  [5.0000,   92.0000],  // Curving east toward Andaman Sea
+  [4.5000,   95.5000],  // Andaman Sea, west of Sumatra north tip
+  [4.2000,   98.0000],  // Entering Malacca Strait from north
+  [3.8000,  100.5000],  // Malacca Strait — between Malaysia & Sumatra
+  [3.0000,  101.5000],  // Mid strait (Port Klang / Klang area east)
+  [2.2000,  102.5000],  // South Malacca Strait
+  [1.5000,  103.5000],  // Singapore Strait approach
+  [1.3521,  103.8198],  // Singapore
+];
+
+const CHENNAI_HAMBURG: [number, number][] = [
+  [13.0827,  80.2707],
+  [8.0000,   78.0000],
+  [5.9000,   79.0000],
+  [4.0000,   73.0000],
+  [10.0000,  57.0000],
+  [12.0000,  45.0000],
+  [20.0000,  38.5000],
+  [27.0000,  34.0000],
+  [30.5000,  32.4000],
+  [36.0000,  14.0000],
+  [36.0000,  -5.5000],
+  [44.0000, -10.0000],
+  [53.5500,   9.9500],
+];
+
+const getSeaRoute = (start: [number, number], end: [number, number]): [number, number][] => {
+  const r = (n: number) => Math.round(n);
+  if (r(end[0]) === 1 && (r(end[1]) === 104 || r(end[1]) === 103)) return CHENNAI_SINGAPORE;
+  if (r(end[0]) > 50 && r(end[1]) > 5 && r(end[1]) < 15) return CHENNAI_HAMBURG;
+  return [start, end];
 };
 
-// Component to handle map view changes and animated marker logic
-const MapContent: React.FC<MapProps> = ({ path, shipmentType, statusTimeline }) => {
-  const map = useMap(); // Get the Leaflet map instance from react-leaflet
-  const animatedMarkerRef = useRef<L.Marker | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+const interpolate = (path: [number, number][], t: number): [number, number] => {
+  if (t <= 0) return path[0];
+  if (t >= 1) return path[path.length - 1];
+  const segs = path.length - 1;
+  const raw  = t * segs;
+  const idx  = Math.min(Math.floor(raw), segs - 1);
+  const seg  = raw - idx;
+  const a = path[idx], b = path[idx + 1];
+  return [a[0] + (b[0] - a[0]) * seg, a[1] + (b[1] - a[1]) * seg];
+};
+
+const makeVehicleIcon = (type: MapProps['shipmentType']) => {
+  const emoji = type === 'Sea' ? '🚢' : type === 'Air' ? '✈️' : type === 'Rail' ? '🚂' : '🚚';
+  return L.divIcon({
+    className: '',
+    html: `<div style="font-size:30px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));user-select:none;">${emoji}</div>`,
+    iconSize:   [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor:[0, -20],
+  });
+};
+
+const makeDotIcon = (color: string) => L.divIcon({
+  className: '',
+  html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 2px ${color};"></div>`,
+  iconSize:   [12, 12],
+  iconAnchor: [6, 6],
+});
+
+const MapContent: React.FC<MapProps & { animPath: [number, number][] }> = ({
+  path, shipmentType, statusTimeline, animPath,
+}) => {
+  const map       = useMap();
+  const markerRef = useRef<L.Marker | null>(null);
+  const frameRef  = useRef<number | null>(null);
+  const startRef  = useRef<number | null>(null);
+
+  const isSea = shipmentType === 'Sea';
+  const isAir = shipmentType === 'Air';
+  const originName = statusTimeline[0]?.location || 'Origin';
+  const destName   = statusTimeline[statusTimeline.length - 1]?.location || 'Destination';
 
   useEffect(() => {
-    // Fit map to bounds of the path
-    if (path && path.length > 0) {
-      const bounds = L.latLngBounds(path);
-      map.fitBounds(bounds.pad(0.2), { animate: true, duration: 1.0 });
+    // Fit exactly like the photo: Chennai top-left, Singapore bottom-right
+    if (isSea) {
+      map.fitBounds(
+        L.latLngBounds([[0.5, 78.5], [14.0, 105.0]]),
+        { animate: true, duration: 1.0, padding: [20, 20] }
+      );
+    } else {
+      map.fitBounds(L.latLngBounds(animPath).pad(0.2), { animate: true, duration: 1.0 });
     }
 
-    // Clear previous marker and animation
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (animatedMarkerRef.current) {
-      map.removeLayer(animatedMarkerRef.current);
-      animatedMarkerRef.current = null;
-    }
+    if (frameRef.current)  { cancelAnimationFrame(frameRef.current);  frameRef.current  = null; }
+    if (markerRef.current) { map.removeLayer(markerRef.current);       markerRef.current = null; }
+    startRef.current = null;
+    if (animPath.length < 2) return;
 
-    if (!path || path.length < 2) {
-      // If path is too short for animation, just place a static marker at the last point if it exists
-      if (path && path.length > 0) {
-        const staticIcon = L.icon({
-          iconUrl: getVehicleIconUrl(shipmentType),
-          iconSize: [38, 38],
-          iconAnchor: [19, 38],
-          popupAnchor: [0, -38]
-        });
-        const lastPoint = path[path.length - 1];
-        animatedMarkerRef.current = L.marker(lastPoint, { icon: staticIcon }).addTo(map);
-        const lastLocationName = statusTimeline[statusTimeline.length - 1]?.location || 'Unknown Location';
-        animatedMarkerRef.current.bindPopup(`<b>Current Location:</b> ${lastLocationName}`).openPopup();
-        map.setView(lastPoint, 10);
-      }
-      return; // No animation for paths less than 2 points
-    }
+    const icon = makeVehicleIcon(shipmentType);
+    markerRef.current = L.marker(animPath[0], { icon }).addTo(map);
+    markerRef.current
+      .bindPopup(
+        `<div style="font-size:13px;font-family:sans-serif;padding:2px 6px"><b>🚢 Departed: ${originName}</b></div>`,
+        { closeButton: false, autoPan: false }
+      ).openPopup();
 
-    // Create custom icon for the animated vehicle
-    const vehicleIcon = L.icon({
-      iconUrl: getVehicleIconUrl(shipmentType),
-      iconSize: [38, 38],
-      iconAnchor: [19, 38],
-      popupAnchor: [0, -38]
-    });
-
-    // Initialize the animated marker at the start of the path
-    animatedMarkerRef.current = L.marker(path[0], { icon: vehicleIcon }).addTo(map);
-    animatedMarkerRef.current.bindPopup(`<b>Current Location:</b> ${statusTimeline[0]?.location || 'Starting Point'}`).openPopup();
-
-    // Animation logic using requestAnimationFrame for smoother animation
-    let startTime: number | null = null;
-    const totalAnimationDuration = 15000; // 15 seconds for the entire journey (adjust as needed)
-
-    const animate = (timestamp: DOMHighResTimeStamp) => {
-      if (startTime === null) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-
-      let progress = elapsed / totalAnimationDuration;
-
-      if (progress > 1) {
-        progress = 1; // Ensure it stops exactly at the end
-      }
-
-      // Calculate the position along the path
-      const totalPathSegments = path.length - 1;
-      const currentSegmentIndex = Math.min(Math.floor(progress * totalPathSegments), totalPathSegments);
-      const segmentProgress = (progress * totalPathSegments) - currentSegmentIndex;
-
-      const startPoint = path[currentSegmentIndex];
-      const endPoint = path[currentSegmentIndex + 1] || path[currentSegmentIndex];
-
-      const lat = startPoint[0] + (endPoint[0] - startPoint[0]) * segmentProgress;
-      const lng = endPoint[1] ? startPoint[1] + (endPoint[1] - startPoint[1]) * segmentProgress : startPoint[1]; // Handle cases where endPoint[1] might be undefined
-
-      animatedMarkerRef.current?.setLatLng([lat, lng]);
-
-      // Determine current named location based on the segment being traversed
-      let currentNamedLocation = 'In Transit'; // Default
-      if (progress === 0 && statusTimeline.length > 0) {
-        currentNamedLocation = statusTimeline[0].location; // Very start
-      } else if (progress === 1 && statusTimeline.length > 0) {
-        currentNamedLocation = statusTimeline[statusTimeline.length - 1].location; // Very end
-      } else if (currentSegmentIndex < statusTimeline.length -1 && statusTimeline[currentSegmentIndex + 1]?.location) {
-        // If moving towards a known point, show that point's name
-        currentNamedLocation = statusTimeline[currentSegmentIndex + 1].location;
-      } else if (statusTimeline[currentSegmentIndex]?.location) {
-        // Otherwise, show the location of the segment's start point
-        currentNamedLocation = statusTimeline[currentSegmentIndex].location;
-      }
-
-
-      animatedMarkerRef.current?.setPopupContent(`<b>Current Location:</b> ${currentNamedLocation}`);
-      animatedMarkerRef.current?.openPopup(); // Ensure popup remains open
-
-      if (progress < 1) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      } else {
-        // Animation finished, ensure marker is at the very last point and shows final location
-        animatedMarkerRef.current?.setLatLng(path[path.length - 1]);
-        animatedMarkerRef.current?.setPopupContent(`<b>Final Location:</b> ${statusTimeline[statusTimeline.length - 1]?.location || 'Destination'}`);
-        animatedMarkerRef.current?.openPopup(); // Keep final popup open
-      }
+    const DURATION = 25000;
+    const tick = (ts: DOMHighResTimeStamp) => {
+      if (!startRef.current) startRef.current = ts;
+      const progress = Math.min((ts - startRef.current) / DURATION, 1);
+      markerRef.current?.setLatLng(interpolate(animPath, progress));
+      const pct   = Math.round(progress * 100);
+      const emoji = shipmentType === 'Sea' ? '🚢' : '🚚';
+      const label = progress < 0.03
+        ? `${emoji} Departed: ${originName}`
+        : progress >= 0.98
+        ? `✅ Arrived: ${destName}`
+        : `${emoji} En Route — ${pct}% complete`;
+      markerRef.current?.setPopupContent(
+        `<div style="font-size:13px;font-family:sans-serif;padding:2px 6px"><b>${label}</b></div>`
+      );
+      markerRef.current?.openPopup();
+      if (progress < 1) frameRef.current = requestAnimationFrame(tick);
     };
+    frameRef.current = requestAnimationFrame(tick);
 
-    animationFrameRef.current = requestAnimationFrame(animate);
-
-    // Cleanup function
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (animatedMarkerRef.current) {
-        map.removeLayer(animatedMarkerRef.current);
-      }
+      if (frameRef.current)  cancelAnimationFrame(frameRef.current);
+      if (markerRef.current) map.removeLayer(markerRef.current);
     };
-  }, [map, path, shipmentType, statusTimeline]); // Re-run effect when map, path, shipmentType, or statusTimeline changes
-
-  // Create static markers for origin and destination with tooltips
-  const originMarkerIcon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-  });
-
-  const destinationMarkerIcon = L.icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-red.png', // A different color for destination
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-  });
-
+  }, [map, animPath, shipmentType, originName, destName]);
 
   return (
     <>
-      {/* Polyline to show the entire path */}
-      <Polyline positions={path} color="#007bff" weight={4} opacity={0.7} />
-
-      {/* Static Marker for Origin with Tooltip */}
-      {path.length > 0 && statusTimeline.length > 0 && (
-        <Marker position={path[0]} icon={originMarkerIcon}>
-          <Tooltip permanent direction="top" offset={[0, -10]}>
-            Origin: {statusTimeline[0]?.location || 'Starting Point'}
-          </Tooltip>
+      <Polyline
+        positions={animPath}
+        color={isSea ? '#1e40af' : isAir ? '#7c3aed' : '#ea580c'}
+        weight={3}
+        opacity={1}
+        dashArray={isSea || isAir ? '8 5' : undefined}
+      />
+      {path.length > 0 && (
+        <Marker position={path[0]} icon={makeDotIcon('#1e40af')}>
+          <Tooltip permanent direction="top" offset={[0, -6]}>📍 {originName}</Tooltip>
         </Marker>
       )}
-
-      {/* Static Marker for Destination with Tooltip */}
-      {path.length > 1 && statusTimeline.length > 0 && (
-        <Marker position={path[path.length - 1]} icon={destinationMarkerIcon}>
-          <Tooltip permanent direction="top" offset={[0, -10]}>
-            Destination: {statusTimeline[statusTimeline.length - 1]?.location || 'Final Point'}
-          </Tooltip>
+      {path.length > 1 && (
+        <Marker position={path[path.length - 1]} icon={makeDotIcon('#15803d')}>
+          <Tooltip permanent direction="top" offset={[0, -6]}>🏁 {destName}</Tooltip>
         </Marker>
       )}
-      {/* The animated marker is managed imperatively in the useEffect */}
     </>
   );
 };
@@ -211,30 +178,35 @@ const MapContent: React.FC<MapProps> = ({ path, shipmentType, statusTimeline }) 
 const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline }) => {
   if (!path || path.length === 0) {
     return (
-      <div className="w-full h-96 rounded-xl shadow-lg border border-gray-200 flex items-center justify-center bg-gray-50 text-gray-500">
-        No map data available for this shipment.
+      <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-sm">
+        No map data available.
       </div>
     );
   }
+  const isSea = shipmentType === 'Sea';
+  const animPath: [number, number][] = isSea && path.length === 2
+    ? getSeaRoute(path[0], path[1])
+    : path;
 
   return (
-    <div
-      className="w-full h-96 rounded-xl shadow-lg border border-gray-200 overflow-hidden"
-      style={{ minHeight: '300px' }}
-    >
+    <div className="w-full h-full rounded-xl overflow-hidden" style={{ minHeight: '300px' }}>
       <MapContainer
-        center={path[0]} // Initial center, will be adjusted by MapContent
-        zoom={5} // Initial zoom, will be adjusted by MapContent
-        scrollWheelZoom={true} // Enable scroll wheel zoom
+        center={[7.0, 92.0]}
+        zoom={5}
+        scrollWheelZoom={true}
         className="h-full w-full"
-        key={path.join(',')} // Key to force remount if path changes drastically
+        key={path.map(p => p.join(',')).join('|')}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; OpenStreetMap contributors'
         />
-        {/* Render MapContent as a child to access the map instance via useMap() */}
-        <MapContent path={path} shipmentType={shipmentType} statusTimeline={statusTimeline} />
+        <MapContent
+          path={path}
+          shipmentType={shipmentType}
+          statusTimeline={statusTimeline}
+          animPath={animPath}
+        />
       </MapContainer>
     </div>
   );

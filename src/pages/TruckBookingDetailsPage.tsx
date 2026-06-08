@@ -1,3 +1,4 @@
+// src/pages/TruckBookingDetailsPage.tsx
 import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { bookingAPI } from '../services/api';
@@ -34,7 +35,6 @@ const TruckBookingDetailsPage: React.FC = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get real data from location state or fall back to defaults
   const stateResult = location.state?.selectedResult;
   const originalFormData = location.state?.originalFormData;
 
@@ -47,9 +47,16 @@ const TruckBookingDetailsPage: React.FC = () => {
     mode: 'truck',
   };
 
+  // ── auto-fill from logged-in user ──
+  const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
   const [formData, setFormData] = useState<FormData>({
-    name: '', email: '', phone: '', company: '', gstin: '',
-    kycType: 'GST Certificate', insurance: true
+    name: user.full_name || '',
+    email: user.email || '',
+    phone: user.phone || '',
+    company: user.company_name || '',
+    gstin: user.gstin || '',
+    kycType: 'GST Certificate',
+    insurance: true,
   });
   const [kycFile, setKycFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -126,7 +133,7 @@ const TruckBookingDetailsPage: React.FC = () => {
 
       <main className="max-w-6xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+
           <div className="lg:col-span-7 space-y-12">
             <section>
               <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
@@ -177,7 +184,7 @@ const TruckBookingDetailsPage: React.FC = () => {
           <div className="lg:col-span-5">
             <div className="sticky top-28 bg-white rounded-2xl p-8 border border-slate-200 shadow-sm">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Booking summary</h3>
-              
+
               <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-50">
                 <div className="text-center">
                   <p className="text-[10px] text-slate-400 font-bold uppercase mb-1">Origin</p>

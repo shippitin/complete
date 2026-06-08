@@ -1,65 +1,58 @@
 // src/components/QuoteForms/RailQuoteForm.tsx
+// CHANGE: navigate to /train-recommended-services instead of /train-results
 import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocationAutocomplete from '../LocationAutocomplete';
-
 import {
-  QuoteFormHandle,
-  TrainContainerFormData,
-  TrainGoodsFormData,
-  TrainParcelFormData,
-  RailServiceType,
-  ParsedVoiceCommand,
+  QuoteFormHandle, TrainContainerFormData, TrainGoodsFormData,
+  TrainParcelFormData, RailServiceType, ParsedVoiceCommand,
 } from '../../types/QuoteFormHandle';
 
-const parseNumber = (value: string | number | undefined | null): number | undefined => {
-  if (value === null || value === undefined || value === '') return undefined;
-  const num = Number(value);
-  return isNaN(num) ? undefined : num;
+const parseNumber = (v: string | number | undefined | null): number | undefined => {
+  if (v === null || v === undefined || v === '') return undefined;
+  const n = Number(v);
+  return isNaN(n) ? undefined : n;
 };
 
-type BookingTab = "container" | "parcel" | "goods";
-const validBookingTabs: BookingTab[] = ["container", "parcel", "goods"];
-type ContainerMode = "domestic" | "international";
-const validContainerModes: ContainerMode[] = ["domestic", "international"];
-const validRailServiceTypes: RailServiceType[] = ["terminalToTerminal", "doorToDoor", "doorToTerminal", "terminalToDoor"];
+type BookingTab      = 'container' | 'parcel' | 'goods';
+type ContainerMode   = 'domestic' | 'international';
+type MovementType    = 'export' | 'import';
+
+const EXPORT_SERVICE_TYPES: { value: RailServiceType; label: string }[] = [
+  { value: 'terminalToPort',     label: 'Terminal to Port'     },
+  { value: 'terminalToTerminal', label: 'Terminal to Terminal' },
+  { value: 'doorToPort',         label: 'Door to Port'         },
+  { value: 'doorToTerminal',     label: 'Door to Terminal'     },
+];
+
+const IMPORT_SERVICE_TYPES: { value: RailServiceType; label: string }[] = [
+  { value: 'portToTerminal',     label: 'Port to Terminal'     },
+  { value: 'terminalToTerminal', label: 'Terminal to Terminal' },
+  { value: 'portToDoor',         label: 'Port to Door'         },
+  { value: 'terminalToDoor',     label: 'Terminal to Door'     },
+];
+
+const DOMESTIC_SERVICE_TYPES: { value: RailServiceType; label: string }[] = [
+  { value: 'terminalToTerminal', label: 'Terminal to Terminal' },
+  { value: 'doorToDoor',         label: 'Door to Door'         },
+  { value: 'doorToTerminal',     label: 'Door to Terminal'     },
+  { value: 'terminalToDoor',     label: 'Terminal to Door'     },
+];
 
 const allCommodities = [
-  { label: 'Batteries', value: 'Batteries' },
-  { label: 'Chemicals', value: 'Chemicals' },
-  { label: 'Electronic Goods', value: 'Electronic Goods' },
-  { label: 'FAK (Freight of All Kinds)', value: 'FAK (Freight of All Kinds)' },
-  { label: 'Fabrics', value: 'Fabrics' },
-  { label: 'Fruits & Vegetables', value: 'Fruits & Vegetables' },
-  { label: 'Garments', value: 'Garments' },
-  { label: 'Handicrafts', value: 'Handicrafts' },
-  { label: 'Leather Goods', value: 'Leather Goods' },
-  { label: 'Machinery', value: 'Machinery' },
-  { label: 'Meat & Seafood', value: 'Meat & Seafood' },
-  { label: 'Miscellaneous', value: 'Miscellaneous' },
-  { label: 'Pharmaceuticals', value: 'Pharmaceuticals' },
-  { label: 'Spare Parts', value: 'Spare Parts' },
-  { label: 'Vehicles', value: 'Vehicles' },
-  { label: 'Other', value: 'Other' },
-];
+  'Batteries','Chemicals','Electronic Goods','FAK (Freight of All Kinds)',
+  'Fabrics','Fruits & Vegetables','Garments','Handicrafts','Leather Goods',
+  'Machinery','Meat & Seafood','Miscellaneous','Pharmaceuticals','Spare Parts','Vehicles','Other',
+].map(v => ({ label: v, value: v }));
 
 const containerTypes = [
-  { label: '20ft Standard', value: '20ft Standard' },
-  { label: '20ft High Cube', value: '20ft High Cube' },
-  { label: '20ft High Cube Reefer', value: '20ft High Cube Reefer' },
-  { label: '40ft Standard', value: '40ft Standard' },
-  { label: '40ft High Cube', value: '40ft High Cube' },
-  { label: '40ft High Cube Reefer', value: '40ft High Cube Reefer' },
-  { label: '40ft Open Top High', value: '40ft Open Top High' },
-];
+  '20ft Standard','20ft High Cube','20ft High Cube Reefer',
+  '40ft Standard','40ft High Cube','40ft High Cube Reefer','40ft Open Top High',
+].map(v => ({ label: v, value: v }));
 
 const wagonTypes = [
-  { label: 'Open Wagon', value: 'Open Wagon' },
-  { label: 'Covered Wagon', value: 'Covered Wagon' },
-  { label: 'Flat Wagon', value: 'Flat Wagon' },
-  { label: 'Hopper Wagon', value: 'Hopper Wagon' },
-  { label: 'Other', value: 'Other' },
-];
+  'Open Wagon','Covered Wagon','Flat Wagon','Hopper Wagon','Other',
+].map(v => ({ label: v, value: v }));
 
 interface RailQuoteFormProps {
   initialActiveService?: BookingTab;
@@ -67,585 +60,697 @@ interface RailQuoteFormProps {
   showButtons?: boolean;
 }
 
-const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({ initialActiveService = "container", prefillData, showButtons = true }, ref) => {
+const toggleBtn = (active: boolean) =>
+  `px-3 py-1 rounded-md text-xs font-medium outline-none transition-all border ${
+    active
+      ? 'bg-blue-100 text-blue-700 border-blue-200'
+      : 'bg-white text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-300'
+  }`;
+
+const radioBtn = (active: boolean) =>
+  `flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-all border ${
+    active
+      ? 'bg-blue-50 text-blue-700 border-blue-300'
+      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+  }`;
+
+const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
+  initialActiveService = 'container', prefillData, showButtons = true,
+}, ref) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<BookingTab>(initialActiveService);
 
-  // Container states
-  const [containerOriginTerminal, setContainerOriginTerminal] = useState('');
-  const [containerDestinationTerminal, setContainerDestinationTerminal] = useState('');
-  const [containerOriginAddress, setContainerOriginAddress] = useState('');
-  const [containerDestinationAddress, setContainerDestinationAddress] = useState('');
-  const [containerNumberOfContainers, setContainerNumberOfContainers] = useState<number | ''>(1);
-  const [containerType, setContainerType] = useState('');
-  const [containerTotalWeight, setContainerTotalWeight] = useState<number | ''>('');
-  const [containerCommodity, setContainerCommodity] = useState('FAK (Freight of All Kinds)');
-  const [containerMode, setContainerMode] = useState<ContainerMode>("domestic");
-  const [containerHazardousCargo, setContainerHazardousCargo] = useState<boolean | ''>(false);
-  const [containerDate, setContainerDate] = useState<Date | null>(new Date());
-  const [containerServiceType, setContainerServiceType] = useState<RailServiceType | ''>('terminalToTerminal');
+  const [domServiceType,    setDomServiceType]    = useState<RailServiceType>('terminalToTerminal');
+  const [domOriginTerminal, setDomOriginTerminal] = useState('');
+  const [domOriginAddress,  setDomOriginAddress]  = useState('');
+  const [domDestTerminal,   setDomDestTerminal]   = useState('');
+  const [domDestAddress,    setDomDestAddress]    = useState('');
 
-  // Goods states
-  const [goodsOriginTerminal, setGoodsOriginTerminal] = useState('');
-  const [goodsDestinationTerminal, setGoodsDestinationTerminal] = useState('');
-  const [goodsOriginAddress, setGoodsOriginAddress] = useState('');
-  const [goodsDestinationAddress, setGoodsDestinationAddress] = useState('');
-  const [goodsTotalWeight, setGoodsTotalWeight] = useState<number | ''>('');
-  const [goodsCommodity, setGoodsCommodity] = useState('FAK (Freight of All Kinds)');
-  const [goodsWagonType, setGoodsWagonType] = useState('');
-  const [goodsNumberOfWagons, setGoodsNumberOfWagons] = useState<number | ''>(1);
-  const [goodsHazardousCargo, setGoodsHazardousCargo] = useState<boolean | ''>(false);
-  const [goodsDate, setGoodsDate] = useState<Date | null>(new Date());
-  const [goodsServiceType, setGoodsServiceType] = useState<RailServiceType | ''>('terminalToTerminal');
+  const [movement,        setMovement]        = useState<MovementType>('export');
+  const [intlServiceType, setIntlServiceType] = useState<RailServiceType>('terminalToPort');
+  const [intlOriginICD,   setIntlOriginICD]   = useState('');
+  const [intlOriginPort,  setIntlOriginPort]  = useState('');
+  const [intlOriginAddr,  setIntlOriginAddr]  = useState('');
+  const [intlOriginForeign, setIntlOriginForeign] = useState('');
+  const [intlDestICD,     setIntlDestICD]     = useState('');
+  const [intlDestPort,    setIntlDestPort]    = useState('');
+  const [intlDestAddr,    setIntlDestAddr]    = useState('');
+  const [intlDestForeign, setIntlDestForeign] = useState('');
 
-  // Parcel states
-  const [parcelOriginTerminal, setParcelOriginTerminal] = useState('');
-  const [parcelDestinationTerminal, setParcelDestinationTerminal] = useState('');
-  const [parcelOriginAddress, setParcelOriginAddress] = useState('');
-  const [parcelDestinationAddress, setParcelDestinationAddress] = useState('');
-  const [parcelTotalWeight, setParcelTotalWeight] = useState<number | ''>('');
-  const [parcelDimensions, setParcelDimensions] = useState('');
-  const [parcelDetailedDescriptionOfGoods, setParcelDetailedDescriptionOfGoods] = useState('');
-  const [parcelHazardousCargo, setParcelHazardousCargo] = useState<boolean | ''>(false);
-  const [parcelDate, setParcelDate] = useState<Date | null>(new Date());
-  const [parcelCount, setParcelCount] = useState<number | ''>(1);
-  const [parcelServiceType, setParcelServiceType] = useState<RailServiceType | ''>('terminalToTerminal');
+  const [containerMode,   setContainerMode]   = useState<ContainerMode>('domestic');
+  const [containerType,   setContainerType]   = useState('');
+  const [numContainers,   setNumContainers]   = useState<number|''>(1);
+  const [totalWeight,     setTotalWeight]     = useState<number|''>('');
+  const [commodity,       setCommodity]       = useState('FAK (Freight of All Kinds)');
+  const [hazardous,       setHazardous]       = useState<boolean|''>(false);
+  const [readyDate,       setReadyDate]       = useState<Date|null>(new Date());
 
-  const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
-  const [showValidationMessage, setShowValidationMessage] = useState(false);
-  const [validationMessage, setValidationMessage] = useState('');
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [goodsServiceType, setGoodsServiceType] = useState<RailServiceType>('terminalToTerminal');
+  const [goodsOriginTerm,  setGoodsOriginTerm]  = useState('');
+  const [goodsOriginAddr,  setGoodsOriginAddr]  = useState('');
+  const [goodsDestTerm,    setGoodsDestTerm]    = useState('');
+  const [goodsDestAddr,    setGoodsDestAddr]    = useState('');
+  const [goodsWeight,      setGoodsWeight]      = useState<number|''>('');
+  const [goodsCommodity,   setGoodsCommodity]   = useState('FAK (Freight of All Kinds)');
+  const [goodsWagonType,   setGoodsWagonType]   = useState('');
+  const [numWagons,        setNumWagons]        = useState<number|''>(1);
+  const [goodsHazardous,   setGoodsHazardous]   = useState<boolean|''>(false);
+  const [goodsDate,        setGoodsDate]        = useState<Date|null>(new Date());
+
+  const [parcelServiceType, setParcelServiceType] = useState<RailServiceType>('terminalToTerminal');
+  const [parcelOriginTerm,  setParcelOriginTerm]  = useState('');
+  const [parcelOriginAddr,  setParcelOriginAddr]  = useState('');
+  const [parcelDestTerm,    setParcelDestTerm]    = useState('');
+  const [parcelDestAddr,    setParcelDestAddr]    = useState('');
+  const [parcelWeight,      setParcelWeight]      = useState<number|''>('');
+  const [parcelDims,        setParcelDims]        = useState('');
+  const [parcelDesc,        setParcelDesc]        = useState('');
+  const [parcelHazardous,   setParcelHazardous]   = useState<boolean|''>(false);
+  const [parcelDate,        setParcelDate]        = useState<Date|null>(new Date());
+  const [parcelCount,       setParcelCount]       = useState<number|''>(1);
+
+  const [errors,     setErrors]     = useState<Record<string,string>>({});
+  const [showValMsg, setShowValMsg] = useState(false);
 
   useEffect(() => {
-    if (initialActiveService && validBookingTabs.includes(initialActiveService)) setActiveTab(initialActiveService);
-  }, [initialActiveService]);
+    if (movement === 'export') setIntlServiceType('terminalToPort');
+    else                       setIntlServiceType('portToTerminal');
+  }, [movement]);
 
-  useEffect(() => {
-    if (prefillData) {
-      let targetTab: BookingTab = activeTab;
-      if (typeof prefillData.service === 'string') {
-        if (prefillData.service === 'Train Container Booking' || (prefillData.service === 'Rail' && prefillData.containerType)) targetTab = 'container';
-        else if (prefillData.service === 'Train Goods Booking' || (prefillData.service === 'Rail' && prefillData.wagonType)) targetTab = 'goods';
-        else if (prefillData.service === 'Train Parcel Booking' || (prefillData.service === 'Rail' && prefillData.parcelCount)) targetTab = 'parcel';
-      }
-      setActiveTab(targetTab);
-      if (prefillData.isDomestic !== undefined) {
-        const domesticValue = typeof prefillData.isDomestic === 'string' ? prefillData.isDomestic.toLowerCase() === 'true' : prefillData.isDomestic;
-        setContainerMode(domesticValue ? 'domestic' : 'international');
-      }
-      if (targetTab === 'container') {
-        setContainerOriginTerminal(prefillData.originTerminal || prefillData.originStation || prefillData.origin || '');
-        setContainerDestinationTerminal(prefillData.destinationTerminal || prefillData.destinationStation || prefillData.destination || '');
-        setContainerOriginAddress(prefillData.originAddress || '');
-        setContainerDestinationAddress(prefillData.destinationAddress || '');
-        setContainerNumberOfContainers(parseNumber(prefillData.numberOfContainers) ?? 1);
-        setContainerType(prefillData.containerType || '');
-        setContainerTotalWeight(parseNumber(prefillData.cargoWeight) ?? parseNumber(prefillData.totalWeight) ?? '');
-        setContainerCommodity(prefillData.commodity || prefillData.cargoType || 'FAK (Freight of All Kinds)');
-        setContainerHazardousCargo(prefillData.hazardousCargo ?? false);
-        setContainerDate(prefillData.readyDate ? new Date(prefillData.readyDate) : (prefillData.date ? new Date(prefillData.date) : null));
-        setContainerServiceType(prefillData.serviceType as RailServiceType || 'terminalToTerminal');
-      } else if (targetTab === 'goods') {
-        setGoodsOriginTerminal(prefillData.originTerminal || prefillData.originStation || prefillData.origin || '');
-        setGoodsDestinationTerminal(prefillData.destinationTerminal || prefillData.destinationStation || prefillData.destination || '');
-        setGoodsOriginAddress(prefillData.originAddress || '');
-        setGoodsDestinationAddress(prefillData.destinationAddress || '');
-        setGoodsTotalWeight(parseNumber(prefillData.cargoWeight) ?? parseNumber(prefillData.totalWeight) ?? '');
-        setGoodsCommodity(prefillData.commodity || prefillData.cargoType || 'FAK (Freight of All Kinds)');
-        setGoodsWagonType(prefillData.wagonType || '');
-        setGoodsNumberOfWagons(parseNumber(prefillData.numberOfWagons) ?? 1);
-        setGoodsHazardousCargo(prefillData.hazardousCargo ?? false);
-        setGoodsDate(prefillData.readyDate ? new Date(prefillData.readyDate) : (prefillData.date ? new Date(prefillData.date) : null));
-        setGoodsServiceType(prefillData.serviceType as RailServiceType || 'terminalToTerminal');
-      } else if (targetTab === 'parcel') {
-        setParcelOriginTerminal(prefillData.originTerminal || prefillData.originStation || prefillData.origin || '');
-        setParcelDestinationTerminal(prefillData.destinationTerminal || prefillData.destinationStation || prefillData.destination || '');
-        setParcelOriginAddress(prefillData.originAddress || '');
-        setParcelDestinationAddress(prefillData.destinationAddress || '');
-        setParcelTotalWeight(parseNumber(prefillData.cargoWeight) ?? parseNumber(prefillData.totalWeight) ?? '');
-        setParcelDimensions(prefillData.dimensions || prefillData.cargoDimensions || '');
-        setParcelDetailedDescriptionOfGoods(prefillData.detailedDescriptionOfGoods || prefillData.description || '');
-        setParcelHazardousCargo(prefillData.hazardousCargo ?? false);
-        setParcelDate(prefillData.readyDate ? new Date(prefillData.readyDate) : (prefillData.date ? new Date(prefillData.date) : null));
-        setParcelCount(parseNumber(prefillData.parcelCount) ?? 1);
-        setParcelServiceType(prefillData.serviceType as RailServiceType || 'terminalToTerminal');
-      }
+  const getIntlOrigin = (): string => {
+    if (movement === 'export') {
+      if (intlServiceType === 'doorToPort' || intlServiceType === 'doorToTerminal') return intlOriginAddr;
+      return intlOriginICD;
     }
-  }, [prefillData]);
-
-  const resetAllFields = () => {
-    setContainerOriginTerminal(''); setContainerDestinationTerminal(''); setContainerOriginAddress(''); setContainerDestinationAddress('');
-    setContainerNumberOfContainers(1); setContainerType(''); setContainerTotalWeight(''); setContainerCommodity('FAK (Freight of All Kinds)');
-    setContainerMode("domestic"); setContainerHazardousCargo(false); setContainerDate(new Date()); setContainerServiceType('terminalToTerminal');
-    setGoodsOriginTerminal(''); setGoodsDestinationTerminal(''); setGoodsOriginAddress(''); setGoodsDestinationAddress('');
-    setGoodsTotalWeight(''); setGoodsCommodity('FAK (Freight of All Kinds)'); setGoodsWagonType(''); setGoodsNumberOfWagons(1);
-    setGoodsHazardousCargo(false); setGoodsDate(new Date()); setGoodsServiceType('terminalToTerminal');
-    setParcelOriginTerminal(''); setParcelDestinationTerminal(''); setParcelOriginAddress(''); setParcelDestinationAddress('');
-    setParcelTotalWeight(''); setParcelDimensions(''); setParcelDetailedDescriptionOfGoods(''); setParcelHazardousCargo(false);
-    setParcelDate(new Date()); setParcelCount(1); setParcelServiceType('terminalToTerminal');
-    setErrors({}); setShowValidationMessage(false); setValidationMessage(''); setShowSuccessMessage(false); setSuccessMessage('');
+    return intlOriginForeign;
   };
 
-  const handleFormSubmissionLogic = async (): Promise<TrainContainerFormData | TrainGoodsFormData | TrainParcelFormData | null> => {
-    const newErrors: Partial<Record<string, string>> = {};
-    let formData: TrainContainerFormData | TrainGoodsFormData | TrainParcelFormData | null = null;
+  const getIntlDest = (): string => {
+    if (movement === 'export') {
+      if (intlServiceType === 'terminalToPort' || intlServiceType === 'doorToPort') return intlDestPort;
+      return intlDestICD;
+    }
+    if (intlServiceType === 'portToDoor' || intlServiceType === 'terminalToDoor') return intlDestAddr;
+    return intlDestICD;
+  };
+
+  const inp = (err: boolean) =>
+    `block w-full px-3 py-2 text-sm border-0 border-b focus:ring-0 focus:border-blue-500 bg-transparent ${
+      err ? 'border-orange-400' : 'border-gray-300'
+    }`;
+
+  const resetAll = () => {
+    setDomServiceType('terminalToTerminal');
+    setDomOriginTerminal(''); setDomOriginAddress('');
+    setDomDestTerminal('');   setDomDestAddress('');
+    setMovement('export');    setIntlServiceType('terminalToPort');
+    setIntlOriginICD('');     setIntlOriginPort('');
+    setIntlOriginAddr('');    setIntlOriginForeign('');
+    setIntlDestICD('');       setIntlDestPort('');
+    setIntlDestAddr('');      setIntlDestForeign('');
+    setContainerType('');     setNumContainers(1);
+    setTotalWeight('');       setCommodity('FAK (Freight of All Kinds)');
+    setHazardous(false);      setReadyDate(new Date());
+    setGoodsServiceType('terminalToTerminal');
+    setGoodsOriginTerm('');   setGoodsOriginAddr('');
+    setGoodsDestTerm('');     setGoodsDestAddr('');
+    setGoodsWeight('');       setGoodsCommodity('FAK (Freight of All Kinds)');
+    setGoodsWagonType('');    setNumWagons(1);
+    setGoodsHazardous(false); setGoodsDate(new Date());
+    setParcelServiceType('terminalToTerminal');
+    setParcelOriginTerm('');  setParcelOriginAddr('');
+    setParcelDestTerm('');    setParcelDestAddr('');
+    setParcelWeight('');      setParcelDims('');
+    setParcelDesc('');        setParcelHazardous(false);
+    setParcelDate(new Date()); setParcelCount(1);
+    setErrors({});            setShowValMsg(false);
+  };
+
+  const handleSubmit = async (): Promise<TrainContainerFormData | TrainGoodsFormData | TrainParcelFormData | null> => {
+    const e: Record<string,string> = {};
+    let fd: TrainContainerFormData | TrainGoodsFormData | TrainParcelFormData | null = null;
 
     if (activeTab === 'container') {
-      if (!containerServiceType) { newErrors.serviceType = 'Service Type is required.'; }
-      else {
-        if (containerServiceType === 'doorToDoor' || containerServiceType === 'doorToTerminal') { if (!containerOriginAddress) newErrors.originAddress = 'Origin is required.'; }
-        else { if (!containerOriginTerminal) newErrors.originTerminal = 'Origin Terminal is required.'; }
-        if (containerServiceType === 'doorToDoor' || containerServiceType === 'terminalToDoor') { if (!containerDestinationAddress) newErrors.destinationAddress = 'Destination is required.'; }
-        else { if (!containerDestinationTerminal) newErrors.destinationTerminal = 'Destination Terminal is required.'; }
+      if (containerMode === 'domestic') {
+        const st = domServiceType;
+        const isDoorO = st === 'doorToDoor' || st === 'doorToTerminal';
+        const isDoorD = st === 'doorToDoor' || st === 'terminalToDoor';
+        if (!domServiceType) e.serviceType = 'Required';
+        if (isDoorO  && !domOriginAddress)  e.originAddress  = 'Required';
+        if (!isDoorO && !domOriginTerminal) e.originTerminal = 'Required';
+        if (isDoorD  && !domDestAddress)    e.destAddress    = 'Required';
+        if (!isDoorD && !domDestTerminal)   e.destTerminal   = 'Required';
+      } else {
+        const org = getIntlOrigin();
+        const dst = getIntlDest();
+        if (!org) e.intlOrigin = 'Origin is required';
+        if (!dst) e.intlDest   = 'Destination is required';
       }
-      const numContainers = parseNumber(containerNumberOfContainers);
-      if (numContainers === undefined || numContainers <= 0) newErrors.numberOfContainers = 'Required.';
-      if (!containerType) newErrors.containerType = 'Required.';
-      const totalWeight = parseNumber(containerTotalWeight);
-      if (totalWeight === undefined || totalWeight <= 0) newErrors.totalWeight = 'Required.';
-      if (!containerCommodity) newErrors.cargoType = 'Required.';
-      if (containerHazardousCargo === '') newErrors.hazardousCargo = 'Required.';
-      if (!containerDate) newErrors.date = 'Required.';
+      if (!containerType)                                                           e.containerType  = 'Required';
+      if (!parseNumber(numContainers) || (parseNumber(numContainers)||0) < 1)     e.numContainers  = 'Required';
+      if (!parseNumber(totalWeight)   || (parseNumber(totalWeight)||0)   < 1)     e.totalWeight    = 'Required';
+      if (!commodity)                                                               e.commodity      = 'Required';
+      if (hazardous === '')                                                         e.hazardous      = 'Required';
+      if (!readyDate)                                                               e.readyDate      = 'Required';
 
-      if (Object.keys(newErrors).length === 0) {
-        formData = {
-          bookingType: 'Train Container Booking', isDomestic: containerMode === 'domestic',
-          originStation: (containerServiceType === 'doorToDoor' || containerServiceType === 'doorToTerminal') ? containerOriginAddress : containerOriginTerminal,
-          destinationStation: (containerServiceType === 'doorToDoor' || containerServiceType === 'terminalToDoor') ? containerDestinationAddress : containerDestinationTerminal,
-          originTerminal: (containerServiceType === 'terminalToTerminal' || containerServiceType === 'terminalToDoor') ? containerOriginTerminal : undefined,
-          originAddress: (containerServiceType === 'doorToDoor' || containerServiceType === 'doorToTerminal') ? containerOriginAddress : undefined,
-          destinationTerminal: (containerServiceType === 'terminalToTerminal' || containerServiceType === 'doorToTerminal') ? containerDestinationTerminal : undefined,
-          destinationAddress: (containerServiceType === 'doorToDoor' || containerServiceType === 'terminalToDoor') ? containerDestinationAddress : undefined,
-          containerType, numberOfContainers: numContainers as number, totalWeight: totalWeight as number,
-          cargoType: containerCommodity, hazardousCargo: containerHazardousCargo === true,
-          readyDate: containerDate ? containerDate.toISOString().split('T')[0] : '',
-          cargoValue: 0, insuranceRequired: false, serviceType: containerServiceType as RailServiceType,
+      if (Object.keys(e).length === 0) {
+        const st         = containerMode === 'domestic' ? domServiceType : intlServiceType;
+        const isDomestic = containerMode === 'domestic';
+        const originStation = isDomestic
+          ? (domServiceType === 'doorToDoor' || domServiceType === 'doorToTerminal' ? domOriginAddress : domOriginTerminal)
+          : getIntlOrigin();
+        const destStation = isDomestic
+          ? (domServiceType === 'doorToDoor' || domServiceType === 'terminalToDoor' ? domDestAddress : domDestTerminal)
+          : getIntlDest();
+
+        fd = {
+          bookingType: 'Train Container Booking',
+          isDomestic,
+          serviceType: st,
+          originStation,
+          destinationStation: destStation,
+          originTerminal:      isDomestic && (domServiceType === 'terminalToTerminal' || domServiceType === 'terminalToDoor') ? domOriginTerminal : undefined,
+          destinationTerminal: isDomestic && (domServiceType === 'terminalToTerminal' || domServiceType === 'doorToTerminal')  ? domDestTerminal   : undefined,
+          containerType,
+          numberOfContainers: parseNumber(numContainers) as number,
+          totalWeight:        parseNumber(totalWeight)   as number,
+          cargoType:          commodity,
+          hazardousCargo:     hazardous === true,
+          readyDate:          readyDate?.toISOString().split('T')[0] || '',
+          cargoValue:         0,
+          insuranceRequired:  false,
+          ...(containerMode === 'international' && { etmsMovementType: movement }),
         } as TrainContainerFormData;
       }
     } else if (activeTab === 'goods') {
-      if (!goodsServiceType) { newErrors.serviceType = 'Service Type is required.'; }
-      else {
-        if (goodsServiceType === 'doorToDoor' || goodsServiceType === 'doorToTerminal') { if (!goodsOriginAddress) newErrors.originAddress = 'Origin is required.'; }
-        else { if (!goodsOriginTerminal) newErrors.originTerminal = 'Origin Terminal is required.'; }
-        if (goodsServiceType === 'doorToDoor' || goodsServiceType === 'terminalToDoor') { if (!goodsDestinationAddress) newErrors.destinationAddress = 'Destination is required.'; }
-        else { if (!goodsDestinationTerminal) newErrors.destinationTerminal = 'Destination Terminal is required.'; }
-      }
-      const totalWeight = parseNumber(goodsTotalWeight);
-      if (totalWeight === undefined || totalWeight <= 0) newErrors.totalWeight = 'Required.';
-      if (!goodsCommodity) newErrors.cargoType = 'Required.';
-      if (!goodsWagonType) newErrors.wagonType = 'Required.';
-      const numWagons = parseNumber(goodsNumberOfWagons);
-      if (numWagons === undefined || numWagons <= 0) newErrors.numberOfWagons = 'Required.';
-      if (goodsHazardousCargo === '') newErrors.hazardousCargo = 'Required.';
-      if (!goodsDate) newErrors.date = 'Required.';
-
-      if (Object.keys(newErrors).length === 0) {
-        formData = {
-          bookingType: 'Train Goods Booking', isDomestic: true,
-          originStation: (goodsServiceType === 'doorToDoor' || goodsServiceType === 'doorToTerminal') ? goodsOriginAddress : goodsOriginTerminal,
-          destinationStation: (goodsServiceType === 'doorToDoor' || goodsServiceType === 'terminalToDoor') ? goodsDestinationAddress : goodsDestinationTerminal,
-          originTerminal: (goodsServiceType === 'terminalToTerminal' || goodsServiceType === 'terminalToDoor') ? goodsOriginTerminal : undefined,
-          originAddress: (goodsServiceType === 'doorToDoor' || goodsServiceType === 'doorToTerminal') ? goodsOriginAddress : undefined,
-          destinationTerminal: (goodsServiceType === 'terminalToTerminal' || goodsServiceType === 'doorToTerminal') ? goodsDestinationTerminal : undefined,
-          destinationAddress: (goodsServiceType === 'doorToDoor' || goodsServiceType === 'terminalToDoor') ? goodsDestinationAddress : undefined,
-          totalWeight: totalWeight as number, cargoType: goodsCommodity, wagonType: goodsWagonType,
-          numberOfWagons: numWagons as number, hazardousCargo: goodsHazardousCargo === true,
-          readyDate: goodsDate ? goodsDate.toISOString().split('T')[0] : '',
-          cargoValue: 0, insuranceRequired: false, serviceType: goodsServiceType as RailServiceType,
+      const st = goodsServiceType;
+      const isDoorO = st === 'doorToDoor' || st === 'doorToTerminal';
+      const isDoorD = st === 'doorToDoor' || st === 'terminalToDoor';
+      if (!st) e.serviceType = 'Required';
+      if (isDoorO  && !goodsOriginAddr) e.originAddress  = 'Required';
+      if (!isDoorO && !goodsOriginTerm) e.originTerminal = 'Required';
+      if (isDoorD  && !goodsDestAddr)   e.destAddress    = 'Required';
+      if (!isDoorD && !goodsDestTerm)   e.destTerminal   = 'Required';
+      if (!parseNumber(goodsWeight)) e.goodsWeight = 'Required';
+      if (!goodsCommodity)           e.commodity   = 'Required';
+      if (!goodsWagonType)           e.wagonType   = 'Required';
+      if (!parseNumber(numWagons))   e.numWagons   = 'Required';
+      if (goodsHazardous === '')     e.hazardous   = 'Required';
+      if (!goodsDate)                e.readyDate   = 'Required';
+      if (Object.keys(e).length === 0) {
+        fd = {
+          bookingType:        'Train Goods Booking',
+          isDomestic:         true,
+          serviceType:        st,
+          originStation:      isDoorO ? goodsOriginAddr : goodsOriginTerm,
+          destinationStation: isDoorD ? goodsDestAddr   : goodsDestTerm,
+          originTerminal:     !isDoorO ? goodsOriginTerm : undefined,
+          originAddress:       isDoorO ? goodsOriginAddr : undefined,
+          destinationTerminal:!isDoorD ? goodsDestTerm   : undefined,
+          destinationAddress:  isDoorD ? goodsDestAddr   : undefined,
+          totalWeight:        parseNumber(goodsWeight) as number,
+          cargoType:          goodsCommodity,
+          wagonType:          goodsWagonType,
+          numberOfWagons:     parseNumber(numWagons) as number,
+          hazardousCargo:     goodsHazardous === true,
+          readyDate:          goodsDate?.toISOString().split('T')[0] || '',
+          cargoValue: 0, insuranceRequired: false,
         } as TrainGoodsFormData;
       }
     } else if (activeTab === 'parcel') {
-      if (!parcelServiceType) { newErrors.serviceType = 'Service Type is required.'; }
-      else {
-        if (parcelServiceType === 'doorToDoor' || parcelServiceType === 'doorToTerminal') { if (!parcelOriginAddress) newErrors.originAddress = 'Origin is required.'; }
-        else { if (!parcelOriginTerminal) newErrors.originTerminal = 'Origin Terminal is required.'; }
-        if (parcelServiceType === 'doorToDoor' || parcelServiceType === 'terminalToDoor') { if (!parcelDestinationAddress) newErrors.destinationAddress = 'Destination is required.'; }
-        else { if (!parcelDestinationTerminal) newErrors.destinationTerminal = 'Destination Terminal is required.'; }
-      }
-      const totalWeight = parseNumber(parcelTotalWeight);
-      if (totalWeight === undefined || totalWeight <= 0) newErrors.totalWeight = 'Required.';
-      if (!parcelDimensions) newErrors.dimensions = 'Required.';
-      if (!parcelDetailedDescriptionOfGoods) newErrors.detailedDescriptionOfGoods = 'Required.';
-      const parsedParcelCount = parseNumber(parcelCount);
-      if (parsedParcelCount === undefined || parsedParcelCount <= 0) newErrors.parcelCount = 'Required.';
-      if (parcelHazardousCargo === '') newErrors.hazardousCargo = 'Required.';
-      if (!parcelDate) newErrors.date = 'Required.';
-
-      if (Object.keys(newErrors).length === 0) {
-        formData = {
-          bookingType: 'Train Parcel Booking', isDomestic: true,
-          originStation: (parcelServiceType === 'doorToDoor' || parcelServiceType === 'doorToTerminal') ? parcelOriginAddress : parcelOriginTerminal,
-          destinationStation: (parcelServiceType === 'doorToDoor' || parcelServiceType === 'terminalToDoor') ? parcelDestinationAddress : parcelDestinationTerminal,
-          originTerminal: (parcelServiceType === 'terminalToTerminal' || parcelServiceType === 'terminalToDoor') ? parcelOriginTerminal : undefined,
-          originAddress: (parcelServiceType === 'doorToDoor' || parcelServiceType === 'doorToTerminal') ? parcelOriginAddress : undefined,
-          destinationTerminal: (parcelServiceType === 'terminalToTerminal' || parcelServiceType === 'doorToTerminal') ? parcelDestinationTerminal : undefined,
-          destinationAddress: (parcelServiceType === 'doorToDoor' || parcelServiceType === 'terminalToDoor') ? parcelDestinationAddress : undefined,
-          totalWeight: totalWeight as number, dimensions: parcelDimensions,
-          detailedDescriptionOfGoods: parcelDetailedDescriptionOfGoods, parcelCount: parsedParcelCount as number,
-          cargoType: 'Parcel', hazardousCargo: parcelHazardousCargo === true,
-          readyDate: parcelDate ? parcelDate.toISOString().split('T')[0] : '',
-          cargoValue: 0, insuranceRequired: false, serviceType: parcelServiceType as RailServiceType,
+      const st = parcelServiceType;
+      const isDoorO = st === 'doorToDoor' || st === 'doorToTerminal';
+      const isDoorD = st === 'doorToDoor' || st === 'terminalToDoor';
+      if (!st) e.serviceType = 'Required';
+      if (isDoorO  && !parcelOriginAddr) e.originAddress  = 'Required';
+      if (!isDoorO && !parcelOriginTerm) e.originTerminal = 'Required';
+      if (isDoorD  && !parcelDestAddr)   e.destAddress    = 'Required';
+      if (!isDoorD && !parcelDestTerm)   e.destTerminal   = 'Required';
+      if (!parseNumber(parcelWeight)) e.parcelWeight = 'Required';
+      if (!parcelDims)               e.parcelDims   = 'Required';
+      if (!parcelDesc)               e.parcelDesc   = 'Required';
+      if (!parseNumber(parcelCount)) e.parcelCount  = 'Required';
+      if (parcelHazardous === '')    e.hazardous    = 'Required';
+      if (!parcelDate)               e.readyDate    = 'Required';
+      if (Object.keys(e).length === 0) {
+        fd = {
+          bookingType:        'Train Parcel Booking',
+          isDomestic:         true,
+          serviceType:        st,
+          originStation:      isDoorO ? parcelOriginAddr : parcelOriginTerm,
+          destinationStation: isDoorD ? parcelDestAddr   : parcelDestTerm,
+          totalWeight:        parseNumber(parcelWeight) as number,
+          dimensions:         parcelDims,
+          detailedDescriptionOfGoods: parcelDesc,
+          parcelCount:        parseNumber(parcelCount) as number,
+          cargoType:          'Parcel',
+          hazardousCargo:     parcelHazardous === true,
+          readyDate:          parcelDate?.toISOString().split('T')[0] || '',
+          cargoValue: 0, insuranceRequired: false,
         } as TrainParcelFormData;
       }
     }
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      setValidationMessage('Please fill in all required fields correctly.');
-      setShowValidationMessage(true);
-      return null;
-    }
+    setErrors(e);
+    if (Object.keys(e).length > 0) { setShowValMsg(true); return null; }
 
-    if (showButtons && formData) {
-      try {
-        const token = localStorage.getItem('shippitin_token');
-        if (token) {
-          await fetch('http://localhost:5000/api/bookings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-              service_type: formData.bookingType, origin: formData.originStation,
-              destination: formData.destinationStation, cargo_type: formData.cargoType,
-              weight: formData.totalWeight, container_type: (formData as any).containerType || null,
-              number_of_containers: (formData as any).numberOfContainers || 1, booking_date: formData.readyDate
-            })
-          });
-        }
-      } catch (error) { console.error('Failed to save booking:', error); }
-      navigate('/train-results', { state: { formData } });
+    // ── KEY CHANGE: go to recommended services first ──
+    if (showButtons && fd) {
+      navigate('/train-recommended-services', { state: { formData: fd } });
     }
-    return formData;
+    return fd;
   };
 
-  useImperativeHandle(ref, () => ({ submit: handleFormSubmissionLogic, reset: resetAllFields }));
+  useImperativeHandle(ref, () => ({ submit: handleSubmit, reset: resetAll }));
 
-  const inputClass = (hasError: boolean) =>
-    `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 ${hasError ? 'border-orange-500' : 'border-gray-300'}`;
-
-  const inputBoxClass = (hasError: boolean) =>
-    `block w-full pl-3 pr-3 py-2 sm:text-sm bg-white border rounded-lg focus:ring-0 focus:border-blue-500 ${hasError ? 'border-orange-500' : 'border-gray-200'}`;
-
-  const renderServiceTypeRadios = (name: string, value: RailServiceType | '', onChange: (v: RailServiceType) => void, hasError: boolean) => (
-    <div className="mb-2">
-      <label className="block text-sm font-medium text-gray-700 mb-1">Service Type<span className="text-red-500">*</span></label>
-      <div className="flex flex-wrap gap-3">
-        {validRailServiceTypes.map((type) => (
-          <label key={type} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-            <input type="radio" name={name} value={type} checked={value === type}
-              onChange={() => { onChange(type); setErrors(prev => ({ ...prev, serviceType: undefined })); }}
-              className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
-            {type === 'terminalToTerminal' ? 'Terminal to Terminal' :
-             type === 'doorToDoor' ? 'Door to Door' :
-             type === 'doorToTerminal' ? 'Door to Terminal' : 'Terminal to Door'}
-          </label>
-        ))}
+  const renderDomesticForm = () => {
+    const st = domServiceType;
+    const isDoorO = st === 'doorToDoor' || st === 'doorToTerminal';
+    const isDoorD = st === 'doorToDoor' || st === 'terminalToDoor';
+    return (
+      <div className="space-y-4 mt-3">
+        <div>
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Service Type</p>
+          <div className="flex flex-wrap gap-2">
+            {DOMESTIC_SERVICE_TYPES.map(opt => (
+              <label key={opt.value} className={radioBtn(domServiceType === opt.value)}>
+                <input type="radio" name="domST" value={opt.value}
+                  checked={domServiceType === opt.value}
+                  onChange={() => { setDomServiceType(opt.value); setErrors(p => ({ ...p, serviceType: undefined as any })); }}
+                  className="h-3.5 w-3.5 text-blue-600" />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+          {errors.serviceType && <p className="text-xs text-orange-500 mt-1">{errors.serviceType}</p>}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+          <div>
+            {isDoorO
+              ? <LocationAutocomplete label="Origin" required value={domOriginAddress}
+                  onChange={v => { setDomOriginAddress(v); setErrors(p => ({ ...p, originAddress: undefined as any })); }}
+                  placeholder="e.g., Chennai, 600001" locationType="city" />
+              : <LocationAutocomplete label="Origin" required value={domOriginTerminal}
+                  onChange={v => { setDomOriginTerminal(v); setErrors(p => ({ ...p, originTerminal: undefined as any })); }}
+                  placeholder="e.g., Chennai" locationType="rail_terminal" />}
+            {(errors.originAddress || errors.originTerminal) && <p className="text-xs text-orange-500 mt-1">{errors.originAddress || errors.originTerminal}</p>}
+          </div>
+          <div>
+            {isDoorD
+              ? <LocationAutocomplete label="Destination" required value={domDestAddress}
+                  onChange={v => { setDomDestAddress(v); setErrors(p => ({ ...p, destAddress: undefined as any })); }}
+                  placeholder="e.g., Delhi, 110001" locationType="city" />
+              : <LocationAutocomplete label="Destination" required value={domDestTerminal}
+                  onChange={v => { setDomDestTerminal(v); setErrors(p => ({ ...p, destTerminal: undefined as any })); }}
+                  placeholder="e.g., Delhi" locationType="rail_terminal" />}
+            {(errors.destAddress || errors.destTerminal) && <p className="text-xs text-orange-500 mt-1">{errors.destAddress || errors.destTerminal}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ready Date <span className="text-red-500">*</span></label>
+            <input type="date" value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
+              onChange={e => setReadyDate(e.target.value ? new Date(e.target.value) : null)}
+              className={inp(!!errors.readyDate)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Container Type <span className="text-red-500">*</span></label>
+            <select value={containerType} onChange={e => setContainerType(e.target.value)} className={inp(!!errors.containerType)}>
+              <option value="">Select</option>
+              {containerTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
+            <input type="number" value={totalWeight} placeholder="e.g., 20000"
+              onChange={e => setTotalWeight(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.totalWeight)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Containers <span className="text-red-500">*</span></label>
+            <input type="number" value={numContainers} min="1" placeholder="1"
+              onChange={e => setNumContainers(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.numContainers)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type <span className="text-red-500">*</span></label>
+            <select value={commodity} onChange={e => setCommodity(e.target.value)} className={inp(!!errors.commodity)}>
+              {allCommodities.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <div className="flex gap-4 mt-1">
+              {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
+                <label key={String(o.v)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                  <input type="radio" name="domHaz" checked={hazardous === o.v}
+                    onChange={() => setHazardous(o.v)} className="h-4 w-4 text-blue-600" /> {o.l}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-      {hasError && <p className="mt-1 text-xs text-orange-600">Service Type is required.</p>}
-    </div>
-  );
+    );
+  };
 
-  const renderContainerForm = () => (
-    <div className="space-y-3 mt-2">
-      {/* Domestic/International */}
-      <div className="flex items-center gap-3">
-        <div className="flex gap-2">
-          {validContainerModes.map((mode) => (
-            <button key={mode} type="button" onClick={() => setContainerMode(mode)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${containerMode === mode ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-gray-100 text-gray-700 hover:bg-blue-50 border border-gray-300'}`}>
-              {mode === 'domestic' ? 'Domestic' : 'International'}
-            </button>
+  const renderInternationalForm = () => {
+    const serviceOptions = movement === 'export' ? EXPORT_SERVICE_TYPES : IMPORT_SERVICE_TYPES;
+    const st = intlServiceType;
+
+    const getOriginValue = () => {
+      if (movement === 'export') {
+        return (st === 'doorToPort' || st === 'doorToTerminal') ? intlOriginAddr : intlOriginICD;
+      }
+      return intlOriginForeign;
+    };
+    const setOriginValue = (v: string) => {
+      setErrors(p => ({ ...p, intlOrigin: undefined as any }));
+      if (movement === 'export') {
+        if (st === 'doorToPort' || st === 'doorToTerminal') setIntlOriginAddr(v);
+        else setIntlOriginICD(v);
+      } else setIntlOriginForeign(v);
+    };
+    const getDestValue = () => {
+      if (movement === 'export') {
+        return (st === 'terminalToPort' || st === 'doorToPort') ? intlDestPort : intlDestICD;
+      }
+      return (st === 'portToDoor' || st === 'terminalToDoor') ? intlDestAddr : intlDestICD;
+    };
+    const setDestValue = (v: string) => {
+      setErrors(p => ({ ...p, intlDest: undefined as any }));
+      if (movement === 'export') {
+        if (st === 'terminalToPort' || st === 'doorToPort') setIntlDestPort(v);
+        else setIntlDestICD(v);
+      } else {
+        if (st === 'portToDoor' || st === 'terminalToDoor') setIntlDestAddr(v);
+        else setIntlDestICD(v);
+      }
+    };
+    const isOriginGlobal = movement === 'import';
+    const isOriginDoor   = movement === 'export' && (st === 'doorToPort' || st === 'doorToTerminal');
+    const isDestDoor     = movement === 'import' && (st === 'portToDoor' || st === 'terminalToDoor');
+
+    return (
+      <div className="space-y-3 mt-2">
+        <div className="mb-1">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Mode</p>
+          <div className="flex gap-2">
+            {([['export','Export'],['import','Import']] as const).map(([val, label]) => (
+              <button key={val} type="button"
+                onClick={() => { setMovement(val); setErrors({}); }}
+                className={toggleBtn(movement === val)}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mb-1">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Service Type</p>
+          <div className="flex flex-wrap gap-3">
+            {serviceOptions.map(opt => (
+              <label key={opt.value} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="intlST" value={opt.value}
+                  checked={intlServiceType === opt.value}
+                  onChange={() => {
+                    setIntlServiceType(opt.value);
+                    setErrors(p => ({ ...p, intlOrigin: undefined as any, intlDest: undefined as any }));
+                  }}
+                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
+          <div>
+            <LocationAutocomplete label="Origin" required
+              value={getOriginValue()} onChange={setOriginValue}
+              placeholder={isOriginDoor ? 'e.g., City / address' : isOriginGlobal ? 'e.g., Shanghai Port' : 'e.g., Chennai'}
+              locationType={isOriginDoor ? 'city' : isOriginGlobal ? 'seaport' : 'rail_terminal'}
+              global={isOriginGlobal} />
+            {errors.intlOrigin && <p className="text-xs text-orange-500 mt-1">{errors.intlOrigin}</p>}
+          </div>
+          <div>
+            <LocationAutocomplete label="Destination" required
+              value={getDestValue()} onChange={setDestValue}
+              placeholder={isDestDoor ? 'e.g., City / address' : movement === 'export' && (st === 'terminalToPort' || st === 'doorToPort') ? 'e.g., JNPT, Mundra' : 'e.g., Delhi'}
+              locationType={isDestDoor ? 'city' : movement === 'export' && (st === 'terminalToPort' || st === 'doorToPort') ? 'seaport' : 'rail_terminal'}
+              global={false} />
+            {errors.intlDest && <p className="text-xs text-orange-500 mt-1">{errors.intlDest}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
+            <input type="date" value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
+              onChange={e => setReadyDate(e.target.value ? new Date(e.target.value) : null)}
+              className={inp(!!errors.readyDate)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Container Type <span className="text-red-500">*</span></label>
+            <select value={containerType} onChange={e => setContainerType(e.target.value)} className={inp(!!errors.containerType)}>
+              <option value="">Select Container Type</option>
+              {containerTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
+            <input type="number" value={totalWeight} placeholder="e.g., 20000"
+              onChange={e => setTotalWeight(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.totalWeight)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Containers <span className="text-red-500">*</span></label>
+            <input type="number" value={numContainers} min="1"
+              onChange={e => setNumContainers(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.numContainers)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type <span className="text-red-500">*</span></label>
+            <select value={commodity} onChange={e => setCommodity(e.target.value)} className={inp(!!errors.commodity)}>
+              {allCommodities.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <div className="flex items-center gap-4 pt-1">
+              {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
+                <label key={String(o.v)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                  <input type="radio" name="intlHaz" checked={hazardous === o.v}
+                    onChange={() => setHazardous(o.v)} className="h-4 w-4 text-blue-600" /> {o.l}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderGoodsForm = () => {
+    const st = goodsServiceType;
+    const isDoorO = st === 'doorToDoor' || st === 'doorToTerminal';
+    const isDoorD = st === 'doorToDoor' || st === 'terminalToDoor';
+    return (
+      <div className="space-y-4 mt-3">
+        <div className="flex flex-wrap gap-2">
+          {DOMESTIC_SERVICE_TYPES.map(opt => (
+            <label key={opt.value} className={radioBtn(goodsServiceType === opt.value)}>
+              <input type="radio" name="gdST" value={opt.value} checked={goodsServiceType === opt.value}
+                onChange={() => setGoodsServiceType(opt.value)} className="h-3.5 w-3.5 text-blue-600" />
+              {opt.label}
+            </label>
           ))}
         </div>
-      </div>
-
-      {renderServiceTypeRadios('containerServiceType', containerServiceType, setContainerServiceType, !!errors.serviceType)}
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
-        <div>
-          {(containerServiceType === 'doorToDoor' || containerServiceType === 'doorToTerminal') ? (
-            <LocationAutocomplete label="Origin (City/Pincode)" required value={containerOriginAddress}
-              onChange={(v) => { setContainerOriginAddress(v); setErrors(p => ({ ...p, originAddress: undefined })); }}
-              placeholder="e.g., Chennai, 600001" locationType="city" />
-          ) : (
-            <LocationAutocomplete label="Origin Terminal" required value={containerOriginTerminal}
-              onChange={(v) => { setContainerOriginTerminal(v); setErrors(p => ({ ...p, originTerminal: undefined })); }}
-              placeholder="e.g., Chennai ICD" locationType="rail_terminal" />
-          )}
-          {(errors.originAddress || errors.originTerminal) && <p className="mt-1 text-xs text-orange-600">{errors.originAddress || errors.originTerminal}</p>}
-        </div>
-        <div>
-          {(containerServiceType === 'doorToDoor' || containerServiceType === 'terminalToDoor') ? (
-            <LocationAutocomplete label="Destination (City/Pincode)" required value={containerDestinationAddress}
-              onChange={(v) => { setContainerDestinationAddress(v); setErrors(p => ({ ...p, destinationAddress: undefined })); }}
-              placeholder="e.g., Mumbai, 400001" locationType="city" />
-          ) : (
-            <LocationAutocomplete label="Destination Terminal" required value={containerDestinationTerminal}
-              onChange={(v) => { setContainerDestinationTerminal(v); setErrors(p => ({ ...p, destinationTerminal: undefined })); }}
-              placeholder="e.g., New Delhi ICD" locationType="rail_terminal" />
-          )}
-          {(errors.destinationAddress || errors.destinationTerminal) && <p className="mt-1 text-xs text-orange-600">{errors.destinationAddress || errors.destinationTerminal}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Date<span className="text-red-500">*</span></label>
-          <input type="date" value={containerDate ? containerDate.toISOString().split('T')[0] : ''}
-            onChange={(e) => { setContainerDate(e.target.value ? new Date(e.target.value) : null); setErrors(p => ({ ...p, date: undefined })); }}
-            className={inputClass(!!errors.date)} />
-          {errors.date && <p className="mt-1 text-xs text-orange-600">{errors.date}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Container Type<span className="text-red-500">*</span></label>
-          <select className={inputClass(!!errors.containerType)} value={containerType}
-            onChange={(e) => { setContainerType(e.target.value); setErrors(p => ({ ...p, containerType: undefined })); }}>
-            <option value="">Select Container Type</option>
-            {containerTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-          </select>
-          {errors.containerType && <p className="mt-1 text-xs text-orange-600">{errors.containerType}</p>}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG)<span className="text-red-500">*</span></label>
-          <input type="number" className={inputClass(!!errors.totalWeight)} placeholder="e.g., 20000" value={containerTotalWeight}
-            onChange={(e) => { setContainerTotalWeight(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, totalWeight: undefined })); }} />
-          {errors.totalWeight && <p className="mt-1 text-xs text-orange-600">{errors.totalWeight}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">No. of Containers<span className="text-red-500">*</span></label>
-          <input type="number" className={inputClass(!!errors.numberOfContainers)} placeholder="e.g., 2" value={containerNumberOfContainers} min="1"
-            onChange={(e) => { setContainerNumberOfContainers(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, numberOfContainers: undefined })); }} />
-          {errors.numberOfContainers && <p className="mt-1 text-xs text-orange-600">{errors.numberOfContainers}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type<span className="text-red-500">*</span></label>
-          <select className={inputClass(!!errors.cargoType)} value={containerCommodity}
-            onChange={(e) => { setContainerCommodity(e.target.value); setErrors(p => ({ ...p, cargoType: undefined })); }}>
-            {allCommodities.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
-          {errors.cargoType && <p className="mt-1 text-xs text-orange-600">{errors.cargoType}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous Cargo<span className="text-red-500">*</span></label>
-          <div className="flex items-center gap-4 pt-1">
-            {[{ val: true, label: 'Yes' }, { val: false, label: 'No' }].map(opt => (
-              <label key={String(opt.val)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-                <input type="radio" name="containerHazardousCargo" checked={containerHazardousCargo === opt.val}
-                  onChange={() => { setContainerHazardousCargo(opt.val); setErrors(p => ({ ...p, hazardousCargo: undefined })); }}
-                  className="h-4 w-4 text-blue-600" /> {opt.label}
-              </label>
-            ))}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+          <div>
+            {isDoorO
+              ? <LocationAutocomplete label="Origin" required value={goodsOriginAddr}
+                  onChange={v => setGoodsOriginAddr(v)} placeholder="City / address" locationType="city" />
+              : <LocationAutocomplete label="Origin" required value={goodsOriginTerm}
+                  onChange={v => setGoodsOriginTerm(v)} placeholder="e.g., Delhi" locationType="rail_terminal" />}
           </div>
-          {errors.hazardousCargo && <p className="mt-1 text-xs text-orange-600">{errors.hazardousCargo}</p>}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderGoodsForm = () => (
-    <div className="space-y-3 mt-2">
-      {renderServiceTypeRadios('goodsServiceType', goodsServiceType, setGoodsServiceType, !!errors.serviceType)}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
-        <div>
-          {(goodsServiceType === 'doorToDoor' || goodsServiceType === 'doorToTerminal') ? (
-            <LocationAutocomplete label="Origin (City/Pincode)" required value={goodsOriginAddress}
-              onChange={(v) => { setGoodsOriginAddress(v); setErrors(p => ({ ...p, originAddress: undefined })); }}
-              placeholder="e.g., New Delhi, 110001" locationType="city" />
-          ) : (
-            <LocationAutocomplete label="Origin Terminal" required value={goodsOriginTerminal}
-              onChange={(v) => { setGoodsOriginTerminal(v); setErrors(p => ({ ...p, originTerminal: undefined })); }}
-              placeholder="e.g., New Delhi ICD" locationType="rail_terminal" />
-          )}
-          {(errors.originAddress || errors.originTerminal) && <p className="mt-1 text-xs text-orange-600">{errors.originAddress || errors.originTerminal}</p>}
-        </div>
-        <div>
-          {(goodsServiceType === 'doorToDoor' || goodsServiceType === 'terminalToDoor') ? (
-            <LocationAutocomplete label="Destination (City/Pincode)" required value={goodsDestinationAddress}
-              onChange={(v) => { setGoodsDestinationAddress(v); setErrors(p => ({ ...p, destinationAddress: undefined })); }}
-              placeholder="e.g., Mumbai, 400001" locationType="city" />
-          ) : (
-            <LocationAutocomplete label="Destination Terminal" required value={goodsDestinationTerminal}
-              onChange={(v) => { setGoodsDestinationTerminal(v); setErrors(p => ({ ...p, destinationTerminal: undefined })); }}
-              placeholder="e.g., Mumbai ICD" locationType="rail_terminal" />
-          )}
-          {(errors.destinationAddress || errors.destinationTerminal) && <p className="mt-1 text-xs text-orange-600">{errors.destinationAddress || errors.destinationTerminal}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Date<span className="text-red-500">*</span></label>
-          <input type="date" value={goodsDate ? goodsDate.toISOString().split('T')[0] : ''}
-            onChange={(e) => { setGoodsDate(e.target.value ? new Date(e.target.value) : null); setErrors(p => ({ ...p, date: undefined })); }}
-            className={inputClass(!!errors.date)} />
-          {errors.date && <p className="mt-1 text-xs text-orange-600">{errors.date}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Wagon Type<span className="text-red-500">*</span></label>
-          <select className={inputClass(!!errors.wagonType)} value={goodsWagonType}
-            onChange={(e) => { setGoodsWagonType(e.target.value); setErrors(p => ({ ...p, wagonType: undefined })); }}>
-            <option value="">Select Wagon Type</option>
-            {wagonTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-          </select>
-          {errors.wagonType && <p className="mt-1 text-xs text-orange-600">{errors.wagonType}</p>}
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Total Weight (Tons)<span className="text-red-500">*</span></label>
-          <input type="number" className={inputClass(!!errors.totalWeight)} placeholder="e.g., 50" value={goodsTotalWeight} min="0.01" step="0.01"
-            onChange={(e) => { setGoodsTotalWeight(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, totalWeight: undefined })); }} />
-          {errors.totalWeight && <p className="mt-1 text-xs text-orange-600">{errors.totalWeight}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">No. of Wagons<span className="text-red-500">*</span></label>
-          <input type="number" className={inputClass(!!errors.numberOfWagons)} placeholder="e.g., 1" value={goodsNumberOfWagons} min="1"
-            onChange={(e) => { setGoodsNumberOfWagons(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, numberOfWagons: undefined })); }} />
-          {errors.numberOfWagons && <p className="mt-1 text-xs text-orange-600">{errors.numberOfWagons}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type<span className="text-red-500">*</span></label>
-          <select className={inputClass(!!errors.cargoType)} value={goodsCommodity}
-            onChange={(e) => { setGoodsCommodity(e.target.value); setErrors(p => ({ ...p, cargoType: undefined })); }}>
-            {allCommodities.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
-          {errors.cargoType && <p className="mt-1 text-xs text-orange-600">{errors.cargoType}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous Cargo<span className="text-red-500">*</span></label>
-          <div className="flex items-center gap-4 pt-1">
-            {[{ val: true, label: 'Yes' }, { val: false, label: 'No' }].map(opt => (
-              <label key={String(opt.val)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-                <input type="radio" name="goodsHazardousCargo" checked={goodsHazardousCargo === opt.val}
-                  onChange={() => { setGoodsHazardousCargo(opt.val); setErrors(p => ({ ...p, hazardousCargo: undefined })); }}
-                  className="h-4 w-4 text-blue-600" /> {opt.label}
-              </label>
-            ))}
+          <div>
+            {isDoorD
+              ? <LocationAutocomplete label="Destination" required value={goodsDestAddr}
+                  onChange={v => setGoodsDestAddr(v)} placeholder="City / address" locationType="city" />
+              : <LocationAutocomplete label="Destination" required value={goodsDestTerm}
+                  onChange={v => setGoodsDestTerm(v)} placeholder="e.g., Mumbai" locationType="rail_terminal" />}
           </div>
-          {errors.hazardousCargo && <p className="mt-1 text-xs text-orange-600">{errors.hazardousCargo}</p>}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderParcelForm = () => (
-    <div className="space-y-3 mt-2">
-      {renderServiceTypeRadios('parcelServiceType', parcelServiceType, setParcelServiceType, !!errors.serviceType)}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
-        <div>
-          {(parcelServiceType === 'doorToDoor' || parcelServiceType === 'doorToTerminal') ? (
-            <LocationAutocomplete label="Origin (City/Pincode)" required value={parcelOriginAddress}
-              onChange={(v) => { setParcelOriginAddress(v); setErrors(p => ({ ...p, originAddress: undefined })); }}
-              placeholder="e.g., New Delhi, 110001" locationType="city" />
-          ) : (
-            <LocationAutocomplete label="Origin Terminal" required value={parcelOriginTerminal}
-              onChange={(v) => { setParcelOriginTerminal(v); setErrors(p => ({ ...p, originTerminal: undefined })); }}
-              placeholder="e.g., Chennai ICD" locationType="rail_terminal" />
-          )}
-          {(errors.originAddress || errors.originTerminal) && <p className="mt-1 text-xs text-orange-600">{errors.originAddress || errors.originTerminal}</p>}
-        </div>
-        <div>
-          {(parcelServiceType === 'doorToDoor' || parcelServiceType === 'terminalToDoor') ? (
-            <LocationAutocomplete label="Destination (City/Pincode)" required value={parcelDestinationAddress}
-              onChange={(v) => { setParcelDestinationAddress(v); setErrors(p => ({ ...p, destinationAddress: undefined })); }}
-              placeholder="e.g., Mumbai, 400001" locationType="city" />
-          ) : (
-            <LocationAutocomplete label="Destination Terminal" required value={parcelDestinationTerminal}
-              onChange={(v) => { setParcelDestinationTerminal(v); setErrors(p => ({ ...p, destinationTerminal: undefined })); }}
-              placeholder="e.g., JNPT ICD" locationType="rail_terminal" />
-          )}
-          {(errors.destinationAddress || errors.destinationTerminal) && <p className="mt-1 text-xs text-orange-600">{errors.destinationAddress || errors.destinationTerminal}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Date<span className="text-red-500">*</span></label>
-          <input type="date" value={parcelDate ? parcelDate.toISOString().split('T')[0] : ''}
-            onChange={(e) => { setParcelDate(e.target.value ? new Date(e.target.value) : null); setErrors(p => ({ ...p, date: undefined })); }}
-            className={inputClass(!!errors.date)} />
-          {errors.date && <p className="mt-1 text-xs text-orange-600">{errors.date}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Dimensions (LxWxH cm)<span className="text-red-500">*</span></label>
-          <input type="text" className={inputClass(!!errors.dimensions)} placeholder="e.g., 30x20x10" value={parcelDimensions}
-            onChange={(e) => { setParcelDimensions(e.target.value); setErrors(p => ({ ...p, dimensions: undefined })); }} />
-          {errors.dimensions && <p className="mt-1 text-xs text-orange-600">{errors.dimensions}</p>}
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Total Weight (Kgs)<span className="text-red-500">*</span></label>
-          <input type="number" className={inputClass(!!errors.totalWeight)} placeholder="e.g., 5" value={parcelTotalWeight} min="0.01" step="0.01"
-            onChange={(e) => { setParcelTotalWeight(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, totalWeight: undefined })); }} />
-          {errors.totalWeight && <p className="mt-1 text-xs text-orange-600">{errors.totalWeight}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Parcel Description<span className="text-red-500">*</span></label>
-          <input type="text" className={inputClass(!!errors.detailedDescriptionOfGoods)} placeholder="e.g., Books, documents" value={parcelDetailedDescriptionOfGoods}
-            onChange={(e) => { setParcelDetailedDescriptionOfGoods(e.target.value); setErrors(p => ({ ...p, detailedDescriptionOfGoods: undefined })); }} />
-          {errors.detailedDescriptionOfGoods && <p className="mt-1 text-xs text-orange-600">{errors.detailedDescriptionOfGoods}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Parcel Count<span className="text-red-500">*</span></label>
-          <input type="number" className={inputClass(!!errors.parcelCount)} placeholder="e.g., 1" value={parcelCount} min="1"
-            onChange={(e) => { setParcelCount(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, parcelCount: undefined })); }} />
-          {errors.parcelCount && <p className="mt-1 text-xs text-orange-600">{errors.parcelCount}</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous Cargo<span className="text-red-500">*</span></label>
-          <div className="flex items-center gap-4 pt-1">
-            {[{ val: true, label: 'Yes' }, { val: false, label: 'No' }].map(opt => (
-              <label key={String(opt.val)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-                <input type="radio" name="parcelHazardousCargo" checked={parcelHazardousCargo === opt.val}
-                  onChange={() => { setParcelHazardousCargo(opt.val); setErrors(p => ({ ...p, hazardousCargo: undefined })); }}
-                  className="h-4 w-4 text-blue-600" /> {opt.label}
-              </label>
-            ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
+            <input type="date" value={goodsDate ? goodsDate.toISOString().split('T')[0] : ''}
+              onChange={e => setGoodsDate(e.target.value ? new Date(e.target.value) : null)}
+              className={inp(!!errors.readyDate)} />
           </div>
-          {errors.hazardousCargo && <p className="mt-1 text-xs text-orange-600">{errors.hazardousCargo}</p>}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Wagon Type <span className="text-red-500">*</span></label>
+            <select value={goodsWagonType} onChange={e => setGoodsWagonType(e.target.value)} className={inp(!!errors.wagonType)}>
+              <option value="">Select</option>
+              {wagonTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (Tons) <span className="text-red-500">*</span></label>
+            <input type="number" value={goodsWeight} placeholder="e.g., 50"
+              onChange={e => setGoodsWeight(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.goodsWeight)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Wagons <span className="text-red-500">*</span></label>
+            <input type="number" value={numWagons} min="1"
+              onChange={e => setNumWagons(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.numWagons)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type <span className="text-red-500">*</span></label>
+            <select value={goodsCommodity} onChange={e => setGoodsCommodity(e.target.value)} className={inp(false)}>
+              {allCommodities.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <div className="flex gap-4 mt-1">
+              {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
+                <label key={String(o.v)} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="gdHaz" checked={goodsHazardous === o.v}
+                    onChange={() => setGoodsHazardous(o.v)} className="h-4 w-4 text-blue-600" /> {o.l}
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+
+  const renderParcelForm = () => {
+    const st = parcelServiceType;
+    const isDoorO = st === 'doorToDoor' || st === 'doorToTerminal';
+    const isDoorD = st === 'doorToDoor' || st === 'terminalToDoor';
+    return (
+      <div className="space-y-4 mt-3">
+        <div className="flex flex-wrap gap-2">
+          {DOMESTIC_SERVICE_TYPES.map(opt => (
+            <label key={opt.value} className={radioBtn(parcelServiceType === opt.value)}>
+              <input type="radio" name="pcST" value={opt.value} checked={parcelServiceType === opt.value}
+                onChange={() => setParcelServiceType(opt.value)} className="h-3.5 w-3.5 text-blue-600" />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+          <div>
+            {isDoorO
+              ? <LocationAutocomplete label="Origin" required value={parcelOriginAddr}
+                  onChange={v => setParcelOriginAddr(v)} placeholder="City / address" locationType="city" />
+              : <LocationAutocomplete label="Origin" required value={parcelOriginTerm}
+                  onChange={v => setParcelOriginTerm(v)} placeholder="e.g., Chennai" locationType="rail_terminal" />}
+          </div>
+          <div>
+            {isDoorD
+              ? <LocationAutocomplete label="Destination" required value={parcelDestAddr}
+                  onChange={v => setParcelDestAddr(v)} placeholder="City / address" locationType="city" />
+              : <LocationAutocomplete label="Destination" required value={parcelDestTerm}
+                  onChange={v => setParcelDestTerm(v)} placeholder="e.g., Delhi" locationType="rail_terminal" />}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
+            <input type="date" value={parcelDate ? parcelDate.toISOString().split('T')[0] : ''}
+              onChange={e => setParcelDate(e.target.value ? new Date(e.target.value) : null)}
+              className={inp(!!errors.readyDate)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dimensions (LxWxH cm) <span className="text-red-500">*</span></label>
+            <input type="text" value={parcelDims} placeholder="e.g., 60x40x40"
+              onChange={e => setParcelDims(e.target.value)} className={inp(!!errors.parcelDims)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
+            <input type="number" value={parcelWeight} placeholder="e.g., 10"
+              onChange={e => setParcelWeight(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.parcelWeight)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
+            <input type="text" value={parcelDesc} placeholder="e.g., Books, documents"
+              onChange={e => setParcelDesc(e.target.value)} className={inp(!!errors.parcelDesc)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Parcel Count <span className="text-red-500">*</span></label>
+            <input type="number" value={parcelCount} min="1"
+              onChange={e => setParcelCount(e.target.value === '' ? '' : Number(e.target.value))}
+              className={inp(!!errors.parcelCount)} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <div className="flex gap-4 mt-1">
+              {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
+                <label key={String(o.v)} className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="pcHaz" checked={parcelHazardous === o.v}
+                    onChange={() => setParcelHazardous(o.v)} className="h-4 w-4 text-blue-600" /> {o.l}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-xl border border-gray-200 font-inter">
-
-      {/* Tab selector */}
-      <div className="p-1 bg-gray-50 rounded-xl mb-3 border border-gray-200 w-full">
-        <div className="flex justify-center gap-2 w-fit mx-auto">
-          {validBookingTabs.map((tab) => (
-            <button key={tab} type="button"
-              onClick={() => { setActiveTab(tab); setErrors({}); setShowValidationMessage(false); setShowSuccessMessage(false); }}
-              className={`px-4 py-2 text-sm font-medium transition-all rounded-lg ${activeTab === tab ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'}`}>
-              {tab === "container" ? "Container Train" : tab === "parcel" ? "Parcel Train" : "Goods Train"}
-            </button>
-          ))}
-        </div>
+    <div className="p-4 bg-white shadow-md rounded-xl border border-gray-200">
+      <div className="flex justify-center gap-2 mb-4 p-1 bg-gray-50 rounded-xl border border-gray-200 w-fit mx-auto">
+        {([['container','Container Train'],['parcel','Parcel Train'],['goods','Goods Train']] as const).map(([tab,label]) => (
+          <button key={tab} type="button"
+            onClick={() => { setActiveTab(tab); setErrors({}); }}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              activeTab === tab
+                ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
+            }`}>
+            {label}
+          </button>
+        ))}
       </div>
 
-      {activeTab === 'container' && renderContainerForm()}
-      {activeTab === 'goods' && renderGoodsForm()}
+      {activeTab === 'container' && (
+        <div>
+          <div className="flex gap-2 mb-2">
+            {([['domestic','Domestic'],['international','International']] as const).map(([mode,label]) => (
+              <button key={mode} type="button" onClick={() => { setContainerMode(mode); setErrors({}); }}
+                className={toggleBtn(containerMode === mode)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {containerMode === 'domestic' ? renderDomesticForm() : renderInternationalForm()}
+        </div>
+      )}
+
+      {activeTab === 'goods'  && renderGoodsForm()}
       {activeTab === 'parcel' && renderParcelForm()}
 
       {showButtons && (
-        <div className="flex justify-center mt-4">
-          <button type="button" onClick={() => handleFormSubmissionLogic()}
-            className="px-10 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition">
+        <div className="flex justify-center mt-5">
+          <button type="button" onClick={() => handleSubmit()}
+            className="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition">
             Search Quotes
           </button>
         </div>
       )}
 
-      {showValidationMessage && (
+      {showValMsg && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
-            <p className="text-gray-700 mb-4">{validationMessage}</p>
-            <button onClick={() => setShowValidationMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
-          </div>
-        </div>
-      )}
-
-      {showSuccessMessage && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center">
-            <p className="text-gray-700 mb-4">{successMessage}</p>
-            <button onClick={() => setShowSuccessMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>
+            <p className="text-gray-700 mb-4">Please fill in all required fields.</p>
+            <button onClick={() => setShowValMsg(false)}
+              className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
           </div>
         </div>
       )}

@@ -1,15 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { signInWithCustomToken } from 'firebase/auth';
 import { auth } from './firebase/firebaseConfig';
-
-// Layout Components
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
-
-// Pages
 import HomeLandingPage from './pages/HomeLandingPage';
 import InvestorLandingPage from './pages/InvestorLandingPage';
 import TrackPage from './pages/TrackPage';
@@ -33,8 +28,6 @@ import BlogPage from './pages/BlogPage';
 import TermsOfUsePage from './pages/TermsOfUsePage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
-
-// Service Detail Pages
 import DoorToDoorDetailPage from './pages/DoorToDoorDetailPage';
 import TruckDetailPage from './pages/TruckDetailPage';
 import RailDetailPage from './pages/RailDetailPage';
@@ -44,16 +37,15 @@ import CargoInsuranceDetailPage from './pages/CargoInsuranceDetailPage';
 import CustomsDetailPage from './pages/CustomsDetailPage';
 import LCLDetailPage from './pages/LCLDetailPage';
 import ParcelDetailPage from './pages/ParcelDetailPage';
-
-// Quote Form Imports
 import RailQuoteForm from './components/QuoteForms/RailQuoteForm';
 import PortServicesQuoteForm from './components/QuoteForms/PortServicesQuoteForm';
 import InsuranceQuoteForm from './components/QuoteForms/InsuranceQuoteForm';
 import FirstLastMileQuoteForm from './components/QuoteForms/FirstLastMileQuoteForm';
-
-// Results & Details Pages
 import DoorToDoorResultsPage from './pages/DoorToDoorResultsPage';
 import SeaResultsPage from './pages/SeaResultsPage';
+import SeaRecommendedServicesPage from './pages/SeaRecommendedServicesPage';
+import SeaShipmentDetailPage from './pages/SeaShipmentDetailPage';
+import TrainRecommendedServicesPage from './pages/TrainRecommendedServicesPage';
 import AirResultsPage from './pages/AirResultsPage';
 import TruckResultsPage from './pages/TruckResultsPage';
 import LCLResultsPage from './pages/LCLResultsPage';
@@ -63,8 +55,6 @@ import TrainResultsPage from './pages/TrainResultsPage';
 import InsuranceResultsPage from './pages/InsuranceResultsPage';
 import FirstLastMileResultsPage from './pages/FirstLastMileResultsPage';
 import PortResultsPage from './pages/PortResultsPage';
-
-// Booking Details Pages
 import AirBookingDetailsPage from './pages/AirBookingDetailsPage';
 import CustomsBookingDetailsPage from './pages/CustomsBookingDetailsPage';
 import SeaBookingDetailsPage from './pages/SeaBookingDetailsPage';
@@ -75,15 +65,11 @@ import InsuranceBookingDetailsPage from './pages/InsuranceBookingDetailsPage';
 import ParcelBookingDetailsPage from './pages/ParcelBookingDetailsPage';
 import RailServiceDetailsPage from './pages/RailServiceDetailsPage';
 import PortBookingDetailsPage from './pages/PortBookingDetailsPage';
-
-// Confirmation Pages
 import BookingConfirmationPage from './pages/BookingConfirmationPage';
 import RailBookingConfirmationPage from './pages/RailBookingConfirmationPage';
 import AdminPage from './pages/AdminPage';
 import PaymentPage from './pages/PaymentPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
-
-// Voice Assistant
 import VoiceAssistant from './components/VoiceAssistant';
 import { ParsedVoiceCommand } from './types/QuoteFormHandle';
 import type { QuoteFormHandle } from './types/QuoteFormHandle';
@@ -92,12 +78,9 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 declare const __firebase_config: string | undefined;
 declare const __initial_auth_token: string | undefined;
 
-// --- WRAPPERS ---
-
 const InsuranceQuoteFormPageWrapper: React.FC = () => {
   const insuranceFormRef = useRef<QuoteFormHandle>(null);
   const navigate = useNavigate();
-
   const handleSubmitInsurance = async () => {
     if (insuranceFormRef.current) {
       const data = await insuranceFormRef.current.submit();
@@ -106,17 +89,12 @@ const InsuranceQuoteFormPageWrapper: React.FC = () => {
       }
     }
   };
-
   return (
     <div className="max-w-4xl mx-auto py-10">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Get Your Insurance Quote</h2>
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <InsuranceQuoteForm ref={insuranceFormRef} />
-      </div>
+      <div className="bg-white rounded-xl shadow-md p-6"><InsuranceQuoteForm ref={insuranceFormRef} /></div>
       <div className="flex justify-center mt-8">
-        <button onClick={handleSubmitInsurance} className="px-8 py-4 bg-green-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105">
-          Search Insurance Policies
-        </button>
+        <button onClick={handleSubmitInsurance} className="px-8 py-4 bg-green-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105">Search Insurance Policies</button>
       </div>
     </div>
   );
@@ -125,7 +103,6 @@ const InsuranceQuoteFormPageWrapper: React.FC = () => {
 const FirstLastMileQuoteFormPageWrapper: React.FC = () => {
   const firstLastMileFormRef = useRef<QuoteFormHandle>(null);
   const navigate = useNavigate();
-
   const handleSubmitFirstLastMile = async () => {
     if (firstLastMileFormRef.current) {
       const data = await firstLastMileFormRef.current.submit();
@@ -134,17 +111,12 @@ const FirstLastMileQuoteFormPageWrapper: React.FC = () => {
       }
     }
   };
-
   return (
     <div className="max-w-4xl mx-auto py-10">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Get Your First/Last Mile Quote</h2>
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <FirstLastMileQuoteForm ref={firstLastMileFormRef} />
-      </div>
+      <div className="bg-white rounded-xl shadow-md p-6"><FirstLastMileQuoteForm ref={firstLastMileFormRef} /></div>
       <div className="flex justify-center mt-8">
-        <button onClick={handleSubmitFirstLastMile} className="px-8 py-4 bg-purple-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-purple-700 transition duration-300 transform hover:scale-105">
-          Search First/Last Mile Services
-        </button>
+        <button onClick={handleSubmitFirstLastMile} className="px-8 py-4 bg-purple-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-purple-700 transition duration-300 transform hover:scale-105">Search First/Last Mile Services</button>
       </div>
     </div>
   );
@@ -153,7 +125,6 @@ const FirstLastMileQuoteFormPageWrapper: React.FC = () => {
 const PortServicesQuoteFormPageWrapper: React.FC = () => {
   const portFormRef = useRef<QuoteFormHandle>(null);
   const navigate = useNavigate();
-
   const handleSubmitPort = async () => {
     if (portFormRef.current) {
       const data = await portFormRef.current.submit();
@@ -162,23 +133,16 @@ const PortServicesQuoteFormPageWrapper: React.FC = () => {
       }
     }
   };
-
   return (
     <div className="max-w-4xl mx-auto py-10">
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Get Your Port Services Quote</h2>
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <PortServicesQuoteForm ref={portFormRef} />
-      </div>
+      <div className="bg-white rounded-xl shadow-md p-6"><PortServicesQuoteForm ref={portFormRef} /></div>
       <div className="flex justify-center mt-8">
-        <button onClick={handleSubmitPort} className="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">
-          Search Port Services
-        </button>
+        <button onClick={handleSubmitPort} className="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">Search Port Services</button>
       </div>
     </div>
   );
 };
-
-// --- CONTENT COMPONENT ---
 
 const AppContent: React.FC = () => {
   const navigate = useNavigate();
@@ -203,13 +167,12 @@ const AppContent: React.FC = () => {
   const handleVoiceCommand = (command: ParsedVoiceCommand) => {
     const updatedCommand: ParsedVoiceCommand = { ...command };
     setVoicePrefillData(updatedCommand);
-
     let targetPath: string | undefined;
     switch (updatedCommand.service) {
       case 'Truck': targetPath = '/truck-booking'; break;
       case 'Air': targetPath = '/air-booking'; break;
       case 'Sea': targetPath = '/sea-booking'; break;
-      case 'Rail': targetPath = '/train-booking'; break;
+      case 'Rail': targetPath = '/'; break;
       case 'Port Services': targetPath = '/port-booking'; break;
       case 'Parcel': targetPath = '/parcel-booking'; break;
       case 'Customs': targetPath = '/customs-booking'; break;
@@ -220,7 +183,6 @@ const AppContent: React.FC = () => {
       case 'Track': targetPath = updatedCommand.shipmentId ? `/track?id=${updatedCommand.shipmentId}` : '/track'; break;
       default: return;
     }
-
     if (targetPath && location.pathname !== targetPath) {
       navigate(targetPath, { state: { prefillData: updatedCommand } });
     }
@@ -274,14 +236,15 @@ const AppContent: React.FC = () => {
           {/* Booking Forms — Protected */}
           <Route path="/truck-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Truck" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
           <Route path="/air-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Air" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
-          <Route path="/sea-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Sea" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/sea-booking" element={<ProtectedRoute><SeaDetailPage /></ProtectedRoute>} />
           <Route path="/parcel-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Parcel" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
           <Route path="/door-to-door-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><QuoteFormPage activeService="Door to Door" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
           <Route path="/lcl-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="LCL" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
           <Route path="/customs-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto px-4 py-10"><QuoteFormPage activeService="Customs" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
 
           {/* Rail Flow — Protected */}
-          <Route path="/train-booking" element={<ProtectedRoute><div className="max-w-4xl mx-auto py-10"><RailQuoteForm initialActiveService="container" prefillData={voicePrefillData} /></div></ProtectedRoute>} />
+          <Route path="/train-booking" element={<ProtectedRoute><Navigate to="/" replace /></ProtectedRoute>} />
+          <Route path="/train-recommended-services" element={<ProtectedRoute><TrainRecommendedServicesPage /></ProtectedRoute>} />
           <Route path="/train-results" element={<ProtectedRoute><TrainResultsPage /></ProtectedRoute>} />
           <Route path="/train-service-details" element={<ProtectedRoute><RailServiceDetailsPage /></ProtectedRoute>} />
           <Route path="/rail-booking-confirmation" element={<ProtectedRoute><RailBookingConfirmationPage /></ProtectedRoute>} />
@@ -305,10 +268,14 @@ const AppContent: React.FC = () => {
           <Route path="/parcel-results" element={<ProtectedRoute><ParcelResultsPage /></ProtectedRoute>} />
           <Route path="/parcel-booking-details" element={<ProtectedRoute><ParcelBookingDetailsPage /></ProtectedRoute>} />
 
-          {/* Results Pages — Protected */}
-          <Route path="/door-to-door-results" element={<ProtectedRoute><DoorToDoorResultsPage /></ProtectedRoute>} />
+          {/* Sea Flow — Protected */}
+          <Route path="/sea-recommended-services" element={<ProtectedRoute><SeaRecommendedServicesPage /></ProtectedRoute>} />
           <Route path="/sea-results" element={<ProtectedRoute><SeaResultsPage /></ProtectedRoute>} />
           <Route path="/sea-booking-details" element={<ProtectedRoute><SeaBookingDetailsPage /></ProtectedRoute>} />
+          <Route path="/sea-shipment/:id" element={<ProtectedRoute><SeaShipmentDetailPage /></ProtectedRoute>} />
+
+          {/* Other Results Pages — Protected */}
+          <Route path="/door-to-door-results" element={<ProtectedRoute><DoorToDoorResultsPage /></ProtectedRoute>} />
           <Route path="/air-results" element={<ProtectedRoute><AirResultsPage /></ProtectedRoute>} />
           <Route path="/air-booking-details" element={<ProtectedRoute><AirBookingDetailsPage /></ProtectedRoute>} />
           <Route path="/truck-results" element={<ProtectedRoute><TruckResultsPage /></ProtectedRoute>} />
@@ -325,7 +292,6 @@ const AppContent: React.FC = () => {
           <Route path="/booking-summary" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingSummaryPage /></div></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><ProfilePage /></div></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><DashboardPage /></div></ProtectedRoute>} />
-
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/payment" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentPage /></div></ProtectedRoute>} />
           <Route path="/payment-success" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><PaymentSuccessPage /></div></ProtectedRoute>} />

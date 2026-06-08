@@ -14,8 +14,6 @@ import InsuranceQuoteForm from '../components/QuoteForms/InsuranceQuoteForm';
 import FirstLastMileQuoteForm from '../components/QuoteForms/FirstLastMileQuoteForm';
 import ParcelQuoteForm from '../components/QuoteForms/ParcelQuoteForm';
 
-// --- TYPE FIX ---
-// Explicitly import as types to avoid "Value vs Type" conflicts
 import type { QuoteFormHandle, ParsedVoiceCommand } from '../types/QuoteFormHandle';
 
 interface QuoteFormPageProps {
@@ -28,15 +26,12 @@ const QuoteFormPage: React.FC<QuoteFormPageProps> = ({ activeService, prefillDat
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Logic to merge Voice Assistant data with Offers Page promo codes
   const mergedPrefillData = useMemo(() => {
     const appliedPromo = location.state?.appliedPromo;
-    
     if (!appliedPromo && !prefillData) return undefined;
-
     return {
       ...(prefillData || {}),
-      promoCode: appliedPromo || prefillData?.promoCode 
+      promoCode: appliedPromo || prefillData?.promoCode
     } as ParsedVoiceCommand;
   }, [location.state, prefillData]);
 
@@ -64,17 +59,17 @@ const QuoteFormPage: React.FC<QuoteFormPageProps> = ({ activeService, prefillDat
   const handleSubmit = () => {
     if (formRef.current) {
       const formData = formRef.current.submit();
-      if (formData) {
+      if (formData && !(formData instanceof Promise)) {
         const routeMap: Record<string, string> = {
           'Air': '/air-results',
-          'Sea': '/sea-results',
+          'Sea': '/sea-recommended-services', // ← goes to Step 2 first
           'Truck': '/truck-results',
           'Door to Door': '/door-to-door-results',
           'LCL': '/lcl-results',
           'Parcel': '/parcel-results',
           'Customs': '/customs-results',
           'Insurance': '/insurance-results',
-          'First/Last Mile': '/first-last-mile-results'
+          'First/Last Mile': '/first-last-mile-results',
         };
         const target = routeMap[formData.bookingType] || '/booking-summary';
         navigate(target, { state: { formData } });

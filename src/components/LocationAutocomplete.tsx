@@ -6,6 +6,7 @@ import api from '../services/api';
 interface Location {
   id: string;
   name: string;
+  full_name?: string;
   code: string;
   type: string;
   state: string;
@@ -16,32 +17,45 @@ interface LocationAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  locationType?: string; // 'city' | 'seaport' | 'airport' | 'rail_terminal' | undefined (all)
+  locationType?: string;
   label?: string;
   required?: boolean;
   className?: string;
   id?: string;
+  global?: boolean;
 }
 
 const getTypeIcon = (type: string) => {
   switch (type) {
-    case 'seaport': return '⚓';
-    case 'airport': return '✈️';
+    case 'seaport':       return '⚓';
+    case 'airport':       return '✈️';
     case 'rail_terminal': return '🚂';
-    case 'city': return '🏙️';
-    default: return '📍';
+    case 'city':          return '🏙️';
+    default:              return '📍';
   }
 };
 
 const getTypeLabel = (type: string) => {
   switch (type) {
-    case 'seaport': return 'Seaport';
-    case 'airport': return 'Airport';
+    case 'seaport':       return 'Seaport';
+    case 'airport':       return 'Airport';
     case 'rail_terminal': return 'Rail Terminal';
-    case 'city': return 'City';
-    default: return type;
+    case 'city':          return 'City';
+    default:              return type;
   }
 };
+
+// Strip ICD / DCT / codes — show only city name
+const cleanName = (name: string): string =>
+  name
+    .replace(/\s*\([A-Z0-9]+\)/g, '') // remove (INMAA), (INPPG), (SNF) etc
+    .replace(/\bICD\b/gi, '')
+    .replace(/\bDCT\b/gi, '')
+    .replace(/\bMMLPMIHAN\b/gi, '')
+    .replace(/\bMMLPMIHAN\b/gi, '')
+    .replace(/\bPort\b/gi, '')         // remove "Port" for cleaner city names
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   value,
@@ -52,26 +66,27 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   required = false,
   className = '',
   id,
+  global = false,
 }) => {
-  const [inputValue, setInputValue] = useState(value);
+  const [inputValue, setInputValue]   = useState(value);
   const [suggestions, setSuggestions] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]         = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [selected, setSelected] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [selected, setSelected]       = useState(false);
+  const inputRef    = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync external value changes
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
-  // Click outside to close
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
-          inputRef.current && !inputRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node) &&
+        inputRef.current   && !inputRef.current.contains(e.target as Node)
+      ) {
         setShowDropdown(false);
       }
     };
@@ -83,7 +98,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     const val = e.target.value;
     setInputValue(val);
     setSelected(false);
-    onChange(val); // keep parent in sync as user types
+    onChange(val);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -98,7 +113,12 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       try {
         const params: any = { q: val };
         if (locationType) params.type = locationType;
-        const response = await api.get('/locations/search', { params });
+
+        const endpoint = global
+          ? '/locations/search-global'
+          : '/locations/search';
+
+        const response = await api.get(endpoint, { params });
         setSuggestions(response.data.data || []);
         setShowDropdown(true);
       } catch (error) {
@@ -106,13 +126,20 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, 300);
   };
 
   const handleSelect = (location: Location) => {
-    const displayValue = location.code
-      ? `${location.name} (${location.code})`
-      : location.name;
+    let displayValue = '';
+
+    if (global) {
+      // International — show as "City, Country"
+      displayValue = location.name;
+    } else {
+      // Domestic — show only clean city name, no ICD/DCT/codes
+      displayValue = cleanName(location.name);
+    }
+
     setInputValue(displayValue);
     onChange(displayValue);
     setSelected(true);
@@ -136,9 +163,12 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
           {label}{required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
+
       <div className="relative">
         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-          {loading ? <FaSpinner className="animate-spin text-blue-400 text-sm" /> : <FaMapMarkerAlt className="text-sm" />}
+          {loading
+            ? <FaSpinner className="animate-spin text-blue-400 text-sm" />
+            : <FaMapMarkerAlt className="text-sm" />}
         </div>
         <input
           ref={inputRef}
@@ -163,7 +193,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
         )}
       </div>
 
-      {/* Dropdown */}
+      {/* Dropdown suggestions */}
       {showDropdown && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
@@ -172,21 +202,23 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
         >
           {suggestions.map((loc, index) => (
             <button
-              key={loc.id}
+              key={`${loc.id}-${index}`}
               type="button"
               onClick={() => handleSelect(loc)}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition text-left border-b border-gray-50 last:border-0"
             >
               <span className="text-lg flex-shrink-0">{getTypeIcon(loc.type)}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-800 truncate">{loc.name}</p>
+                {/* Clean city name — no ICD/DCT/codes */}
+                <p className="text-sm font-semibold text-gray-800 truncate">
+                  {global ? loc.name : cleanName(loc.name)}
+                </p>
                 <p className="text-xs text-gray-400 truncate">
-                  {loc.state || loc.country}
-                  {loc.code && <span className="ml-1 font-mono text-blue-500">· {loc.code}</span>}
+                  {global ? loc.country : (loc.state || loc.country)}
                 </p>
               </div>
               <span className="text-xs text-gray-300 flex-shrink-0 bg-gray-50 px-2 py-0.5 rounded-full">
-                {getTypeLabel(loc.type)}
+                {global ? (loc.country || 'Global') : getTypeLabel(loc.type)}
               </span>
             </button>
           ))}
@@ -195,7 +227,10 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
 
       {/* No results */}
       {showDropdown && !loading && suggestions.length === 0 && inputValue.length >= 2 && (
-        <div ref={dropdownRef} className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg px-4 py-3 text-sm text-gray-400">
+        <div
+          ref={dropdownRef}
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg px-4 py-3 text-sm text-gray-400"
+        >
           No locations found for "{inputValue}"
         </div>
       )}

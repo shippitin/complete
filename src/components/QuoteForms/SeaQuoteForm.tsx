@@ -126,7 +126,11 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
     }
 
     setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) { setValidationMessage('Please fill in all required fields correctly.'); setShowValidationMessage(true); return null; }
+    if (Object.keys(newErrors).length > 0) {
+      setValidationMessage('Please fill in all required fields correctly.');
+      setShowValidationMessage(true);
+      return null;
+    }
 
     const formData: SeaFormData = {
       bookingType: 'Sea', activityType, shipmentMode,
@@ -136,7 +140,8 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
       destinationPort: undefined, destinationCity: undefined, destinationAddress: undefined, destinationPincode: undefined,
       dimensions: undefined, cargoValue: undefined, insuranceRequired: false, incoterms: undefined,
       hsCode: undefined, stuffingPoint: undefined, detailedDescriptionOfGoods: undefined,
-      commodityCategory: '', description: undefined, numberOfPieces: undefined, volumeCBM: undefined, containerType: undefined, numberOfContainers: undefined,
+      commodityCategory: '', numberOfPieces: undefined, volumeCBM: undefined,
+      containerType: undefined, numberOfContainers: undefined,
     };
 
     if (activityType === 'Port to Port') { formData.originPort = originPort; formData.destinationPort = destinationPort; }
@@ -145,10 +150,20 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
     else if (activityType === 'Door to Door') { formData.originCity = originCityPincode; formData.destinationCity = destinationCityPincode; }
 
     if (shipmentMode === 'LCL') { formData.numberOfPieces = parseNumber(numberOfPieces); formData.volumeCBM = parseNumber(volumeCBM); }
-    if (shipmentMode === 'FCL') { formData.containerType = fclContainerType === 'ALL' ? undefined : fclContainerType; formData.numberOfContainers = parseNumber(fclNumberOfContainers); }
+    if (shipmentMode === 'FCL') {
+      formData.containerType = fclContainerType === 'ALL' ? undefined : fclContainerType;
+      formData.numberOfContainers = parseNumber(fclNumberOfContainers);
+    }
 
-    if (showButtons) { navigate('/sea-results', { state: { formData } }); setSuccessMessage('Redirecting to results...'); setShowSuccessMessage(true); }
-    else { setSuccessMessage('Form data collected successfully.'); setShowSuccessMessage(true); }
+    // ← Only change:  /sea-recommended-services → /sea-recommended-services
+    if (showButtons) {
+      navigate('/sea-recommended-services', { state: { formData } });
+      setSuccessMessage('Redirecting...');
+      setShowSuccessMessage(true);
+    } else {
+      setSuccessMessage('Form data collected successfully.');
+      setShowSuccessMessage(true);
+    }
     return formData;
   };
 

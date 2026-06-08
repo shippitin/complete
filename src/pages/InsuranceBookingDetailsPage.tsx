@@ -9,14 +9,16 @@ const InsuranceBookingDetailsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-const selectedResult = location.state?.selectedResult as any;
-const originalFormData = location.state?.originalFormData as any;
+  const selectedResult = location.state?.selectedResult as any;
+  const originalFormData = location.state?.originalFormData as any;
 
-  const [contactPersonName, setContactPersonName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactPhone, setContactPhone] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [gstin, setGstin] = useState('');
+  // ── auto-fill from logged-in user ──
+  const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
+  const [contactPersonName, setContactPersonName] = useState(user.full_name || '');
+  const [contactEmail, setContactEmail] = useState(user.email || '');
+  const [contactPhone, setContactPhone] = useState(user.phone || '');
+  const [companyName, setCompanyName] = useState(user.company_name || '');
+  const [gstin, setGstin] = useState(user.gstin || '');
   const [kycDocType, setKycDocType] = useState('Select Document Type');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [additionalInsuranceRequired, setAdditionalInsuranceRequired] = useState(false);
@@ -119,7 +121,7 @@ const originalFormData = location.state?.originalFormData as any;
                 <div><strong>Coverage:</strong> {originalFormData.coverageType}</div>
                 <div><strong>Cargo Type:</strong> {originalFormData.cargoType}</div>
                 <div><strong>Weight:</strong> {originalFormData.weight} KG</div>
-                <div><strong>Insurance Value:</strong> ${originalFormData.insuranceValue?.toLocaleString('en-US')}</div>
+                <div><strong>Insurance Value:</strong> ₹{originalFormData.insuranceValue?.toLocaleString('en-IN')}</div>
                 <div className="md:col-span-2 text-2xl font-bold text-blue-700 flex items-center mt-2">
                   <FaRupeeSign className="text-xl mr-1" />Premium: {selectedResult.premium.toLocaleString('en-IN')}
                 </div>
