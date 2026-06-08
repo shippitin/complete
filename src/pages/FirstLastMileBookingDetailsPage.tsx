@@ -11,13 +11,11 @@ const FirstLastMileBookingDetailsPage: React.FC = () => {
   const selectedResult = location.state?.selectedResult as any;
   const originalFormData = location.state?.originalFormData as any;
 
-  // ── auto-fill from logged-in user ──
-  const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
-  const [contactPersonName, setContactPersonName] = useState(user.full_name || '');
-  const [contactEmail, setContactEmail] = useState(user.email || '');
-  const [contactPhone, setContactPhone] = useState(user.phone || '');
-  const [companyName, setCompanyName] = useState(user.company_name || '');
-  const [gstin, setGstin] = useState(user.gstin || '');
+  const [contactPersonName, setContactPersonName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [companyName, setCompanyName] = useState('');
+  const [gstin, setGstin] = useState('');
   const [kycDocType, setKycDocType] = useState('Select Document Type');
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [insuranceRequired, setInsuranceRequired] = useState(false);
