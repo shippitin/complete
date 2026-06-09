@@ -90,7 +90,7 @@ const EmailVerificationPage: React.FC = () => {
       const updatedUser = { ...user, is_verified: true };
       localStorage.setItem('shippitin_user', JSON.stringify(updatedUser));
 
-      navigate('/dashboard');
+      navigate('/');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Invalid or expired OTP.');
     } finally {
