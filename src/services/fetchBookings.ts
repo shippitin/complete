@@ -1,5 +1,6 @@
 // src/services/fetchBookings.ts
 import type { QuoteFormData } from '../types/QuoteData';
+import API_BASE_URL from '../config/api';
 
 export const fetchBookingHistory = async (): Promise<QuoteFormData[]> => {
   const token = localStorage.getItem('shippitin_token');
@@ -8,7 +9,7 @@ export const fetchBookingHistory = async (): Promise<QuoteFormData[]> => {
     return [];
   }
 
-  const response = await fetch('http://localhost:5000/api/bookings', {
+  const response = await fetch(`${API_BASE_URL}/api/bookings`, {
     headers: {
       'Authorization': `Bearer ${token}`
     }
