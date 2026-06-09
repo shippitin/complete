@@ -23,7 +23,7 @@ localStorage.setItem('shippitin_token', token);
 localStorage.setItem('shippitin_refresh_token', refreshToken);
 localStorage.setItem('shippitin_user', JSON.stringify(user));
       toast.success(`Welcome back, ${user.full_name?.split(' ')[0]}!`);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       const message = err.response?.data?.message || 'Login failed';
       toast.error(message);
