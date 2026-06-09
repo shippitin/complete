@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// VITE_API_URL is the bare backend host (no /api). The /api prefix is added here
+// so this matches src/config/api.ts, which the page components use directly.
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE}/api`;
 
 const api = axios.create({
   baseURL: API_URL,
@@ -44,7 +47,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // A 401 from an auth endpoint (login/register/refresh/logout) is a credential
+    // failure, not an expired session — let it surface to the caller's own handler
+    // instead of showing "Session expired" and redirecting to /login.
+    const isAuthRequest = originalRequest?.url?.includes('/auth/');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       const refreshToken = localStorage.getItem('shippitin_refresh_token');
 
       if (!refreshToken) {
