@@ -13,6 +13,7 @@ import ServicesPage from './pages/ServicesPage';
 import SupportPage from './pages/SupportPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
 import OfferDetailPage from './pages/OfferDetailPage';
 import QuoteFormPage from './pages/QuoteFormPage';
 import BookingSummaryPage from './pages/BookingSummaryPage';
@@ -231,6 +232,7 @@ const AppContent: React.FC = () => {
           {/* Auth Pages — Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Booking Forms — Protected */}
