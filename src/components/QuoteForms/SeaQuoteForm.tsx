@@ -209,7 +209,7 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
         <div className="md:col-span-1">
           <LocationAutocomplete label="Destination Port" required value={destinationPort}
             onChange={(v) => { setDestinationPort(v); setErrors(p => ({ ...p, destinationPort: undefined })); }}
-            placeholder="e.g., Singapore, SGSIN" locationType="seaport"
+            placeholder="e.g., Singapore, SGSIN" locationType="seaport" global
             className={errors.destinationPort ? 'ring-1 ring-orange-500 rounded-xl' : ''} />
           {errors.destinationPort && <p className="mt-1 text-sm text-orange-600">{errors.destinationPort}</p>}
         </div>
@@ -219,7 +219,7 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
       <div className="md:col-span-1">
         <LocationAutocomplete label="Destination (City/Pincode)" required value={destinationCityPincode}
           onChange={(v) => { setDestinationCityPincode(v); setErrors(p => ({ ...p, destinationCity: undefined })); }}
-          placeholder="e.g., Los Angeles, 90210" locationType="city"
+          placeholder="e.g., Los Angeles, 90210" locationType="city" global
           className={errors.destinationCity ? 'ring-1 ring-orange-500 rounded-xl' : ''} />
         {errors.destinationCity && <p className="mt-1 text-sm text-orange-600">{errors.destinationCity}</p>}
       </div>
