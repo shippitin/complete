@@ -225,6 +225,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
               <span className="text-lg flex-shrink-0">{getTypeIcon(loc.type)}</span>
               <div className="flex-1 min-w-0">
                 {/* Clean city name — no ICD/DCT/codes */}
+          
                 <p className="text-sm font-semibold text-gray-800 truncate">
                   {global ? loc.name : cleanName(loc.name)}
                 </p>
