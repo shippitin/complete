@@ -156,6 +156,18 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     inputRef.current?.focus();
   };
 
+  // Door / city fields have no fixed master list in the backend — let the user
+  // enter a free-form address instead of dead-ending on "No locations found".
+  const allowFreeText = locationType === 'city';
+  const handleUseTyped = () => {
+    const v = inputValue.trim();
+    if (!v) return;
+    onChange(v);
+    setSelected(true);
+    setShowDropdown(false);
+    setSuggestions([]);
+  };
+
   return (
     <div className={`relative ${className}`}>
       {label && (
@@ -194,7 +206,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       </div>
 
       {/* Dropdown suggestions */}
-      {showDropdown && suggestions.length > 0 && (
+      {showDropdown && (suggestions.length > 0 || (allowFreeText && !loading && inputValue.trim().length >= 2)) && (
         <div
           ref={dropdownRef}
           className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg overflow-hidden"
@@ -222,11 +234,28 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
               </span>
             </button>
           ))}
+
+          {/* Free-text fallback — door/address fields have no fixed master list */}
+          {allowFreeText && inputValue.trim().length >= 2 && (
+            <button
+              type="button"
+              onClick={handleUseTyped}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition text-left border-t border-gray-100"
+            >
+              <span className="text-lg flex-shrink-0">📍</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-gray-800 truncate">Use “{inputValue.trim()}”</p>
+                <p className="text-xs text-gray-400">
+                  {suggestions.length > 0 ? 'Enter as a custom address' : 'No match found — use this address as typed'}
+                </p>
+              </div>
+            </button>
+          )}
         </div>
       )}
 
-      {/* No results */}
-      {showDropdown && !loading && suggestions.length === 0 && inputValue.length >= 2 && (
+      {/* No results — only for fixed-list fields (terminals / ports) */}
+      {!allowFreeText && showDropdown && !loading && suggestions.length === 0 && inputValue.length >= 2 && (
         <div
           ref={dropdownRef}
           className="absolute z-50 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg px-4 py-3 text-sm text-gray-400"
