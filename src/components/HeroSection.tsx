@@ -18,7 +18,7 @@ import type { QuoteFormHandle, TrainContainerFormData } from '../types/QuoteForm
 
 import {
   FaHome, FaTrain, FaShip, FaPlane, FaTruck,
-  FaBox, FaBoxes, FaStamp, FaDolly, FaHandshake, FaAnchor,
+  FaBox, FaStamp, FaDolly, FaAnchor,
 } from 'react-icons/fa';
 
 const tabs = [
@@ -28,8 +28,6 @@ const tabs = [
   { service: 'Truck',           label: 'Truck',           icon: FaTruck     },
   { service: 'Parcel',          label: 'Parcel',          icon: FaBox       },
   { service: 'Customs',         label: 'Customs',         icon: FaStamp     },
-  { service: 'Insurance',       label: 'Insurance',       icon: FaHandshake },
-  { service: 'LCL',             label: 'LCL',             icon: FaBoxes     },
   { service: 'First/Last Mile', label: 'First/Last Mile', icon: FaDolly     },
   { service: 'Door to Door',    label: 'Door to Door',    icon: FaHome      },
   { service: 'Port Services',   label: 'Port Services',   icon: FaAnchor    },
