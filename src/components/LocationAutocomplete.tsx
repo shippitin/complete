@@ -112,7 +112,10 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       setLoading(true);
       try {
         const params: any = { q: val };
-        if (locationType) params.type = locationType;
+        // 'city'/door fields have no dedicated city dataset in the backend, so
+        // searching type=city returns nothing. Drop the filter for these fields to
+        // surface real nearby locations; other fields stay scoped to their type.
+        if (locationType && locationType !== 'city') params.type = locationType;
 
         const endpoint = global
           ? '/locations/search-global'
