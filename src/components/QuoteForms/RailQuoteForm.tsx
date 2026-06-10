@@ -347,20 +347,20 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             {isDoorO
-              ? <LocationAutocomplete label="Origin" required value={domOriginAddress}
+              ? <LocationAutocomplete key="dom-origin-city" label="Origin" required value={domOriginAddress}
                   onChange={v => { setDomOriginAddress(v); setErrors(p => ({ ...p, originAddress: undefined as any })); }}
                   placeholder="e.g., Chennai, 600001" locationType="city" />
-              : <LocationAutocomplete label="Origin" required value={domOriginTerminal}
+              : <LocationAutocomplete key="dom-origin-term" label="Origin" required value={domOriginTerminal}
                   onChange={v => { setDomOriginTerminal(v); setErrors(p => ({ ...p, originTerminal: undefined as any })); }}
                   placeholder="e.g., Chennai" locationType="rail_terminal" />}
             {(errors.originAddress || errors.originTerminal) && <p className="text-xs text-orange-500 mt-1">{errors.originAddress || errors.originTerminal}</p>}
           </div>
           <div>
             {isDoorD
-              ? <LocationAutocomplete label="Destination" required value={domDestAddress}
+              ? <LocationAutocomplete key="dom-dest-city" label="Destination" required value={domDestAddress}
                   onChange={v => { setDomDestAddress(v); setErrors(p => ({ ...p, destAddress: undefined as any })); }}
                   placeholder="e.g., Delhi, 110001" locationType="city" />
-              : <LocationAutocomplete label="Destination" required value={domDestTerminal}
+              : <LocationAutocomplete key="dom-dest-term" label="Destination" required value={domDestTerminal}
                   onChange={v => { setDomDestTerminal(v); setErrors(p => ({ ...p, destTerminal: undefined as any })); }}
                   placeholder="e.g., Delhi" locationType="rail_terminal" />}
             {(errors.destAddress || errors.destTerminal) && <p className="text-xs text-orange-500 mt-1">{errors.destAddress || errors.destTerminal}</p>}
@@ -484,7 +484,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
           <div>
-            <LocationAutocomplete label="Origin" required
+            <LocationAutocomplete key={`intl-origin-${movement}-${st}`} label="Origin" required
               value={getOriginValue()} onChange={setOriginValue}
               placeholder={isOriginDoor ? 'e.g., City / address' : isOriginGlobal ? 'e.g., Shanghai Port' : 'e.g., Chennai'}
               locationType={isOriginDoor ? 'city' : isOriginGlobal ? 'seaport' : 'rail_terminal'}
@@ -492,7 +492,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             {errors.intlOrigin && <p className="text-xs text-orange-500 mt-1">{errors.intlOrigin}</p>}
           </div>
           <div>
-            <LocationAutocomplete label="Destination" required
+            <LocationAutocomplete key={`intl-dest-${movement}-${st}`} label="Destination" required
               value={getDestValue()} onChange={setDestValue}
               placeholder={isDestDoor ? 'e.g., City / address' : movement === 'export' && (st === 'terminalToPort' || st === 'doorToPort') ? 'e.g., JNPT, Mundra' : 'e.g., Delhi'}
               locationType={isDestDoor ? 'city' : movement === 'export' && (st === 'terminalToPort' || st === 'doorToPort') ? 'seaport' : 'rail_terminal'}
@@ -566,16 +566,16 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             {isDoorO
-              ? <LocationAutocomplete label="Origin" required value={goodsOriginAddr}
+              ? <LocationAutocomplete key="goods-origin-city" label="Origin" required value={goodsOriginAddr}
                   onChange={v => setGoodsOriginAddr(v)} placeholder="City / address" locationType="city" />
-              : <LocationAutocomplete label="Origin" required value={goodsOriginTerm}
+              : <LocationAutocomplete key="goods-origin-term" label="Origin" required value={goodsOriginTerm}
                   onChange={v => setGoodsOriginTerm(v)} placeholder="e.g., Delhi" locationType="rail_terminal" />}
           </div>
           <div>
             {isDoorD
-              ? <LocationAutocomplete label="Destination" required value={goodsDestAddr}
+              ? <LocationAutocomplete key="goods-dest-city" label="Destination" required value={goodsDestAddr}
                   onChange={v => setGoodsDestAddr(v)} placeholder="City / address" locationType="city" />
-              : <LocationAutocomplete label="Destination" required value={goodsDestTerm}
+              : <LocationAutocomplete key="goods-dest-term" label="Destination" required value={goodsDestTerm}
                   onChange={v => setGoodsDestTerm(v)} placeholder="e.g., Mumbai" locationType="rail_terminal" />}
           </div>
           <div>
@@ -645,16 +645,16 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             {isDoorO
-              ? <LocationAutocomplete label="Origin" required value={parcelOriginAddr}
+              ? <LocationAutocomplete key="parcel-origin-city" label="Origin" required value={parcelOriginAddr}
                   onChange={v => setParcelOriginAddr(v)} placeholder="City / address" locationType="city" />
-              : <LocationAutocomplete label="Origin" required value={parcelOriginTerm}
+              : <LocationAutocomplete key="parcel-origin-term" label="Origin" required value={parcelOriginTerm}
                   onChange={v => setParcelOriginTerm(v)} placeholder="e.g., Chennai" locationType="rail_terminal" />}
           </div>
           <div>
             {isDoorD
-              ? <LocationAutocomplete label="Destination" required value={parcelDestAddr}
+              ? <LocationAutocomplete key="parcel-dest-city" label="Destination" required value={parcelDestAddr}
                   onChange={v => setParcelDestAddr(v)} placeholder="City / address" locationType="city" />
-              : <LocationAutocomplete label="Destination" required value={parcelDestTerm}
+              : <LocationAutocomplete key="parcel-dest-term" label="Destination" required value={parcelDestTerm}
                   onChange={v => setParcelDestTerm(v)} placeholder="e.g., Delhi" locationType="rail_terminal" />}
           </div>
           <div>
