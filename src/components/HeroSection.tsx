@@ -126,7 +126,7 @@ const HeroSection: React.FC = () => {
   const renderQuoteForm = () => {
     switch (activeTab) {
       case 'Door to Door':    return <DoorToDoorQuoteForm   ref={el => { formRefs.current['Door to Door']    = el; }} showButtons={false} />;
-      case 'Rail':            return <RailQuoteForm          ref={el => { formRefs.current['Rail']            = el; }} showButtons={false} />;
+      case 'Rail':            return <RailQuoteForm          ref={el => { formRefs.current['Rail']            = el; }} showButtons={false} embedded />;
       case 'Sea':             return <SeaQuoteForm           ref={el => { formRefs.current['Sea']             = el; }} showButtons={false} />;
       case 'Port Services':   return <PortServicesQuoteForm  ref={el => { formRefs.current['Port Services']   = el; }} showButtons={false} />;
       case 'Air':             return <AirQuoteForm           ref={el => { formRefs.current['Air']             = el; }} showButtons={false} />;
