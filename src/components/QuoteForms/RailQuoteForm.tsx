@@ -463,7 +463,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="mb-1">
           <div className="flex flex-wrap gap-2">
             {([['export','Export'],['import','Import']] as const).map(([val, label]) => (
-              <label key={val} className={radioBtn(movement === val)}>
+              <label key={val} className={`${radioBtn(movement === val)} w-36 justify-center`}>
                 <input type="radio" name="intlMovement" value={val}
                   checked={movement === val}
                   onChange={() => { setMovement(val); resetIntlLoc(); setErrors({}); }}
