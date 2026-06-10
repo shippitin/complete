@@ -245,6 +245,8 @@ const generateDynamicShipment = (idToTrack: string, originParam = '', destParam 
 
 
 // ── Geocode any city/location string using Nominatim (no API key needed) ──
+import API_BASE_URL from '../config/api';
+
 const geocodeCache: Record<string, [number, number]> = {};
 const geocode = async (place: string): Promise<[number, number]> => {
   const key = place.trim().toLowerCase();
@@ -292,7 +294,7 @@ const TrackPage: React.FC = () => {
 
     // 1. Try real backend first
     try {
-      const response = await fetch(`http://localhost:5000/api/tracking/${idToTrack.trim()}`);
+      const response = await fetch(`${API_BASE_URL}/api/tracking/${idToTrack.trim()}`);
       if (response.ok) {
         const result = await response.json();
         const booking = result.data;

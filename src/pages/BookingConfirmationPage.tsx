@@ -7,6 +7,8 @@ import {
   FaEnvelope, FaPhone, FaPrint,
 } from 'react-icons/fa';
 
+import API_BASE_URL from '../config/api';
+
 const fmt = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 
 const formatServiceType = (st: string) => {
@@ -133,7 +135,7 @@ const BookingConfirmationPage: React.FC = () => {
         try {
           const token = localStorage.getItem('shippitin_token');
           if (token && details.bookingId) {
-            await fetch('http://localhost:5000/api/bookings', {
+            await fetch(`${API_BASE_URL}/api/bookings`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
               body: JSON.stringify({
@@ -179,7 +181,7 @@ const BookingConfirmationPage: React.FC = () => {
     setSending('email');
     try {
       const token = localStorage.getItem('shippitin_token');
-      await fetch('http://localhost:5000/api/bookings/send-confirmation', {
+      await fetch(`${API_BASE_URL}/api/bookings/send-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ bookingId: bookingDetails.bookingId, email, type: 'email' }),
@@ -195,7 +197,7 @@ const BookingConfirmationPage: React.FC = () => {
     setSending('sms');
     try {
       const token = localStorage.getItem('shippitin_token');
-      await fetch('http://localhost:5000/api/bookings/send-confirmation', {
+      await fetch(`${API_BASE_URL}/api/bookings/send-confirmation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ bookingId: bookingDetails.bookingId, phone, type: 'sms' }),
