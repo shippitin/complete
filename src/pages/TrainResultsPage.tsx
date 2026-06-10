@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaTrain, FaShip, FaMapMarkerAlt, FaRupeeSign, FaArrowRight, FaArrowLeft, FaFilter, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, RailServiceType, TrainContainerFormData } from '../types/QuoteFormHandle';
+import API_BASE_URL from '../config/api';
 
 type TrainTypeFilter   = 'Express Cargo' | 'Standard Cargo' | 'Premium Cargo' | 'Economy Cargo';
 type OperatorFilter    = 'CONCOR' | 'BCSL' | 'Adani Logistics' | 'Maersk' | 'MSC' | 'CMA CGM' | 'Hapag-Lloyd' | 'Evergreen' | 'Cosco' | 'ZIM';
@@ -41,7 +42,7 @@ const TrainResultsPage: React.FC = () => {
   const [filteredResults, setFilteredResults]       = useState<FreightTrainResult[]>([]);
   const [loading, setLoading]                       = useState(true);
   const [error, setError]                           = useState<string | null>(null);
-  const [sortBy, setSortBy]                         = useState<'price' | 'transit'>('price');
+  const [sortBy, setSortBy]                         = useState<'recommended' | 'cheapest' | 'fastest'>('recommended');
   const [selectedTrainTypes, setSelectedTrainTypes] = useState<TrainTypeFilter[]>([]);
   const [selectedOperators, setSelectedOperators]   = useState<OperatorFilter[]>([]);
   const [selectedServiceTypes, setSelectedServiceTypes] = useState<ServiceTypeFilter[]>([]);
@@ -101,6 +102,8 @@ const TrainResultsPage: React.FC = () => {
     const getSNF40ft = (wt: number) => wt <= 20000 ? 29800 : 46000;
 
     const basePerContainer = is40ft ? getSNF40ft(weight) : getSNF20ft(weight);
+    const baseTotal        = basePerContainer * n;
+    // Faster service = premium, slower = economy. Standard tier stays at the CONCOR base rate.
     const serviceFeature   = formatServiceType(st);
 
     const domesticOperators = ['CONCOR', 'Adani Logistics'];
@@ -114,7 +117,7 @@ const TrainResultsPage: React.FC = () => {
         departureTime: 'As per schedule', arrivalTime: 'Estimated',
         transitDuration: domestic ? '2 Days' : '4 Days',
         availableCapacity: '150 Containers',
-        price: basePerContainer * n,
+        price: Math.round(baseTotal * 1.25),
         features: ['GPS Tracking', 'Priority Handling', 'Real-time Updates', serviceFeature],
         cargoType: cd.containerType || 'General', isHazardousCompatible: true,
         sourceDocument: 'CONCOR-SNF-TARIFF-2022', isDomestic: domestic,
@@ -125,7 +128,7 @@ const TrainResultsPage: React.FC = () => {
         departureTime: 'As per schedule', arrivalTime: 'Estimated',
         transitDuration: domestic ? '3 Days' : '5 Days',
         availableCapacity: '200 Containers',
-        price: basePerContainer * n,
+        price: Math.round(baseTotal * 1.12),
         features: ['GPS Tracking', 'Real-time Updates', serviceFeature],
         cargoType: cd.containerType || 'General', isHazardousCompatible: true,
         sourceDocument: 'CONCOR-SNF-TARIFF-2022', isDomestic: domestic,
@@ -136,7 +139,7 @@ const TrainResultsPage: React.FC = () => {
         departureTime: 'As per schedule', arrivalTime: 'Estimated',
         transitDuration: domestic ? '4 Days' : '6 Days',
         availableCapacity: '300 Containers',
-        price: basePerContainer * n,
+        price: baseTotal,
         features: ['Standard Service', serviceFeature],
         cargoType: cd.containerType || 'General', isHazardousCompatible: false,
         sourceDocument: 'CONCOR-SNF-TARIFF-2022', isDomestic: domestic,
@@ -147,7 +150,7 @@ const TrainResultsPage: React.FC = () => {
         departureTime: 'As per schedule', arrivalTime: 'Estimated',
         transitDuration: domestic ? '5 Days' : '7 Days',
         availableCapacity: '400 Containers',
-        price: basePerContainer * n,
+        price: Math.round(baseTotal * 0.88),
         features: ['Economy Service', serviceFeature],
         cargoType: cd.containerType || 'General', isHazardousCompatible: false,
         sourceDocument: 'CONCOR-SNF-TARIFF-2022', isDomestic: domestic,
@@ -170,7 +173,7 @@ const TrainResultsPage: React.FC = () => {
         const originRaw      = getOriginDisplay(data, true);
         const destinationRaw = getDestinationDisplay(data, true);
 
-        const res = await fetch('http://localhost:5000/api/quotes/rail/quotes', {
+        const res = await fetch(`${API_BASE_URL}/api/quotes/rail/quotes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({
@@ -236,8 +239,9 @@ const TrainResultsPage: React.FC = () => {
       cur = cur.filter(r => selectedOperators.includes(r.operator as OperatorFilter));
     if (selectedServiceTypes.length > 0)
       cur = cur.filter(r => selectedServiceTypes.some(st => r.features.includes(formatServiceType(st))));
-    if (sortBy === 'price')   cur.sort((a, b) => a.price - b.price);
-    if (sortBy === 'transit') cur.sort((a, b) => parseInt(a.transitDuration) - parseInt(b.transitDuration));
+    if (sortBy === 'cheapest') cur.sort((a, b) => a.price - b.price);
+    if (sortBy === 'fastest')  cur.sort((a, b) => parseInt(a.transitDuration) - parseInt(b.transitDuration));
+    // 'recommended' keeps the original order (Priority / Best Value / Fastest badges)
     setFilteredResults(cur);
   }, [selectedTrainTypes, selectedOperators, selectedServiceTypes, sortBy, allSearchResults]);
 
@@ -332,8 +336,12 @@ const TrainResultsPage: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">Sort:</span>
-            {[{ key: 'price', label: 'Price' }, { key: 'transit', label: 'Transit' }].map(s => (
+            <span className="text-xs text-gray-400">Sort by:</span>
+            {[
+              { key: 'recommended', label: 'Recommended' },
+              { key: 'cheapest',    label: 'Cheapest' },
+              { key: 'fastest',     label: 'Fastest' },
+            ].map(s => (
               <button key={s.key} onClick={() => setSortBy(s.key as any)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${sortBy === s.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 {s.label}
