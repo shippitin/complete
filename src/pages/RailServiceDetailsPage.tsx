@@ -176,14 +176,14 @@ const RailServiceDetailsPage: React.FC = () => {
     ? FaTrain : formData!.bookingType === 'Train Container Booking' ? FaCube : FaBoxOpen;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+    <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-5">
 
         {/* ── LEFT ── */}
-        <div className="flex-grow space-y-6">
+        <div className="flex-grow space-y-4">
 
           {/* Header */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <button onClick={() => navigate('/train-results', { state: { formData: formData! } })}
               className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium mb-5 transition">
               <FaArrowLeft className="mr-2" /> Back to Search Results
@@ -198,21 +198,16 @@ const RailServiceDetailsPage: React.FC = () => {
           </div>
 
           {/* Train Service Info */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-2 mb-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center gap-2 mb-4">
               <FaTrain className="text-blue-500 text-lg" />
               <h2 className="text-lg font-bold text-gray-800">Train Service Information</h2>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {[
-                { label: 'Service Name',      value: selectedTrainResult!.serviceName },
-                { label: 'Train ID',          value: selectedTrainResult!.id },
-                { label: 'Operator',          value: selectedTrainResult!.operator },
-                { label: 'Origin',            value: selectedTrainResult!.originStation },
-                { label: 'Destination',       value: selectedTrainResult!.destinationStation },
-                { label: 'Transit Duration',  value: selectedTrainResult!.transitDuration },
-                { label: 'Available Capacity',value: selectedTrainResult!.availableCapacity },
-                { label: 'Cargo Type',        value: selectedTrainResult!.cargoType || 'N/A' },
+                { label: 'Service Name',     value: selectedTrainResult!.serviceName },
+                { label: 'Operator',         value: selectedTrainResult!.operator },
+                { label: 'Transit Duration', value: selectedTrainResult!.transitDuration },
               ].map((item, i) => (
                 <div key={i} className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400 mb-1">{item.label}</p>
@@ -232,7 +227,7 @@ const RailServiceDetailsPage: React.FC = () => {
                 <p className="text-sm font-semibold text-gray-800">{selectedTrainResult!.features.join(', ')}</p>
               </div>
             </div>
-            <div className="mt-5 flex justify-end">
+            <div className="mt-4 flex justify-end">
               <div className="bg-blue-50 rounded-xl px-5 py-3 text-right">
                 <p className="text-xs text-blue-400 mb-0.5">Base Rail Freight</p>
                 <p className="text-2xl font-extrabold text-blue-700">{fmt(baseRailFreight)}</p>
@@ -242,8 +237,8 @@ const RailServiceDetailsPage: React.FC = () => {
           </div>
 
           {/* Quote Details */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <div className="flex items-center gap-2 mb-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center gap-2 mb-4">
               <FaClipboardList className="text-gray-500 text-lg" />
               <h2 className="text-lg font-bold text-gray-800">Your Quote Details</h2>
             </div>
@@ -299,7 +294,7 @@ const RailServiceDetailsPage: React.FC = () => {
           </div>
 
           {/* Insurance */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-center gap-2 mb-4">
               <FaShieldAlt className="text-blue-500 text-lg" />
               <h2 className="text-lg font-bold text-gray-800">Additional Services</h2>
