@@ -186,6 +186,13 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     setErrors({});            setShowValMsg(false);
   };
 
+  // Clear location inputs when the user switches service type / mode / movement,
+  // so a previously typed origin/destination doesn't linger into the new context.
+  const resetDomLoc    = () => { setDomOriginTerminal(''); setDomOriginAddress(''); setDomDestTerminal(''); setDomDestAddress(''); };
+  const resetIntlLoc   = () => { setIntlOriginICD(''); setIntlOriginPort(''); setIntlOriginAddr(''); setIntlOriginForeign(''); setIntlDestICD(''); setIntlDestPort(''); setIntlDestAddr(''); setIntlDestForeign(''); };
+  const resetGoodsLoc  = () => { setGoodsOriginTerm(''); setGoodsOriginAddr(''); setGoodsDestTerm(''); setGoodsDestAddr(''); };
+  const resetParcelLoc = () => { setParcelOriginTerm(''); setParcelOriginAddr(''); setParcelDestTerm(''); setParcelDestAddr(''); };
+
   const handleSubmit = async (): Promise<TrainContainerFormData | TrainGoodsFormData | TrainParcelFormData | null> => {
     const e: Record<string,string> = {};
     let fd: TrainContainerFormData | TrainGoodsFormData | TrainParcelFormData | null = null;
@@ -336,7 +343,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
               <label key={opt.value} className={radioBtn(domServiceType === opt.value)}>
                 <input type="radio" name="domST" value={opt.value}
                   checked={domServiceType === opt.value}
-                  onChange={() => { setDomServiceType(opt.value); setErrors(p => ({ ...p, serviceType: undefined as any })); }}
+                  onChange={() => { setDomServiceType(opt.value); resetDomLoc(); setErrors(p => ({ ...p, serviceType: undefined as any })); }}
                   className="h-3.5 w-3.5 text-blue-600" />
                 {opt.label}
               </label>
@@ -458,7 +465,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           <div className="flex gap-2">
             {([['export','Export'],['import','Import']] as const).map(([val, label]) => (
               <button key={val} type="button"
-                onClick={() => { setMovement(val); setErrors({}); }}
+                onClick={() => { setMovement(val); resetIntlLoc(); setErrors({}); }}
                 className={toggleBtn(movement === val)}>
                 {label}
               </button>
@@ -474,6 +481,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
                   checked={intlServiceType === opt.value}
                   onChange={() => {
                     setIntlServiceType(opt.value);
+                    resetIntlLoc();
                     setErrors(p => ({ ...p, intlOrigin: undefined as any, intlDest: undefined as any }));
                   }}
                   className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
@@ -558,7 +566,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           {DOMESTIC_SERVICE_TYPES.map(opt => (
             <label key={opt.value} className={radioBtn(goodsServiceType === opt.value)}>
               <input type="radio" name="gdST" value={opt.value} checked={goodsServiceType === opt.value}
-                onChange={() => setGoodsServiceType(opt.value)} className="h-3.5 w-3.5 text-blue-600" />
+                onChange={() => { setGoodsServiceType(opt.value); resetGoodsLoc(); }} className="h-3.5 w-3.5 text-blue-600" />
               {opt.label}
             </label>
           ))}
@@ -637,7 +645,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           {DOMESTIC_SERVICE_TYPES.map(opt => (
             <label key={opt.value} className={radioBtn(parcelServiceType === opt.value)}>
               <input type="radio" name="pcST" value={opt.value} checked={parcelServiceType === opt.value}
-                onChange={() => setParcelServiceType(opt.value)} className="h-3.5 w-3.5 text-blue-600" />
+                onChange={() => { setParcelServiceType(opt.value); resetParcelLoc(); }} className="h-3.5 w-3.5 text-blue-600" />
               {opt.label}
             </label>
           ))}
@@ -723,7 +731,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div>
           <div className="flex gap-2 mb-2">
             {([['domestic','Domestic'],['international','International']] as const).map(([mode,label]) => (
-              <button key={mode} type="button" onClick={() => { setContainerMode(mode); setErrors({}); }}
+              <button key={mode} type="button" onClick={() => { setContainerMode(mode); resetDomLoc(); resetIntlLoc(); setErrors({}); }}
                 className={toggleBtn(containerMode === mode)}>
                 {label}
               </button>
