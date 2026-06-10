@@ -461,21 +461,23 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     return (
       <div className="space-y-3 mt-2">
         <div className="mb-1">
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             {([['export','Export'],['import','Import']] as const).map(([val, label]) => (
-              <button key={val} type="button"
-                onClick={() => { setMovement(val); resetIntlLoc(); setErrors({}); }}
-                className={toggleBtn(movement === val)}>
+              <label key={val} className={radioBtn(movement === val)}>
+                <input type="radio" name="intlMovement" value={val}
+                  checked={movement === val}
+                  onChange={() => { setMovement(val); resetIntlLoc(); setErrors({}); }}
+                  className="h-3.5 w-3.5 text-blue-600" />
                 {label}
-              </button>
+              </label>
             ))}
           </div>
         </div>
         <div className="mb-1">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Service Type</p>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {serviceOptions.map(opt => (
-              <label key={opt.value} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+              <label key={opt.value} className={radioBtn(intlServiceType === opt.value)}>
                 <input type="radio" name="intlST" value={opt.value}
                   checked={intlServiceType === opt.value}
                   onChange={() => {
@@ -483,7 +485,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
                     resetIntlLoc();
                     setErrors(p => ({ ...p, intlOrigin: undefined as any, intlDest: undefined as any }));
                   }}
-                  className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+                  className="h-3.5 w-3.5 text-blue-600" />
                 {opt.label}
               </label>
             ))}
