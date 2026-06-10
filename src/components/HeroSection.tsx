@@ -52,7 +52,7 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
       }
     `}
   >
-    <Icon className={`text-2xl mb-1 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
+    <Icon className={`text-3xl mb-1 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
     <span className="text-xs font-medium text-center">{label}</span>
   </div>
 );
