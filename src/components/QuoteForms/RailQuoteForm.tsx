@@ -20,16 +20,16 @@ type MovementType    = 'export' | 'import';
 
 const EXPORT_SERVICE_TYPES: { value: RailServiceType; label: string }[] = [
   { value: 'terminalToPort',     label: 'Terminal to Port'     },
-  { value: 'terminalToTerminal', label: 'Terminal to Terminal' },
   { value: 'doorToPort',         label: 'Door to Port'         },
   { value: 'doorToTerminal',     label: 'Door to Terminal'     },
+  { value: 'terminalToTerminal', label: 'Terminal to Terminal' },
 ];
 
 const IMPORT_SERVICE_TYPES: { value: RailServiceType; label: string }[] = [
   { value: 'portToTerminal',     label: 'Port to Terminal'     },
-  { value: 'terminalToTerminal', label: 'Terminal to Terminal' },
   { value: 'portToDoor',         label: 'Port to Door'         },
   { value: 'terminalToDoor',     label: 'Terminal to Door'     },
+  { value: 'terminalToTerminal', label: 'Terminal to Terminal' },
 ];
 
 const DOMESTIC_SERVICE_TYPES: { value: RailServiceType; label: string }[] = [
@@ -463,7 +463,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="mb-1">
           <div className="flex flex-wrap gap-2">
             {([['export','Export'],['import','Import']] as const).map(([val, label]) => (
-              <label key={val} className={`${radioBtn(movement === val)} w-36 justify-center`}>
+              <label key={val} className={`${radioBtn(movement === val)} w-36`}>
                 <input type="radio" name="intlMovement" value={val}
                   checked={movement === val}
                   onChange={() => { setMovement(val); resetIntlLoc(); setErrors({}); }}
