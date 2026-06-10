@@ -11,42 +11,12 @@ import type {
   TrainParcelFormData, FreightTrainResult,
 } from '../types/QuoteFormHandle';
 
+import { computeRailCharges } from '../utils/railCharges';
+
 const VALID_PROMOS: Record<string, number> = {
   SHIP10:   0.10,
   RAIL5:    0.05,
   DEMO2026: 0.15,
-};
-
-const DOMESTIC_THC = 3000;
-
-const INTL_THC: Record<string, number> = {
-  '20ft Standard':         6000,
-  '20ft High Cube':        6000,
-  '20ft High Cube Reefer': 6000,
-  '40ft Standard':        10800,
-  '40ft High Cube':       10800,
-  '40ft High Cube Reefer':10800,
-  '40ft Open Top High':   10800,
-};
-
-const INTL_OTHER: Record<string, number> = {
-  '20ft Standard':         3500,
-  '20ft High Cube':        3500,
-  '20ft High Cube Reefer': 3500,
-  '40ft Standard':         7000,
-  '40ft High Cube':        7000,
-  '40ft High Cube Reefer': 7000,
-  '40ft Open Top High':    7000,
-};
-
-const FIRST_LAST_MILE: Record<string, number> = {
-  '20ft Standard':         10500,
-  '20ft High Cube':        10500,
-  '20ft High Cube Reefer': 10500,
-  '40ft Standard':         12000,
-  '40ft High Cube':        12000,
-  '40ft High Cube Reefer': 12000,
-  '40ft Open Top High':    12000,
 };
 
 const RailServiceDetailsPage: React.FC = () => {
@@ -139,21 +109,18 @@ const RailServiceDetailsPage: React.FC = () => {
 
   const baseRailFreight = selectedTrainResult!.price;
 
-  const thcPerSide  = isDomestic ? DOMESTIC_THC : (INTL_THC[containerType] || 8700);
-  const thcOrigin   = isOriginPort ? 0 : thcPerSide * numContainers;
-  const thcDest     = isDestPort   ? 0 : thcPerSide * numContainers;
-  const otherCharges = isDomestic ? 0 : (INTL_OTHER[containerType] || 1000) * numContainers;
-  const firstMile   = isDoorOrigin ? (FIRST_LAST_MILE[containerType] || 10500) * numContainers : 0;
-  const lastMile    = isDoorDest   ? (FIRST_LAST_MILE[containerType] || 12000) * numContainers : 0;
-  const platformFee = isDomestic ? 1000 : 1500;
+  const { thcPerSide, thcOrigin, thcDest, otherCharges, firstMile, lastMile, platformFee, subtotal } =
+    computeRailCharges({
+      baseRailFreight, isDomestic, containerType, numContainers,
+      doorOrigin: isDoorOrigin, doorDest: isDoorDest,
+      originPort: isOriginPort, destPort: isDestPort,
+    });
 
   const gstRail     = Math.round(baseRailFreight * 0.05);
   const gstTHC      = Math.round((thcOrigin + thcDest + otherCharges) * 0.18);
   const gstFLML     = Math.round((firstMile + lastMile) * 0.05);
   const gstPlatform = Math.round(platformFee * 0.18);
   const totalGST    = gstRail + gstTHC + gstFLML + gstPlatform + gstCustoms;
-
-  const subtotal        = baseRailFreight + thcOrigin + thcDest + otherCharges + firstMile + lastMile + platformFee;
   const insuranceAmt    = insuranceRequired ? Math.round(baseRailFreight * 0.01) : 0;
   const subtotalWithGST = subtotal + totalGST + insuranceAmt;
   const discountAmt     = promoCode && VALID_PROMOS[promoCode]

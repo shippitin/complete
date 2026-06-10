@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { FaTrain, FaShip, FaMapMarkerAlt, FaRupeeSign, FaArrowRight, FaArrowLeft, FaFilter, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, RailServiceType, TrainContainerFormData } from '../types/QuoteFormHandle';
 import API_BASE_URL from '../config/api';
+import { computeRailCharges, doorPortFlags } from '../utils/railCharges';
 
 type TrainTypeFilter   = 'Express Cargo' | 'Standard Cargo' | 'Premium Cargo' | 'Economy Cargo';
 type OperatorFilter    = 'CONCOR' | 'BCSL' | 'Adani Logistics' | 'Maersk' | 'MSC' | 'CMA CGM' | 'Hapag-Lloyd' | 'Evergreen' | 'Cosco' | 'ZIM';
@@ -262,6 +263,18 @@ const TrainResultsPage: React.FC = () => {
   const movement    = formData ? getMovement(formData) : null;
   const serviceType = formData ? (formData as any).serviceType as RailServiceType : 'terminalToTerminal';
 
+  // All-in indicative pricing (excl. GST) — uses the same CONCOR charge model as
+  // checkout, so Door-to-Door reflects pickup/delivery instead of base freight only.
+  const isContainerBooking = formData?.bookingType === 'Train Container Booking';
+  const cType = (formData as TrainContainerFormData | null)?.containerType || '20ft Standard';
+  const nCont = (formData as TrainContainerFormData | null)?.numberOfContainers || 1;
+  const chargeFlags = doorPortFlags(isContainerBooking, serviceType);
+  const allInPrice = (base: number) =>
+    computeRailCharges({
+      baseRailFreight: base, isDomestic: domestic,
+      containerType: cType, numContainers: nCont, ...chargeFlags,
+    }).subtotal;
+
   const domesticOperators = ['CONCOR', 'Adani Logistics'];
   const intlOperators     = ['CONCOR', 'BCSL', 'Maersk', 'MSC', 'CMA CGM', 'Hapag-Lloyd', 'Evergreen', 'Cosco', 'ZIM'];
   const operatorOptions   = domestic ? domesticOperators : intlOperators;
@@ -474,9 +487,9 @@ const TrainResultsPage: React.FC = () => {
                         <div className="text-right">
                           <p className="text-2xl font-black text-gray-900 flex items-center gap-1">
                             <FaRupeeSign className="text-lg text-blue-500" />
-                            {Math.round(result.price).toLocaleString('en-IN')}
+                            {Math.round(allInPrice(result.price)).toLocaleString('en-IN')}
                           </p>
-                          <p className="text-xs text-gray-400">Base freight · excl. GST & charges</p>
+                          <p className="text-xs text-gray-400">Indicative total · excl. GST</p>
                         </div>
                         <button onClick={() => handleViewDetails(result)}
                           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap">
