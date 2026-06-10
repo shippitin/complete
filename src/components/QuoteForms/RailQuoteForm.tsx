@@ -61,7 +61,7 @@ interface RailQuoteFormProps {
 }
 
 const toggleBtn = (active: boolean) =>
-  `px-4 py-2 rounded-lg text-sm font-medium outline-none transition-all border ${
+  `w-36 text-center px-4 py-2 rounded-lg text-sm font-medium outline-none transition-all border ${
     active
       ? 'bg-blue-100 text-blue-800 border-blue-200'
       : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50'
