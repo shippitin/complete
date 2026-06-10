@@ -44,7 +44,7 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
   <div
     onClick={onClick}
     className={`
-      relative flex flex-col items-center justify-end px-4 pt-1 pb-2.5 cursor-pointer select-none
+      flex flex-col items-center justify-end px-4 pt-1 pb-2.5 cursor-pointer select-none
       transition-all duration-200 whitespace-nowrap flex-shrink-0 border-b-2
       ${isActive
         ? 'border-blue-600 text-blue-600 font-semibold'
@@ -54,17 +54,6 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
   >
     <Icon className={`text-3xl mb-1.5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
     <span className="text-xs text-center">{label}</span>
-    {isActive && (
-      <span
-        aria-hidden
-        className="absolute left-1/2 -translate-x-1/2 -bottom-[6px] h-0 w-0"
-        style={{
-          borderLeft: '7px solid transparent',
-          borderRight: '7px solid transparent',
-          borderTop: '7px solid #2563eb',
-        }}
-      />
-    )}
   </div>
 );
 

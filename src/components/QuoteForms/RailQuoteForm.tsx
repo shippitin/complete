@@ -156,7 +156,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   };
 
   const inp = (err: boolean) =>
-    `block w-full px-3 py-2 text-sm border-0 border-b focus:ring-0 focus:border-blue-500 bg-transparent ${
+    `block w-full px-3 py-2.5 text-sm rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition ${
       err ? 'border-orange-400' : 'border-gray-300'
     }`;
 
@@ -715,7 +715,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
 
   return (
     <div className={embedded ? '' : 'p-4 bg-white shadow-md rounded-xl border border-gray-200'}>
-      <div className="flex justify-center gap-2 mb-4 p-1 bg-gray-50 rounded-xl border border-gray-200 w-fit mx-auto">
+      <div className="flex justify-center gap-2 mb-4 p-1 bg-gray-50 rounded-xl border border-gray-200 w-fit">
         {([['container','Container Train'],['parcel','Parcel Train'],['goods','Goods Train']] as const).map(([tab,label]) => (
           <button key={tab} type="button"
             onClick={() => { setActiveTab(tab); setErrors({}); }}
