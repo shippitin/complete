@@ -44,16 +44,16 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
   <div
     onClick={onClick}
     className={`
-      flex flex-col items-center justify-center px-5 py-3 cursor-pointer rounded-xl select-none
-      transition-all duration-300 ease-in-out whitespace-nowrap flex-shrink-0
+      flex flex-col items-center justify-end px-4 pt-1 pb-2.5 cursor-pointer select-none
+      transition-all duration-200 whitespace-nowrap flex-shrink-0 border-b-2
       ${isActive
-        ? 'bg-blue-100 text-black font-bold shadow-md transform scale-105'
-        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-800'
+        ? 'border-blue-600 text-blue-600 font-semibold'
+        : 'border-transparent text-gray-600 hover:text-blue-600'
       }
     `}
   >
-    <Icon className={`text-3xl mb-1 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
-    <span className="text-xs font-medium text-center">{label}</span>
+    <Icon className={`text-3xl mb-1.5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+    <span className="text-xs text-center">{label}</span>
   </div>
 );
 
@@ -138,7 +138,7 @@ const HeroSection: React.FC = () => {
 
         {/* White tab strip */}
         <div
-          className="bg-white px-4 py-3 flex flex-wrap justify-center sm:justify-between items-center gap-1"
+          className="bg-white px-4 pt-3 flex flex-wrap justify-center sm:justify-between items-end gap-1"
           style={{ borderRadius: '16px 16px 0 0', borderBottom: '1px solid #e0e7ff' }}
         >
           {tabs.map(tab => (
