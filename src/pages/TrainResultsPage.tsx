@@ -104,7 +104,7 @@ const TrainResultsPage: React.FC = () => {
 
     const basePerContainer = is40ft ? getSNF40ft(weight) : getSNF20ft(weight);
     const baseTotal        = basePerContainer * n;
-    // Faster service = premium, slower = economy. Standard tier stays at the CONCOR base rate.
+    // All services use the exact CONCOR base rate — they differ by transit time and features, not price.
     const serviceFeature   = formatServiceType(st);
 
     const domesticOperators = ['CONCOR', 'Adani Logistics'];
@@ -118,7 +118,7 @@ const TrainResultsPage: React.FC = () => {
         departureTime: 'As per schedule', arrivalTime: 'Estimated',
         transitDuration: domestic ? '2 Days' : '4 Days',
         availableCapacity: '150 Containers',
-        price: Math.round(baseTotal * 1.25),
+        price: baseTotal,
         features: ['GPS Tracking', 'Priority Handling', 'Real-time Updates', serviceFeature],
         cargoType: cd.containerType || 'General', isHazardousCompatible: true,
         sourceDocument: 'CONCOR-SNF-TARIFF-2022', isDomestic: domestic,
@@ -129,7 +129,7 @@ const TrainResultsPage: React.FC = () => {
         departureTime: 'As per schedule', arrivalTime: 'Estimated',
         transitDuration: domestic ? '3 Days' : '5 Days',
         availableCapacity: '200 Containers',
-        price: Math.round(baseTotal * 1.12),
+        price: baseTotal,
         features: ['GPS Tracking', 'Real-time Updates', serviceFeature],
         cargoType: cd.containerType || 'General', isHazardousCompatible: true,
         sourceDocument: 'CONCOR-SNF-TARIFF-2022', isDomestic: domestic,
@@ -151,7 +151,7 @@ const TrainResultsPage: React.FC = () => {
         departureTime: 'As per schedule', arrivalTime: 'Estimated',
         transitDuration: domestic ? '5 Days' : '7 Days',
         availableCapacity: '400 Containers',
-        price: Math.round(baseTotal * 0.88),
+        price: baseTotal,
         features: ['Economy Service', serviceFeature],
         cargoType: cd.containerType || 'General', isHazardousCompatible: false,
         sourceDocument: 'CONCOR-SNF-TARIFF-2022', isDomestic: domestic,
