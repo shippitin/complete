@@ -1,7 +1,7 @@
 // src/pages/TrainResultsPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaTrain, FaShip, FaMapMarkerAlt, FaRupeeSign, FaArrowRight, FaArrowLeft, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaTrain, FaShip, FaMapMarkerAlt, FaRupeeSign, FaArrowRight, FaArrowLeft } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, RailServiceType, TrainContainerFormData } from '../types/QuoteFormHandle';
 import API_BASE_URL from '../config/api';
 import { computeRailCharges, doorPortFlags } from '../utils/railCharges';
@@ -425,10 +425,6 @@ const TrainResultsPage: React.FC = () => {
                       {result.features.map((f, i) => (
                         <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">{f}</span>
                       ))}
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${result.isHazardousCompatible ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-400'}`}>
-                        {result.isHazardousCompatible ? <FaCheckCircle className="text-xs" /> : <FaTimesCircle className="text-xs" />}
-                        Hazardous {result.isHazardousCompatible ? 'OK' : 'No'}
-                      </span>
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-50">
