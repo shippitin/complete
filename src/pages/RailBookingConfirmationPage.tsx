@@ -161,15 +161,18 @@ const RailBookingConfirmationPage: React.FC = () => {
     const fm      = isDoorO ? (FIRST_LAST_MILE_FIRST[ct]||10500)*n : 0;
     const lm      = isDoorD ? (FIRST_LAST_MILE_LAST[ct]||12000)*n : 0;
     const pf      = isDomestic ? 1000 : 1500;
-    const gRail   = Math.round(base*0.05);
-    const gTHC    = Math.round((thcO+thcD+other)*0.18);
-    const gFLML   = Math.round((fm+lm)*0.05);
-    const gPlat   = Math.round(pf*0.18);
-    const totalGST = gRail+gTHC+gFLML+gPlat;
-    const subtotal = base+thcO+thcD+other+fm+lm+pf;
     const insAmt   = insuranceRequired ? 1000 : 0;
+    // Claiming GST input → 18% on rail + first/last mile too; else concessional 5%.
+    const rRate    = claimGstInput ? 0.18 : 0.05;
+    const gRail   = Math.round(base*rRate);
+    const gTHC    = Math.round((thcO+thcD+other)*0.18);
+    const gFLML   = Math.round((fm+lm)*rRate);
+    const gPlat   = Math.round(pf*0.18);
+    const gIns    = Math.round(insAmt*0.18);
+    const totalGST = gRail+gTHC+gFLML+gPlat+gIns;
+    const subtotal = base+thcO+thcD+other+fm+lm+pf;
     const grand    = subtotal+totalGST+insAmt;
-    return { base,thcO,thcD,other,fm,lm,pf,gRail,gTHC,gFLML,gPlat,totalGST,subtotal,insAmt,grand,isDomestic,n,thcSide,isDoorO,isDoorD,isDestPort,isOrigPort };
+    return { base,thcO,thcD,other,fm,lm,pf,gRail,gTHC,gFLML,gPlat,gIns,totalGST,subtotal,insAmt,grand,isDomestic,n,thcSide,isDoorO,isDoorD,isDestPort,isOrigPort };
   };
   const bd = getBreakdown();
 
@@ -691,10 +694,11 @@ const RailBookingConfirmationPage: React.FC = () => {
               )}
               {bd && (
                 <div className="bg-amber-50 rounded-xl p-3 space-y-1.5 text-xs">
-                  <div className="flex justify-between text-gray-600"><span>Rail Freight GST @5%</span><span>{fmt(bd.gRail)}</span></div>
+                  <div className="flex justify-between text-gray-600"><span>Rail Freight GST @{claimGstInput ? '18' : '5'}%</span><span>{fmt(bd.gRail)}</span></div>
                   <div className="flex justify-between text-gray-600"><span>THC GST @18%</span><span>{fmt(bd.gTHC)}</span></div>
-                  {(bd.isDoorO||bd.isDoorD) && <div className="flex justify-between text-gray-600"><span>First/Last Mile GST @5%</span><span>{fmt(bd.gFLML)}</span></div>}
+                  {(bd.isDoorO||bd.isDoorD) && <div className="flex justify-between text-gray-600"><span>First/Last Mile GST @{claimGstInput ? '18' : '5'}%</span><span>{fmt(bd.gFLML)}</span></div>}
                   <div className="flex justify-between text-gray-600"><span>Platform Fee GST @18%</span><span>{fmt(bd.gPlat)}</span></div>
+                  {bd.insAmt>0 && <div className="flex justify-between text-gray-600"><span>Insurance GST @18%</span><span>{fmt(bd.gIns)}</span></div>}
                   <div className="flex justify-between font-bold text-gray-700 pt-1 border-t border-amber-200"><span>Total GST</span><span>{fmt(bd.totalGST)}</span></div>
                 </div>
               )}

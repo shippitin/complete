@@ -32,7 +32,7 @@ const RailServiceDetailsPage: React.FC = () => {
   const [promoCode, setPromoCode]                     = useState('');
   const [promoError, setPromoError]                   = useState('');
   const [termsConfirmed, setTermsConfirmed]           = useState(false);
-  const [gstInput, setGstInput]                       = useState(false);   // "I have a GST number" — makes GSTIN required on the booking page
+  const [gstInput, setGstInput]                       = useState(true);    // "Claim GST Input" — default ON; drives GST rates + requires GSTIN on booking page
 
   useEffect(() => {
     const state = location.state as {
@@ -119,12 +119,17 @@ const RailServiceDetailsPage: React.FC = () => {
       originPort: isOriginPort, destPort: isDestPort,
     });
 
-  const gstRail     = Math.round(baseRailFreight * 0.05);
-  const gstTHC      = Math.round((thcOrigin + thcDest + otherCharges) * 0.18);
-  const gstFLML     = Math.round((firstMile + lastMile) * 0.05);
-  const gstPlatform = Math.round(platformFee * 0.18);
-  const totalGST    = gstRail + gstTHC + gstFLML + gstPlatform + gstCustoms;
   const insuranceAmt    = addInsurance ? 1000 : 0;
+  // Claiming GST input → 18% across every line. Otherwise concessional rates
+  // (rail/first-last mile @5%), but insurance is always 18%.
+  const railRate    = gstInput ? 0.18 : 0.05;
+  const flmlRate    = gstInput ? 0.18 : 0.05;
+  const gstRail     = Math.round(baseRailFreight * railRate);
+  const gstTHC      = Math.round((thcOrigin + thcDest + otherCharges) * 0.18);
+  const gstFLML     = Math.round((firstMile + lastMile) * flmlRate);
+  const gstPlatform = Math.round(platformFee * 0.18);
+  const gstInsurance = Math.round(insuranceAmt * 0.18);
+  const totalGST    = gstRail + gstTHC + gstFLML + gstPlatform + gstCustoms + gstInsurance;
   const subtotalWithGST = subtotal + totalGST + insuranceAmt;
   const discountAmt     = promoCode && VALID_PROMOS[promoCode]
     ? Math.round(subtotalWithGST * VALID_PROMOS[promoCode]) : 0;
@@ -418,19 +423,24 @@ const RailServiceDetailsPage: React.FC = () => {
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2.5">GST Breakup</p>
                 <div className="space-y-2 bg-amber-50 rounded-xl p-3">
                   <div className="flex justify-between text-xs text-gray-600">
-                    <span>Rail Freight GST @5%</span><span className="font-medium">{fmt(gstRail)}</span>
+                    <span>Rail Freight GST @{gstInput ? '18' : '5'}%</span><span className="font-medium">{fmt(gstRail)}</span>
                   </div>
                   <div className="flex justify-between text-xs text-gray-600">
                     <span>THC {!isDomestic && '+ Terminal'} GST @18%</span><span className="font-medium">{fmt(gstTHC)}</span>
                   </div>
                   {(isDoorOrigin || isDoorDest) && (
                     <div className="flex justify-between text-xs text-gray-600">
-                      <span>First/Last Mile GST @5%</span><span className="font-medium">{fmt(gstFLML)}</span>
+                      <span>First/Last Mile GST @{gstInput ? '18' : '5'}%</span><span className="font-medium">{fmt(gstFLML)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-xs text-gray-600">
                     <span>Platform Fee GST @18%</span><span className="font-medium">{fmt(gstPlatform)}</span>
                   </div>
+                  {addInsurance && (
+                    <div className="flex justify-between text-xs text-gray-600">
+                      <span>Insurance GST @18%</span><span className="font-medium">{fmt(gstInsurance)}</span>
+                    </div>
+                  )}
                   {addCustoms && (
                     <div className="flex justify-between text-xs text-gray-600">
                       <span>Customs Clearance GST @18%</span>
