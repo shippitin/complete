@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  FaClipboardList, FaShieldAlt,
-  FaTrain, FaCube, FaBoxOpen, FaArrowLeft,
+  FaClipboardList, FaShieldAlt, FaArrowLeft,
   FaArrowRight, FaChevronDown, FaChevronUp, FaTag,
 } from 'react-icons/fa';
 import type {
@@ -33,6 +32,8 @@ const RailServiceDetailsPage: React.FC = () => {
   const [promoCode, setPromoCode]                     = useState('');
   const [promoError, setPromoError]                   = useState('');
   const [termsConfirmed, setTermsConfirmed]           = useState(false);
+  const [gstInput, setGstInput]                       = useState(false);   // claim GST input credit?
+  const [gstNumber, setGstNumber]                     = useState('');
 
   useEffect(() => {
     const state = location.state as {
@@ -129,19 +130,6 @@ const RailServiceDetailsPage: React.FC = () => {
 
   const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
-  let title = 'Service Details';
-  if (formData) {
-    if (formData.bookingType === 'Train Container Booking')
-      title = isDomestic ? 'Domestic Container Service Details' : 'International Container Service Details';
-    else if (formData.bookingType === 'Train Goods Booking')
-      title = 'Goods Train Service Details';
-    else if (formData.bookingType === 'Train Parcel Booking')
-      title = 'Parcel Train Service Details';
-  }
-
-  const MainIcon = formData!.bookingType === 'Train Goods Booking'
-    ? FaTrain : formData!.bookingType === 'Train Container Booking' ? FaCube : FaBoxOpen;
-
   return (
     <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-5">
@@ -149,19 +137,12 @@ const RailServiceDetailsPage: React.FC = () => {
         {/* ── LEFT ── */}
         <div className="flex-grow space-y-4">
 
-          {/* Header */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          {/* Header — back only (title removed) */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
             <button onClick={() => navigate('/train-results', { state: { formData: formData! } })}
-              className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium mb-5 transition">
+              className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium transition">
               <FaArrowLeft className="mr-2" /> Back to Search Results
             </button>
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-blue-50"><MainIcon className="text-2xl text-blue-500" /></div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-                <p className="text-gray-500 text-sm mt-0.5">Review your selected service and fare details</p>
-              </div>
-            </div>
           </div>
 
           {/* Quote Details */}
@@ -223,26 +204,60 @@ const RailServiceDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Insurance */}
+          {/* GST */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-center gap-2 mb-4">
               <FaShieldAlt className="text-blue-500 text-lg" />
-              <h2 className="text-lg font-bold text-gray-800">Additional Services</h2>
+              <h2 className="text-lg font-bold text-gray-800">GST</h2>
             </div>
-            <label className="flex items-start gap-4 cursor-pointer group">
-              <div className="mt-0.5">
-                <input type="checkbox" checked={insuranceRequired}
-                  onChange={e => setInsuranceRequired(e.target.checked)}
-                  className="h-5 w-5 text-blue-500 rounded border-gray-300 cursor-pointer" />
+            <div className="flex flex-wrap gap-2">
+              {[{ v: false, l: 'Without GST input' }, { v: true, l: 'With GST input' }].map(o => (
+                <label key={String(o.v)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium border transition ${gstInput === o.v ? 'bg-blue-50 text-blue-700 border-blue-300' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+                  <input type="radio" name="gstInput" checked={gstInput === o.v}
+                    onChange={() => setGstInput(o.v)} className="h-4 w-4 text-blue-600" />
+                  {o.l}
+                </label>
+              ))}
+            </div>
+            {gstInput && (
+              <div className="mt-3">
+                <label className="block text-xs font-medium text-gray-500 mb-1">GST Number</label>
+                <input type="text" value={gstNumber}
+                  onChange={e => setGstNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g., 33ABCDE1234F1Z5" maxLength={15}
+                  className="w-full sm:w-72 text-sm border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 uppercase" />
               </div>
-              <div>
-                <p className="font-semibold text-gray-800 group-hover:text-blue-700 transition">Cargo Insurance (Optional)</p>
-                <p className="text-sm text-gray-500 mt-0.5">Protect your cargo against loss or damage. Charged at 1% of base rail freight.</p>
-                {insuranceRequired && (
-                  <p className="text-sm text-green-600 font-medium mt-1">✓ {fmt(insuranceAmt)} will be added</p>
-                )}
+            )}
+          </div>
+
+          {/* Promo / Discount Code */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <FaTag className="text-blue-500 text-lg" />
+              <h2 className="text-lg font-bold text-gray-800">Promo / Discount Code</h2>
+            </div>
+            {promoCode ? (
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 sm:max-w-md">
+                <div>
+                  <p className="text-sm font-bold text-green-700">{promoCode} applied!</p>
+                  <p className="text-xs text-green-600">You save {fmt(discountAmt)}</p>
+                </div>
+                <button onClick={removePromo} className="text-xs text-red-500 hover:text-red-700 font-medium">Remove</button>
               </div>
-            </label>
+            ) : (
+              <div className="flex gap-2 sm:max-w-md">
+                <input type="text" value={promoInput}
+                  onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }}
+                  placeholder="Enter code"
+                  className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 uppercase" />
+                <button onClick={applyPromo}
+                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold rounded-xl transition">
+                  Apply
+                </button>
+              </div>
+            )}
+            {promoError && <p className="text-xs text-red-500 mt-1.5">{promoError}</p>}
           </div>
 
           {/* Terms & Conditions */}
@@ -262,6 +277,30 @@ const RailServiceDetailsPage: React.FC = () => {
               </span>
             </label>
           </div>
+
+          {/* Proceed to Book */}
+          <button
+            onClick={() => {
+              if (!termsConfirmed) return;
+              navigate('/rail-booking-confirmation', {
+                state: {
+                  formData: formData!,
+                  selectedTrainResult: selectedTrainResult!,
+                  initialInsuranceRequired: insuranceRequired,
+                  gstInput,
+                  gstNumber,
+                },
+              });
+            }}
+            disabled={!termsConfirmed}
+            className={`w-full py-3.5 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
+              termsConfirmed
+                ? 'bg-blue-700 hover:bg-blue-800 text-white cursor-pointer'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            Proceed to Book <FaArrowRight />
+          </button>
 
         </div>
         {/* END LEFT */}
@@ -425,34 +464,6 @@ const RailServiceDetailsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Promo */}
-              <div className="border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <FaTag className="text-blue-500" /> Promo / Discount Code
-                </p>
-                {promoCode ? (
-                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
-                    <div>
-                      <p className="text-sm font-bold text-green-700">{promoCode} applied!</p>
-                      <p className="text-xs text-green-600">You save {fmt(discountAmt)}</p>
-                    </div>
-                    <button onClick={removePromo} className="text-xs text-red-500 hover:text-red-700 font-medium">Remove</button>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
-                    <input type="text" value={promoInput}
-                      onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }}
-                      placeholder="Enter code"
-                      className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 uppercase" />
-                    <button onClick={applyPromo}
-                      className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold rounded-xl transition">
-                      Apply
-                    </button>
-                  </div>
-                )}
-                {promoError && <p className="text-xs text-red-500 mt-1.5">{promoError}</p>}
-              </div>
-
               {discountAmt > 0 && (
                 <div className="flex justify-between items-center text-green-600">
                   <span className="text-sm font-medium">Discount ({(VALID_PROMOS[promoCode] * 100).toFixed(0)}%)</span>
@@ -460,7 +471,7 @@ const RailServiceDetailsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Grand Total */}
+              {/* Grand Total — right side ends here */}
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center">
                   <span className="text-base font-bold text-gray-800">Grand Total</span>
@@ -468,47 +479,6 @@ const RailServiceDetailsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-gray-400 mt-1">Inclusive of all taxes and charges</p>
               </div>
-
-              <p className="text-xs text-gray-400 leading-relaxed">
-                *Prices are indicative and subject to change based on final booking details.
-              </p>
-
-              {/* Terms & Conditions */}
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={termsConfirmed}
-                    onChange={e => setTermsConfirmed(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-blue-600 rounded flex-shrink-0"
-                  />
-                  <span className="text-xs text-gray-700 leading-relaxed">
-                    I confirm this is a commercial shipment and all details are correct. I accept CONCOR tariff terms and Shippitin's booking conditions.
-                  </span>
-                </label>
-              </div>
-
-              {/* Proceed to Book */}
-              <button
-                onClick={() => {
-                  if (!termsConfirmed) return;
-                  navigate('/rail-booking-confirmation', {
-                    state: {
-                      formData: formData!,
-                      selectedTrainResult: selectedTrainResult!,
-                      initialInsuranceRequired: insuranceRequired,
-                    },
-                  });
-                }}
-                disabled={!termsConfirmed}
-                className={`w-full py-3 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
-                  termsConfirmed
-                    ? 'bg-blue-700 hover:bg-blue-800 text-white cursor-pointer'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                Proceed to Book <FaArrowRight />
-              </button>
 
             </div>
           </div>
