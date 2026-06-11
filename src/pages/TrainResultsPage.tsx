@@ -305,7 +305,7 @@ const TrainResultsPage: React.FC = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="text-center p-10 bg-white rounded-2xl shadow-sm border border-gray-100">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mx-auto mb-4"></div>
-        <p className="text-gray-600 font-semibold">Fetching CONCOR rates...</p>
+        <p className="text-gray-600 font-semibold">Fetching rates...</p>
       </div>
     </div>
   );
