@@ -23,6 +23,7 @@ interface LocationAutocompleteProps {
   className?: string;
   id?: string;
   global?: boolean;
+  unstyled?: boolean;   // borderless variant for use inside a bordered cell (MMT box)
 }
 
 const getTypeIcon = (type: string) => {
@@ -67,6 +68,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   className = '',
   id,
   global = false,
+  unstyled = false,
 }) => {
   const [inputValue, setInputValue]   = useState(value);
   const [suggestions, setSuggestions] = useState<Location[]>([]);
@@ -174,13 +176,16 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   return (
     <div className={`relative ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={id}>
+        <label
+          className={`block ${unstyled ? 'text-xs font-medium text-gray-500' : 'text-sm font-medium text-gray-700'} mb-1`}
+          htmlFor={id}
+        >
           {label}{required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
 
       <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+        <div className={`absolute ${unstyled ? 'left-0' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none`}>
           {loading
             ? <FaSpinner className="animate-spin text-blue-400 text-sm" />
             : <FaMapMarkerAlt className="text-sm" />}
@@ -195,7 +200,11 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
           placeholder={placeholder}
           required={required}
           autoComplete="off"
-          className="w-full pl-9 pr-8 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition bg-white"
+          className={
+            unstyled
+              ? 'w-full pl-6 pr-7 py-1 text-sm bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none'
+              : 'w-full pl-9 pr-8 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition bg-white'
+          }
         />
         {inputValue && (
           <button
