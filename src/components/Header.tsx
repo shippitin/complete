@@ -54,15 +54,14 @@ const Header: React.FC = () => {
 
   return (
     <header className="w-full bg-gradient-to-br from-blue-50 via-white to-purple-50 backdrop-blur-md shadow-md py-2 md:py-3 sticky top-0 z-50 border-b border-blue-100">
-      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
+      <div className="max-w-6xl mx-auto px-4 flex justify-between items-center h-16">
         {/* Logo */}
         <Link to="/" className="flex items-center">
           <img src="/images/shippitin logo-1.svg" alt="Shippitin Logo" className="h-9 w-auto object-contain" />
         </Link>
 
-        {/* Navigation */}
-        <div className="flex items-center gap-4 text-sm text-gray-700">
-          <nav className="hidden lg:flex items-center gap-3 text-sm font-medium">
+        {/* Navigation (center group) */}
+        <nav className="hidden lg:flex items-center gap-2 text-sm font-medium">
             <NavLink to="/aboutus" className={() => `flex items-center gap-1.5 px-3 py-2 rounded-full transition-colors duration-200 ${isActiveLink('/aboutus') ? 'bg-blue-100 text-black font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`}>
               <FaInfoCircle /> About Us
             </NavLink>
@@ -78,8 +77,10 @@ const Header: React.FC = () => {
             <NavLink to="/support" className={() => `flex items-center gap-1.5 px-3 py-2 rounded-full transition-colors duration-200 ${isActiveLink('/support') ? 'bg-blue-100 text-black font-semibold' : 'hover:bg-blue-50 hover:text-blue-700'}`}>
               <FaQuestionCircle /> Support
             </NavLink>
-          </nav>
+        </nav>
 
+        {/* Right group: account + mobile menu */}
+        <div className="flex items-center gap-4 text-sm text-gray-700">
           {/* Auth Button */}
           {isLoggedIn ? (
             <div className="relative">
