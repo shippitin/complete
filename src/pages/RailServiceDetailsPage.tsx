@@ -146,7 +146,7 @@ const RailServiceDetailsPage: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-2 mb-3">
               <FaClipboardList className="text-gray-500 text-lg" />
-              <h2 className="text-lg font-bold text-gray-800">Your Quote Details</h2>
+              <h2 className="text-lg font-bold text-gray-800">Your Booking Details</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
               {[
