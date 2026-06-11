@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  FaCheckCircle, FaClipboardList, FaShieldAlt, FaRupeeSign,
-  FaTrain, FaCube, FaBoxOpen, FaTimesCircle, FaArrowLeft,
+  FaClipboardList, FaShieldAlt,
+  FaTrain, FaCube, FaBoxOpen, FaArrowLeft,
   FaArrowRight, FaChevronDown, FaChevronUp, FaTag,
 } from 'react-icons/fa';
 import type {
@@ -164,45 +164,6 @@ const RailServiceDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Train Service Info */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FaTrain className="text-blue-500 text-lg" />
-              <h2 className="text-lg font-bold text-gray-800">Train Service Information</h2>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {[
-                { label: 'Service Name',     value: selectedTrainResult!.serviceName },
-                { label: 'Operator',         value: selectedTrainResult!.operator },
-                { label: 'Transit Duration', value: selectedTrainResult!.transitDuration },
-              ].map((item, i) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 mb-1">{item.label}</p>
-                  <p className="text-sm font-semibold text-gray-800">{item.value}</p>
-                </div>
-              ))}
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 mb-1">Hazardous Compatible</p>
-                <p className="text-sm font-semibold">
-                  {selectedTrainResult!.isHazardousCompatible
-                    ? <span className="text-green-600 flex items-center gap-1"><FaCheckCircle /> Yes</span>
-                    : <span className="text-red-500 flex items-center gap-1"><FaTimesCircle /> No</span>}
-                </p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3 col-span-2">
-                <p className="text-xs text-gray-400 mb-1">Features</p>
-                <p className="text-sm font-semibold text-gray-800">{selectedTrainResult!.features.join(', ')}</p>
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <div className="bg-blue-50 rounded-xl px-5 py-3 text-right">
-                <p className="text-xs text-blue-400 mb-0.5">Base Rail Freight</p>
-                <p className="text-2xl font-extrabold text-blue-700">{fmt(baseRailFreight)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">Exclusive of GST & other charges</p>
-              </div>
-            </div>
-          </div>
-
           {/* Quote Details */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -211,6 +172,8 @@ const RailServiceDetailsPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
               {[
+                { label: 'Operator',    value: selectedTrainResult!.operator },
+                { label: 'ETA',         value: selectedTrainResult!.transitDuration },
                 { label: 'Origin',      value: selectedTrainResult!.originStation },
                 { label: 'Destination', value: selectedTrainResult!.destinationStation },
                 { label: 'Ready Date',  value: formData!.readyDate },
