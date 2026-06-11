@@ -475,6 +475,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     return (
       <div className="space-y-3 mt-2">
         <div className="mb-1">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Mode</p>
           <div className="flex flex-wrap gap-2">
             {([['export','Export'],['import','Import']] as const).map(([val, label]) => (
               <label key={val} className={`${radioBtn(movement === val)} w-36`}>
