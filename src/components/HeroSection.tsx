@@ -44,16 +44,20 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
   <div
     onClick={onClick}
     className={`
-      flex flex-col items-center justify-end px-4 pt-1 pb-2.5 cursor-pointer select-none
-      transition-all duration-200 whitespace-nowrap flex-shrink-0 border-b-2
-      ${isActive
-        ? 'border-blue-600 text-blue-600 font-semibold'
-        : 'border-transparent text-gray-600 hover:text-blue-600'
-      }
+      group flex flex-col items-center justify-end px-4 pt-2 pb-2 rounded-2xl cursor-pointer select-none
+      transition-all duration-200 whitespace-nowrap flex-shrink-0
+      ${isActive ? 'bg-blue-50 shadow-sm' : 'hover:bg-gray-50'}
     `}
   >
-    <Icon className={`text-3xl mb-1.5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-    <span className="text-xs text-center">{label}</span>
+    <Icon
+      className={`text-3xl mb-1.5 transition-all duration-200
+        ${isActive
+          ? 'text-blue-600 scale-110'
+          : 'text-gray-500 group-hover:text-blue-500 group-hover:scale-105'}`}
+    />
+    <span className={`text-xs text-center transition-colors ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600'}`}>
+      {label}
+    </span>
   </div>
 );
 
