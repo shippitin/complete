@@ -136,10 +136,10 @@ const HeroSection: React.FC = () => {
     >
       <div className="max-w-6xl mx-auto">
 
-        {/* White tab strip — narrower card sitting on top of the wider form card */}
+        {/* White tab strip — its own floating rounded box (MakeMyTrip style) */}
         <div
-          className="relative z-10 mx-4 sm:mx-10 bg-white px-4 pt-3 flex flex-wrap justify-center sm:justify-between items-end gap-1"
-          style={{ borderRadius: '16px 16px 0 0', borderBottom: '1px solid #e0e7ff' }}
+          className="relative z-20 mx-4 sm:mx-10 bg-white px-4 pt-3 pb-2 flex flex-wrap justify-center sm:justify-between items-end gap-1"
+          style={{ borderRadius: '16px', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}
         >
           {tabs.map(tab => (
             <Tab
@@ -152,9 +152,9 @@ const HeroSection: React.FC = () => {
           ))}
         </div>
 
-        {/* Form card — wider base, connected below the tab strip */}
+        {/* Form card — wider base, tucked just under the floating tab box */}
         <div
-          className="relative bg-white px-6 pt-5 pb-5"
+          className="relative z-10 -mt-3 bg-white px-6 pt-8 pb-5"
           style={{
             borderRadius: '16px',
             boxShadow: '0 8px 32px rgba(59,130,246,0.10), 0 2px 8px rgba(0,0,0,0.06)',
