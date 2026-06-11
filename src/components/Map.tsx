@@ -15,6 +15,8 @@ interface MapProps {
   path: [number, number][];
   shipmentType: 'Truck' | 'Sea' | 'Air' | 'Parcel' | 'International' | 'Rail';
   statusTimeline: ShipmentStatus[];
+  progress?: number;   // 0..1 target journey completion (default 1 = animate full route)
+  delivered?: boolean; // true → vehicle rests at destination as "Delivered"
 }
 
 // Exact route traced from Google Maps photo:
@@ -71,6 +73,23 @@ const interpolate = (path: [number, number][], t: number): [number, number] => {
   return [a[0] + (b[0] - a[0]) * seg, a[1] + (b[1] - a[1]) * seg];
 };
 
+// Split a path at fraction t into the traveled portion and the remaining portion,
+// meeting exactly at the interpolated cut point so the two polylines join cleanly.
+const splitPath = (
+  path: [number, number][],
+  t: number,
+): { traveled: [number, number][]; remaining: [number, number][] } => {
+  if (t <= 0) return { traveled: [path[0]], remaining: path };
+  if (t >= 1) return { traveled: path, remaining: [] };
+  const segs = path.length - 1;
+  const idx  = Math.min(Math.floor(t * segs), segs - 1);
+  const cut  = interpolate(path, t);
+  return {
+    traveled:  [...path.slice(0, idx + 1), cut],
+    remaining: [cut, ...path.slice(idx + 1)],
+  };
+};
+
 const makeVehicleIcon = (type: MapProps['shipmentType']) => {
   const emoji = type === 'Sea' ? '🚢' : type === 'Air' ? '✈️' : type === 'Rail' ? '🚂' : '🚚';
   return L.divIcon({
@@ -90,7 +109,7 @@ const makeDotIcon = (color: string) => L.divIcon({
 });
 
 const MapContent: React.FC<MapProps & { animPath: [number, number][] }> = ({
-  path, shipmentType, statusTimeline, animPath,
+  path, shipmentType, statusTimeline, animPath, progress = 1, delivered = false,
 }) => {
   const map       = useMap();
   const markerRef = useRef<L.Marker | null>(null);
@@ -101,6 +120,10 @@ const MapContent: React.FC<MapProps & { animPath: [number, number][] }> = ({
   const isAir = shipmentType === 'Air';
   const originName = statusTimeline[0]?.location || 'Origin';
   const destName   = statusTimeline[statusTimeline.length - 1]?.location || 'Destination';
+  const vehicleEmoji = isSea ? '🚢' : isAir ? '✈️' : shipmentType === 'Rail' ? '🚂' : '🚚';
+
+  const targetT = Math.max(0, Math.min(progress, 1));
+  const { traveled, remaining } = splitPath(animPath, targetT);
 
   useEffect(() => {
     // Fit exactly like the photo: Chennai top-left, Singapore bottom-right
@@ -122,27 +145,28 @@ const MapContent: React.FC<MapProps & { animPath: [number, number][] }> = ({
     markerRef.current = L.marker(animPath[0], { icon }).addTo(map);
     markerRef.current
       .bindPopup(
-        `<div style="font-size:13px;font-family:sans-serif;padding:2px 6px"><b>🚢 Departed: ${originName}</b></div>`,
+        `<div style="font-size:13px;font-family:sans-serif;padding:2px 6px"><b>${vehicleEmoji} Departed: ${originName}</b></div>`,
         { closeButton: false, autoPan: false }
       ).openPopup();
 
-    const DURATION = 25000;
+    // Animate from origin to the target fraction; speed kept ~constant by scaling
+    // the duration to the distance so a 60% trip takes 60% of the time.
+    const DURATION = Math.max(2500, 22000 * targetT);
     const tick = (ts: DOMHighResTimeStamp) => {
       if (!startRef.current) startRef.current = ts;
-      const progress = Math.min((ts - startRef.current) / DURATION, 1);
-      markerRef.current?.setLatLng(interpolate(animPath, progress));
-      const pct   = Math.round(progress * 100);
-      const emoji = shipmentType === 'Sea' ? '🚢' : '🚚';
-      const label = progress < 0.03
-        ? `${emoji} Departed: ${originName}`
-        : progress >= 0.98
-        ? `✅ Arrived: ${destName}`
-        : `${emoji} En Route — ${pct}% complete`;
+      const raw = Math.min((ts - startRef.current) / DURATION, 1);
+      const t   = raw * targetT;
+      markerRef.current?.setLatLng(interpolate(animPath, t));
+      const pct = Math.round(t * 100);
+      const label =
+        delivered && raw >= 1 ? `✅ Delivered: ${destName}`
+        : t < 0.03            ? `${vehicleEmoji} Departed: ${originName}`
+        :                       `${vehicleEmoji} En Route — ${pct}% complete`;
       markerRef.current?.setPopupContent(
         `<div style="font-size:13px;font-family:sans-serif;padding:2px 6px"><b>${label}</b></div>`
       );
       markerRef.current?.openPopup();
-      if (progress < 1) frameRef.current = requestAnimationFrame(tick);
+      if (raw < 1) frameRef.current = requestAnimationFrame(tick);
     };
     frameRef.current = requestAnimationFrame(tick);
 
@@ -150,32 +174,39 @@ const MapContent: React.FC<MapProps & { animPath: [number, number][] }> = ({
       if (frameRef.current)  cancelAnimationFrame(frameRef.current);
       if (markerRef.current) map.removeLayer(markerRef.current);
     };
-  }, [map, animPath, shipmentType, originName, destName]);
+  }, [map, animPath, shipmentType, originName, destName, targetT, delivered, vehicleEmoji]);
+
+  const lineColor = isSea ? '#1e40af' : isAir ? '#7c3aed' : '#ea580c';
 
   return (
     <>
+      {/* Traveled portion — solid, bright */}
       <Polyline
-        positions={animPath}
-        color={isSea ? '#1e40af' : isAir ? '#7c3aed' : '#ea580c'}
-        weight={3}
+        positions={traveled}
+        color={lineColor}
+        weight={4}
         opacity={1}
         dashArray={isSea || isAir ? '8 5' : undefined}
       />
+      {/* Remaining portion — faded grey dashes (hidden once delivered) */}
+      {remaining.length > 1 && (
+        <Polyline positions={remaining} color="#9ca3af" weight={3} opacity={0.5} dashArray="6 8" />
+      )}
       {path.length > 0 && (
         <Marker position={path[0]} icon={makeDotIcon('#1e40af')}>
           <Tooltip permanent direction="top" offset={[0, -6]}>📍 {originName}</Tooltip>
         </Marker>
       )}
       {path.length > 1 && (
-        <Marker position={path[path.length - 1]} icon={makeDotIcon('#15803d')}>
-          <Tooltip permanent direction="top" offset={[0, -6]}>🏁 {destName}</Tooltip>
+        <Marker position={path[path.length - 1]} icon={makeDotIcon(delivered ? '#15803d' : '#9ca3af')}>
+          <Tooltip permanent direction="top" offset={[0, -6]}>{delivered ? '✅' : '🏁'} {destName}</Tooltip>
         </Marker>
       )}
     </>
   );
 };
 
-const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline }) => {
+const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline, progress, delivered }) => {
   if (!path || path.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-sm">
@@ -206,6 +237,8 @@ const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline }) => {
           shipmentType={shipmentType}
           statusTimeline={statusTimeline}
           animPath={animPath}
+          progress={progress}
+          delivered={delivered}
         />
       </MapContainer>
     </div>

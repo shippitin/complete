@@ -274,6 +274,8 @@ const TrackPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [copySuccess, setCopySuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Demo phase: false = shipment on the way, true = reached destination
+  const [demoDelivered, setDemoDelivered] = useState(false);
 
   useEffect(() => {
     const idFromUrl     = searchParams.get('id')     || '';
@@ -289,6 +291,7 @@ const TrackPage: React.FC = () => {
   const handleTrack = async (idToTrack: string = trackingId, originParam = '', destParam = '', typeParam = '') => {
     setError(null);
     setShipment(null);
+    setDemoDelivered(false); // every new search starts in the "on the way" state
     if (!idToTrack) return;
     setLoading(true);
 
@@ -436,9 +439,77 @@ const TrackPage: React.FC = () => {
           {error && <div className="p-4 bg-red-50 text-red-600 text-center font-medium border-t">{error}</div>}
         </div>
 
-        {shipment && (
+        {shipment && (() => {
+          // ── Two-state demo logic: "on the way" vs "reached destination" ──
+          const originName = shipment.statusTimeline[0]?.location || 'Origin';
+          const destName   = shipment.statusTimeline[shipment.statusTimeline.length - 1]?.location || 'Destination';
+          const lastIdx    = shipment.statusTimeline.length - 1;
+
+          const isDelivered  = demoDelivered;
+          const progressT    = isDelivered ? 1 : 0.6;          // journey fraction
+          const progressPct  = Math.round(progressT * 100);
+          const transitStatus = shipment.status === 'Delivered' ? 'In Transit' : shipment.status;
+          const liveStatus   = isDelivered ? 'Delivered' : transitStatus;
+
+          // Timeline: when delivered, all steps complete (and the final "Expected
+          // Arrival" becomes "Delivered"); when in transit, the final step is pending.
+          const activeIndex    = isDelivered ? lastIdx : Math.max(0, lastIdx - 1);
+          const displayTimeline = shipment.statusTimeline.map((item, i) =>
+            isDelivered && i === lastIdx && /expected|arrival/i.test(item.status)
+              ? { ...item, status: 'Delivered' }
+              : item
+          );
+
+          return (
           <div className="animate-fade-in space-y-8">
-            
+
+            {/* ── Demo phase toggle ── */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h2 className="text-lg font-black text-gray-700">Shipment <span className="text-blue-600">{shipment.id}</span></h2>
+              <div className="inline-flex bg-gray-100 rounded-2xl p-1">
+                <button
+                  onClick={() => setDemoDelivered(false)}
+                  className={`px-5 py-2 rounded-xl text-sm font-bold transition ${!isDelivered ? 'bg-white shadow text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  🚂 On the way
+                </button>
+                <button
+                  onClick={() => setDemoDelivered(true)}
+                  className={`px-5 py-2 rounded-xl text-sm font-bold transition ${isDelivered ? 'bg-white shadow text-green-600' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  ✅ Delivered
+                </button>
+              </div>
+            </div>
+
+            {/* ── Status hero with live progress bar ── */}
+            <div className={`rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden transition-colors duration-500 ${isDelivered ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-gradient-to-r from-blue-500 to-blue-700'}`}>
+              <div className="flex items-end justify-between mb-5 flex-wrap gap-3">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest opacity-80">{isDelivered ? 'Delivered' : 'In Transit'}</p>
+                  <h3 className="text-2xl sm:text-3xl font-black leading-tight">
+                    {isDelivered ? `Arrived at ${destName}` : `En Route to ${destName}`}
+                  </h3>
+                  <p className="opacity-90 text-sm mt-1">
+                    {isDelivered
+                      ? `Delivered on ${shipment.estimatedDelivery}`
+                      : `ETA ${shipment.estimatedDelivery} · ${shipment.carrier}`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-4xl font-black leading-none">{progressPct}%</p>
+                  <p className="text-[11px] opacity-80 mt-1">journey complete</p>
+                </div>
+              </div>
+              <div className="h-2.5 bg-white/25 rounded-full overflow-hidden">
+                <div className="h-full bg-white rounded-full transition-all duration-700 ease-out" style={{ width: `${progressPct}%` }} />
+              </div>
+              <div className="flex justify-between mt-2 text-xs font-semibold opacity-90">
+                <span>📍 {originName}</span>
+                <span>{isDelivered ? '✅ Delivered' : `🏁 ${destName}`}</span>
+              </div>
+            </div>
+
             {/* Share Bar */}
             <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center space-x-2">
@@ -463,13 +534,13 @@ const TrackPage: React.FC = () => {
               <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Live Status</span>
-                  <p className={`text-2xl font-black ${shipment.status === 'Delayed' ? 'text-red-600' : shipment.status === 'Delivered' ? 'text-green-600' : 'text-blue-600'}`}>{shipment.status}</p>
+                  <p className={`text-2xl font-black ${isDelivered ? 'text-green-600' : 'text-blue-600'}`}>{liveStatus}</p>
                   <p className="text-sm text-gray-500">{shipment.carrier}</p>
                 </div>
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Estimated Arrival</span>
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">{isDelivered ? 'Delivered On' : 'Estimated Arrival'}</span>
                   <p className="text-2xl font-black text-gray-800">{shipment.estimatedDelivery}</p>
-                  <p className="text-sm text-gray-500">{shipment.currentLocation}</p>
+                  <p className="text-sm text-gray-500">{isDelivered ? destName : `Near ${originName}`}</p>
                 </div>
               </div>
 
@@ -530,28 +601,39 @@ const TrackPage: React.FC = () => {
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="grid grid-cols-1 lg:grid-cols-3">
                 <div className="lg:col-span-2 h-[450px] bg-gray-50">
-                  <Map path={shipment.path} shipmentType={shipment.shipmentType} statusTimeline={shipment.statusTimeline} />
+                  <Map path={shipment.path} shipmentType={shipment.shipmentType} statusTimeline={shipment.statusTimeline} progress={progressT} delivered={isDelivered} />
                 </div>
                 <div className="p-8 border-l border-gray-100 max-h-[450px] overflow-y-auto">
                   <h3 className="font-bold text-gray-800 mb-8 flex items-center"><FaCalendarAlt className="mr-2 text-blue-600" /> Journey History</h3>
                   <div className="relative border-l-2 border-blue-50 ml-2 space-y-10">
-                    {shipment.statusTimeline.map((item, i) => (
-                      <div key={i} className="relative pl-8">
-                        <div className="absolute -left-[17px] top-0 w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
-                          <div className="scale-75">{getStatusIcon(item.status)}</div>
+                    {displayTimeline.map((item, i) => {
+                      const current     = i === activeIndex;
+                      const pending     = i > activeIndex;
+                      const finalDone   = isDelivered && i === lastIdx;
+                      const dotClass    = finalDone ? 'bg-green-600'
+                                        : pending   ? 'bg-gray-200'
+                                        :             'bg-blue-600';
+                      return (
+                        <div key={i} className={`relative pl-8 ${pending ? 'opacity-60' : ''}`}>
+                          <div className={`absolute -left-[17px] top-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${dotClass} ${current ? 'ring-4 ring-blue-100' : ''}`}>
+                            <div className="scale-75">{getStatusIcon(item.status)}</div>
+                          </div>
+                          <p className={`text-[10px] font-black uppercase tracking-tighter ${pending ? 'text-gray-400' : finalDone ? 'text-green-500' : 'text-blue-400'}`}>{item.date}</p>
+                          <p className={`font-bold ${pending ? 'text-gray-500' : 'text-gray-800'}`}>
+                            {item.status}{current && !finalDone ? ' · Now' : ''}
+                          </p>
+                          <p className="text-xs text-gray-500">{item.location}</p>
                         </div>
-                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">{item.date}</p>
-                        <p className="font-bold text-gray-800">{item.status}</p>
-                        <p className="text-xs text-gray-500">{item.location}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>
             </div>
 
           </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );
