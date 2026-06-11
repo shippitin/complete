@@ -15,6 +15,7 @@ const PaymentPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   const bookingId = location.state?.bookingId;
   const amount = location.state?.amount;
@@ -95,10 +96,14 @@ const PaymentPage: React.FC = () => {
             // (signature mismatch, booking not found, etc.) instead of a generic message.
             const status = error?.response?.status;
             const serverMsg = error?.response?.data?.message;
-            console.error('Payment verify failed:', status, error?.response?.data);
-            toast.error(serverMsg
-              ? `Verify failed: ${serverMsg}`
-              : `Verify failed (${status || 'network error'}). Please contact support.`);
+            const body = error?.response?.data;
+            console.error('Payment verify failed:', status, body);
+            const detail = serverMsg
+              || (body ? JSON.stringify(body) : '')
+              || error?.message
+              || 'Unknown error';
+            setVerifyError(`[HTTP ${status ?? 'none'}] ${detail}`);
+            toast.error(serverMsg ? `Verify failed: ${serverMsg}` : `Verify failed (${status || 'network'})`);
           }
         },
         modal: {
@@ -140,6 +145,14 @@ const PaymentPage: React.FC = () => {
           <h1 className="text-2xl font-bold">Complete Payment</h1>
           <p className="text-blue-100 text-sm mt-1">Secure payment powered by Razorpay</p>
         </div>
+
+        {/* Verify error — persistent + screenshot-friendly for diagnosis */}
+        {verifyError && (
+          <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 break-words">
+            <span className="font-bold block mb-1">Payment verify error (screenshot this):</span>
+            {verifyError}
+          </div>
+        )}
 
         {/* Booking Summary */}
         <div className="p-6 border-b border-gray-100">
