@@ -1,8 +1,10 @@
-// src/components/Map.tsx
-import React, { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Polyline, useMap, Marker, Tooltip } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+// src/components/Map.tsx — Google Maps (region=IN for correct India borders)
+import React, { useEffect, useRef, useState } from "react";
+
+// Google Maps JS key — same key used across the app. In a frontend app this is
+// necessarily public; protect billing with an HTTP-referrer restriction in
+// Google Cloud Console. The "Maps JavaScript API" must be enabled for this key.
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || 'AIzaSyAMBNRVdFnvb3I2Z7FuFdzfy_BrBk77obY';
 
 interface ShipmentStatus {
   date: string;
@@ -19,40 +21,19 @@ interface MapProps {
   delivered?: boolean; // true → vehicle rests at destination as "Delivered"
 }
 
-// Exact route traced from Google Maps photo:
-// Chennai → SE Bay of Bengal → west of Andamans → curves right into Andaman Sea
-// → enters Malacca Strait from the EAST (between Malaysia east coast & Sumatra)
-// → south down strait → Singapore
+// Hand-traced sea corridors (Google Maps draws great-circle straight lines that
+// cut across land, so we feed it real waypoints for the known ocean routes).
 const CHENNAI_SINGAPORE: [number, number][] = [
-  [13.0827,  80.2707],  // Chennai
-  [12.0000,  81.5000],  // SE into Bay of Bengal
-  [10.5000,  83.5000],  // Bay of Bengal, curving south
-  [8.5000,   86.0000],  // Mid Bay of Bengal heading SE
-  [6.5000,   89.0000],  // Passing west of Andaman Islands
-  [5.0000,   92.0000],  // Curving east toward Andaman Sea
-  [4.5000,   95.5000],  // Andaman Sea, west of Sumatra north tip
-  [4.2000,   98.0000],  // Entering Malacca Strait from north
-  [3.8000,  100.5000],  // Malacca Strait — between Malaysia & Sumatra
-  [3.0000,  101.5000],  // Mid strait (Port Klang / Klang area east)
-  [2.2000,  102.5000],  // South Malacca Strait
-  [1.5000,  103.5000],  // Singapore Strait approach
-  [1.3521,  103.8198],  // Singapore
+  [13.0827,  80.2707], [12.0000, 81.5000], [10.5000, 83.5000], [8.5000, 86.0000],
+  [6.5000,   89.0000], [5.0000,  92.0000], [4.5000,  95.5000], [4.2000, 98.0000],
+  [3.8000,  100.5000], [3.0000, 101.5000], [2.2000, 102.5000], [1.5000, 103.5000],
+  [1.3521,  103.8198],
 ];
-
 const CHENNAI_HAMBURG: [number, number][] = [
-  [13.0827,  80.2707],
-  [8.0000,   78.0000],
-  [5.9000,   79.0000],
-  [4.0000,   73.0000],
-  [10.0000,  57.0000],
-  [12.0000,  45.0000],
-  [20.0000,  38.5000],
-  [27.0000,  34.0000],
-  [30.5000,  32.4000],
-  [36.0000,  14.0000],
-  [36.0000,  -5.5000],
-  [44.0000, -10.0000],
-  [53.5500,   9.9500],
+  [13.0827, 80.2707], [8.0000, 78.0000], [5.9000, 79.0000], [4.0000, 73.0000],
+  [10.0000, 57.0000], [12.0000, 45.0000], [20.0000, 38.5000], [27.0000, 34.0000],
+  [30.5000, 32.4000], [36.0000, 14.0000], [36.0000, -5.5000], [44.0000, -10.0000],
+  [53.5500,  9.9500],
 ];
 
 const getSeaRoute = (start: [number, number], end: [number, number]): [number, number][] => {
@@ -73,8 +54,7 @@ const interpolate = (path: [number, number][], t: number): [number, number] => {
   return [a[0] + (b[0] - a[0]) * seg, a[1] + (b[1] - a[1]) * seg];
 };
 
-// Split a path at fraction t into the traveled portion and the remaining portion,
-// meeting exactly at the interpolated cut point so the two polylines join cleanly.
+// Split a path at fraction t into traveled + remaining, meeting at the cut point.
 const splitPath = (
   path: [number, number][],
   t: number,
@@ -90,123 +70,181 @@ const splitPath = (
   };
 };
 
-const makeVehicleIcon = (type: MapProps['shipmentType']) => {
-  const emoji = type === 'Sea' ? '🚢' : type === 'Air' ? '✈️' : type === 'Rail' ? '🚂' : '🚚';
-  return L.divIcon({
-    className: '',
-    html: `<div style="font-size:30px;line-height:1;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));user-select:none;">${emoji}</div>`,
-    iconSize:   [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor:[0, -20],
+const vehicleEmojiFor = (t: MapProps['shipmentType']) =>
+  t === 'Sea' ? '🚢' : t === 'Air' ? '✈️' : t === 'Rail' ? '🚂' : '🚚';
+
+// Singleton loader for the Google Maps JS SDK (region=IN → India's official map).
+let gmapsPromise: Promise<void> | null = null;
+const loadGoogleMaps = (): Promise<void> => {
+  if ((window as any).google?.maps) return Promise.resolve();
+  if (gmapsPromise) return gmapsPromise;
+  gmapsPromise = new Promise<void>((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_KEY}&region=IN&language=en`;
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('Google Maps failed to load'));
+    document.head.appendChild(s);
   });
+  return gmapsPromise;
 };
 
-const makeDotIcon = (color: string) => L.divIcon({
-  className: '',
-  html: `<div style="background:${color};width:12px;height:12px;border-radius:50%;border:3px solid white;box-shadow:0 0 0 2px ${color};"></div>`,
-  iconSize:   [12, 12],
-  iconAnchor: [6, 6],
-});
+const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline, progress = 1, delivered = false }) => {
+  const divRef      = useRef<HTMLDivElement>(null);
+  const mapRef      = useRef<any>(null);
+  const overlaysRef = useRef<any[]>([]);
+  const frameRef    = useRef<number | null>(null);
+  const [ready, setReady]   = useState<boolean>(!!(window as any).google?.maps);
+  const [failed, setFailed] = useState(false);
 
-const MapContent: React.FC<MapProps & { animPath: [number, number][] }> = ({
-  path, shipmentType, statusTimeline, animPath, progress = 1, delivered = false,
-}) => {
-  const map       = useMap();
-  const markerRef = useRef<L.Marker | null>(null);
-  const frameRef  = useRef<number | null>(null);
-  const startRef  = useRef<number | null>(null);
+  // Load the SDK once
+  useEffect(() => {
+    let mounted = true;
+    loadGoogleMaps()
+      .then(() => { if (mounted) setReady(true); })
+      .catch(() => { if (mounted) setFailed(true); });
+    return () => { mounted = false; };
+  }, []);
 
   const isSea = shipmentType === 'Sea';
-  const isAir = shipmentType === 'Air';
-  const originName = statusTimeline[0]?.location || 'Origin';
-  const destName   = statusTimeline[statusTimeline.length - 1]?.location || 'Destination';
-  const vehicleEmoji = isSea ? '🚢' : isAir ? '✈️' : shipmentType === 'Rail' ? '🚂' : '🚚';
+  const animPath: [number, number][] =
+    isSea && path && path.length === 2 ? getSeaRoute(path[0], path[1]) : (path || []);
 
-  const targetT = Math.max(0, Math.min(progress, 1));
-  const { traveled, remaining } = splitPath(animPath, targetT);
-
+  // Build / rebuild the route, markers and animation whenever inputs change
   useEffect(() => {
-    // Fit exactly like the photo: Chennai top-left, Singapore bottom-right
-    if (isSea) {
-      map.fitBounds(
-        L.latLngBounds([[0.5, 78.5], [14.0, 105.0]]),
-        { animate: true, duration: 1.0, padding: [20, 20] }
-      );
-    } else {
-      map.fitBounds(L.latLngBounds(animPath).pad(0.2), { animate: true, duration: 1.0 });
+    if (!ready || !divRef.current || animPath.length === 0) return;
+    const g = (window as any).google;
+    const toLL = (p: [number, number]) => ({ lat: p[0], lng: p[1] });
+
+    if (!mapRef.current) {
+      mapRef.current = new g.maps.Map(divRef.current, {
+        center: { lat: 20.5937, lng: 78.9629 },
+        zoom: 5,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        gestureHandling: 'greedy',
+        clickableIcons: false,
+      });
+    }
+    const map = mapRef.current;
+
+    // Clean HTML label overlay (no close button — unlike InfoWindow)
+    class LabelOverlay extends g.maps.OverlayView {
+      position: any; html: string; div: HTMLDivElement | null = null;
+      constructor(position: any, html: string) { super(); this.position = position; this.html = html; }
+      onAdd() {
+        const d = document.createElement('div');
+        d.style.cssText =
+          'position:absolute;transform:translate(-50%,-145%);background:#fff;padding:3px 9px;' +
+          'border-radius:9px;font:600 12px/1.2 sans-serif;color:#1f2937;white-space:nowrap;' +
+          'box-shadow:0 2px 6px rgba(0,0,0,.25);pointer-events:none;';
+        d.innerHTML = this.html;
+        this.div = d;
+        this.getPanes().floatPane.appendChild(d);
+      }
+      draw() {
+        if (!this.div) return;
+        const p = this.getProjection()?.fromLatLngToDivPixel(this.position);
+        if (p) { this.div.style.left = `${p.x}px`; this.div.style.top = `${p.y}px`; }
+      }
+      update(position: any, html: string) {
+        this.position = position;
+        if (this.div) this.div.innerHTML = html;
+        this.draw();
+      }
+      onRemove() { if (this.div) { this.div.remove(); this.div = null; } }
     }
 
-    if (frameRef.current)  { cancelAnimationFrame(frameRef.current);  frameRef.current  = null; }
-    if (markerRef.current) { map.removeLayer(markerRef.current);       markerRef.current = null; }
-    startRef.current = null;
-    if (animPath.length < 2) return;
+    // Tear down previous overlays + animation
+    overlaysRef.current.forEach(o => o.setMap && o.setMap(null));
+    overlaysRef.current = [];
+    if (frameRef.current) { cancelAnimationFrame(frameRef.current); frameRef.current = null; }
 
-    const icon = makeVehicleIcon(shipmentType);
-    markerRef.current = L.marker(animPath[0], { icon }).addTo(map);
-    markerRef.current
-      .bindPopup(
-        `<div style="font-size:13px;font-family:sans-serif;padding:2px 6px"><b>${vehicleEmoji} Departed: ${originName}</b></div>`,
-        { closeButton: false, autoPan: false }
-      ).openPopup();
+    const targetT  = Math.max(0, Math.min(progress, 1));
+    const { traveled, remaining } = splitPath(animPath, targetT);
+    const originName = statusTimeline[0]?.location || 'Origin';
+    const destName   = statusTimeline[statusTimeline.length - 1]?.location || 'Destination';
+    const emoji      = vehicleEmojiFor(shipmentType);
+    const lineColor  = isSea ? '#1e40af' : shipmentType === 'Air' ? '#7c3aed' : '#ea580c';
 
-    // Animate from origin to the target fraction; speed kept ~constant by scaling
-    // the duration to the distance so a 60% trip takes 60% of the time.
+    // Fit the viewport to the route
+    const bounds = new g.maps.LatLngBounds();
+    animPath.forEach(p => bounds.extend(toLL(p)));
+    map.fitBounds(bounds, 56);
+
+    // Traveled portion — solid bright line
+    overlaysRef.current.push(new g.maps.Polyline({
+      path: traveled.map(toLL), strokeColor: lineColor, strokeOpacity: 1, strokeWeight: 4, map,
+    }));
+
+    // Remaining portion — grey dashed
+    if (remaining.length > 1) {
+      overlaysRef.current.push(new g.maps.Polyline({
+        path: remaining.map(toLL), strokeOpacity: 0, map,
+        icons: [{
+          icon: { path: 'M 0,-1 0,1', strokeColor: '#9ca3af', strokeOpacity: 0.8, scale: 3 },
+          offset: '0', repeat: '13px',
+        }],
+      }));
+    }
+
+    // Origin & destination dots + name tags
+    const originDot = new g.maps.Marker({
+      position: toLL(path[0]), map,
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 7, fillColor: '#1e40af', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+    });
+    const destDot = new g.maps.Marker({
+      position: toLL(path[path.length - 1]), map,
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 7, fillColor: delivered ? '#15803d' : '#9ca3af', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 },
+    });
+    overlaysRef.current.push(originDot, destDot);
+
+    const originTag = new LabelOverlay(toLL(path[0]), `📍 ${originName}`);
+    const destTag   = new LabelOverlay(toLL(path[path.length - 1]), `${delivered ? '✅' : '🏁'} ${destName}`);
+    originTag.setMap(map);
+    destTag.setMap(map);
+    overlaysRef.current.push(originTag, destTag);
+
+    // Moving vehicle (emoji) + live progress tag
+    const vehicle = new g.maps.Marker({
+      position: toLL(animPath[0]),
+      map,
+      icon: { path: g.maps.SymbolPath.CIRCLE, scale: 0 },
+      label: { text: emoji, fontSize: '26px' },
+      zIndex: 999,
+    });
+    const vehicleTag = new LabelOverlay(toLL(animPath[0]), `${emoji} Departed: ${originName}`);
+    vehicleTag.setMap(map);
+    overlaysRef.current.push(vehicle, vehicleTag);
+
+    // Animate origin → target fraction; duration scales with distance for constant speed
     const DURATION = Math.max(2500, 22000 * targetT);
-    const tick = (ts: DOMHighResTimeStamp) => {
-      if (!startRef.current) startRef.current = ts;
-      const raw = Math.min((ts - startRef.current) / DURATION, 1);
+    let start: number | null = null;
+    const tick = (ts: number) => {
+      if (start === null) start = ts;
+      const raw = Math.min((ts - start) / DURATION, 1);
       const t   = raw * targetT;
-      markerRef.current?.setLatLng(interpolate(animPath, t));
+      const pos = interpolate(animPath, t);
+      const ll  = toLL(pos);
+      vehicle.setPosition(ll);
       const pct = Math.round(t * 100);
       const label =
         delivered && raw >= 1 ? `✅ Delivered: ${destName}`
-        : t < 0.03            ? `${vehicleEmoji} Departed: ${originName}`
-        :                       `${vehicleEmoji} En Route — ${pct}% complete`;
-      markerRef.current?.setPopupContent(
-        `<div style="font-size:13px;font-family:sans-serif;padding:2px 6px"><b>${label}</b></div>`
-      );
-      markerRef.current?.openPopup();
+        : t < 0.03            ? `${emoji} Departed: ${originName}`
+        :                       `${emoji} En Route — ${pct}% complete`;
+      vehicleTag.update(ll, label);
       if (raw < 1) frameRef.current = requestAnimationFrame(tick);
     };
     frameRef.current = requestAnimationFrame(tick);
 
     return () => {
-      if (frameRef.current)  cancelAnimationFrame(frameRef.current);
-      if (markerRef.current) map.removeLayer(markerRef.current);
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [map, animPath, shipmentType, originName, destName, targetT, delivered, vehicleEmoji]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, JSON.stringify(animPath), progress, delivered, shipmentType, JSON.stringify(statusTimeline)]);
 
-  const lineColor = isSea ? '#1e40af' : isAir ? '#7c3aed' : '#ea580c';
-
-  return (
-    <>
-      {/* Traveled portion — solid, bright */}
-      <Polyline
-        positions={traveled}
-        color={lineColor}
-        weight={4}
-        opacity={1}
-        dashArray={isSea || isAir ? '8 5' : undefined}
-      />
-      {/* Remaining portion — faded grey dashes (hidden once delivered) */}
-      {remaining.length > 1 && (
-        <Polyline positions={remaining} color="#9ca3af" weight={3} opacity={0.5} dashArray="6 8" />
-      )}
-      {path.length > 0 && (
-        <Marker position={path[0]} icon={makeDotIcon('#1e40af')}>
-          <Tooltip permanent direction="top" offset={[0, -6]}>📍 {originName}</Tooltip>
-        </Marker>
-      )}
-      {path.length > 1 && (
-        <Marker position={path[path.length - 1]} icon={makeDotIcon(delivered ? '#15803d' : '#9ca3af')}>
-          <Tooltip permanent direction="top" offset={[0, -6]}>{delivered ? '✅' : '🏁'} {destName}</Tooltip>
-        </Marker>
-      )}
-    </>
-  );
-};
-
-const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline, progress, delivered }) => {
   if (!path || path.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400 text-sm">
@@ -214,33 +252,25 @@ const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline, progress,
       </div>
     );
   }
-  const isSea = shipmentType === 'Sea';
-  const animPath: [number, number][] = isSea && path.length === 2
-    ? getSeaRoute(path[0], path[1])
-    : path;
+
+  if (failed) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-500 text-sm gap-1 p-4 text-center">
+        <span className="font-semibold">Map could not load.</span>
+        <span className="text-xs text-gray-400">Enable the “Maps JavaScript API” for this key in Google Cloud Console.</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full rounded-xl overflow-hidden" style={{ minHeight: '300px' }}>
-      <MapContainer
-        center={[7.0, 92.0]}
-        zoom={5}
-        scrollWheelZoom={true}
-        className="h-full w-full"
-        key={path.map(p => p.join(',')).join('|')}
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap contributors'
-        />
-        <MapContent
-          path={path}
-          shipmentType={shipmentType}
-          statusTimeline={statusTimeline}
-          animPath={animPath}
-          progress={progress}
-          delivered={delivered}
-        />
-      </MapContainer>
+    <div className="w-full h-full rounded-xl overflow-hidden relative" style={{ minHeight: '300px' }}>
+      {!ready && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50 text-gray-400 text-sm z-10">
+          <span className="animate-spin rounded-full h-5 w-5 border-2 border-blue-400 border-t-transparent mr-2" />
+          Loading map…
+        </div>
+      )}
+      <div ref={divRef} className="w-full h-full" />
     </div>
   );
 };

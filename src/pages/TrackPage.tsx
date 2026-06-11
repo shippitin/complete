@@ -244,21 +244,29 @@ const generateDynamicShipment = (idToTrack: string, originParam = '', destParam 
 };
 
 
-// ── Geocode any city/location string using Nominatim (no API key needed) ──
+// ── Geocode any city/location string via Google Places Text Search (New) ──
 import API_BASE_URL from '../config/api';
+
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || 'AIzaSyAMBNRVdFnvb3I2Z7FuFdzfy_BrBk77obY';
 
 const geocodeCache: Record<string, [number, number]> = {};
 const geocode = async (place: string): Promise<[number, number]> => {
   const key = place.trim().toLowerCase();
   if (geocodeCache[key]) return geocodeCache[key];
   try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(place)}&format=json&limit=1&countrycodes=in`,
-      { headers: { 'Accept-Language': 'en' } }
-    );
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_KEY,
+        'X-Goog-FieldMask': 'places.location',
+      },
+      body: JSON.stringify({ textQuery: place, regionCode: 'IN' }),
+    });
     const data = await res.json();
-    if (data && data[0]) {
-      const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    const loc = data.places?.[0]?.location;
+    if (loc && typeof loc.latitude === 'number' && typeof loc.longitude === 'number') {
+      const coords: [number, number] = [loc.latitude, loc.longitude];
       geocodeCache[key] = coords;
       return coords;
     }
