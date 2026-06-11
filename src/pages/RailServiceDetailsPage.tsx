@@ -386,6 +386,16 @@ const RailServiceDetailsPage: React.FC = () => {
                       </div>
                     )}
 
+                    {addInsurance && (
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 pr-2">
+                          <p className="text-sm text-gray-700">Cargo Insurance</p>
+                          <p className="text-xs text-gray-400">All-risk cargo cover</p>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-800">{fmt(insuranceAmt)}</span>
+                      </div>
+                    )}
+
                     <div className="flex items-start justify-between">
                       <div className="flex-1 pr-2">
                         <p className="text-sm text-gray-700">Platform Fee</p>
@@ -400,7 +410,7 @@ const RailServiceDetailsPage: React.FC = () => {
               {/* Subtotal */}
               <div className="flex justify-between items-center py-2 border-t border-dashed border-gray-200">
                 <span className="text-sm font-semibold text-gray-600">Subtotal (excl. GST)</span>
-                <span className="text-sm font-bold text-gray-800">{fmt(subtotal)}</span>
+                <span className="text-sm font-bold text-gray-800">{fmt(subtotal + insuranceAmt)}</span>
               </div>
 
               {/* GST */}
@@ -432,17 +442,6 @@ const RailServiceDetailsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Insurance */}
-              {addInsurance && (
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm text-gray-700">Cargo Insurance</p>
-                    <p className="text-xs text-gray-400">All-risk cargo cover</p>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-800">{fmt(insuranceAmt)}</span>
-                </div>
-              )}
 
               {discountAmt > 0 && (
                 <div className="flex justify-between items-center text-green-600">

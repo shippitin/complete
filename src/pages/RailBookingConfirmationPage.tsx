@@ -680,12 +680,13 @@ const RailBookingConfirmationPage: React.FC = () => {
                   {bd.other>0 && <div className="flex justify-between"><span className="text-gray-500">Other Terminal Charges</span><span className="font-semibold">{fmt(bd.other)}</span></div>}
                   {bd.isDoorO && <div className="flex justify-between"><span className="text-gray-500">First Mile</span><span className="font-semibold">{fmt(bd.fm)}</span></div>}
                   {bd.isDoorD && <div className="flex justify-between"><span className="text-gray-500">Last Mile</span><span className="font-semibold">{fmt(bd.lm)}</span></div>}
+                  {bd.insAmt>0 && <div className="flex justify-between"><span className="text-gray-500">Cargo Insurance</span><span className="font-semibold">{fmt(bd.insAmt)}</span></div>}
                   <div className="flex justify-between"><span className="text-gray-500">Platform Fee</span><span className="font-semibold">{fmt(bd.pf)}</span></div>
                 </div>
               )}
               {bd && (
                 <div className="flex justify-between py-2 border-t border-dashed border-gray-200 text-sm font-semibold">
-                  <span className="text-gray-600">Subtotal (excl. GST)</span><span>{fmt(bd.subtotal)}</span>
+                  <span className="text-gray-600">Subtotal (excl. GST)</span><span>{fmt(bd.subtotal + bd.insAmt)}</span>
                 </div>
               )}
               {bd && (
@@ -696,9 +697,6 @@ const RailBookingConfirmationPage: React.FC = () => {
                   <div className="flex justify-between text-gray-600"><span>Platform Fee GST @18%</span><span>{fmt(bd.gPlat)}</span></div>
                   <div className="flex justify-between font-bold text-gray-700 pt-1 border-t border-amber-200"><span>Total GST</span><span>{fmt(bd.totalGST)}</span></div>
                 </div>
-              )}
-              {insuranceRequired && bd && (
-                <div className="flex justify-between text-sm"><span className="text-gray-500">Cargo Insurance</span><span className="font-semibold">{fmt(bd.insAmt)}</span></div>
               )}
               {bd && (
                 <div className="border-t border-gray-200 pt-3">
