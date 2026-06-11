@@ -25,13 +25,11 @@ interface LocationAutocompleteProps {
   global?: boolean;
 }
 
+// City symbol for all place types (port/anchor and rail/train symbols removed)
 const getTypeIcon = (type: string) => {
   switch (type) {
-    case 'seaport':       return '⚓';
-    case 'airport':       return '✈️';
-    case 'rail_terminal': return '🚂';
-    case 'city':          return '🏙️';
-    default:              return '📍';
+    case 'airport': return '✈️';
+    default:        return '🏙️';
   }
 };
 
