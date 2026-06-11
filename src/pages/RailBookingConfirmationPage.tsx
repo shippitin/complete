@@ -146,7 +146,8 @@ const RailBookingConfirmationPage: React.FC = () => {
     if (!selectedTrainResult || !formData) return null;
     const cfd = formData as TrainContainerFormData;
     const isDomestic = cfd.isDomestic !== false;
-    const ct = cfd.containerType || '20ft Standard';
+    // Empty types ("20ft Empty"/"40ft Empty") reuse their loaded base rate card.
+    const ct = (cfd.containerType || '20ft Standard').replace(/\bEmpty\b/i, 'Standard');
     const n  = cfd.numberOfContainers || 1;
     const st = cfd.serviceType || 'terminalToTerminal';
     const isDoorO    = st==='doorToDoor'||st==='doorToTerminal'||st==='doorToPort';

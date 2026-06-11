@@ -50,6 +50,14 @@ const containerTypes = [
   '40ft Standard','40ft High Cube','40ft High Cube Reefer','40ft Open Top High',
 ].map(v => ({ label: v, value: v }));
 
+// International also allows empty-container moves (repositioning) — these carry no
+// cargo, so weight is muted when selected.
+const intlContainerTypes = [
+  ...containerTypes,
+  { label: '20ft Empty', value: '20ft Empty' },
+  { label: '40ft Empty', value: '40ft Empty' },
+];
+
 const wagonTypes = [
   'Open Wagon','Covered Wagon','Flat Wagon','Hopper Wagon','Other',
 ].map(v => ({ label: v, value: v }));
@@ -105,7 +113,9 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   const [commodity,       setCommodity]       = useState('FAK (Freight of All Kinds)');
   const [hazardous,       setHazardous]       = useState<boolean|''>(false);
   const [readyDate,       setReadyDate]       = useState<Date|null>(new Date());
-  const [intlEmpty,       setIntlEmpty]       = useState(false);   // international empty container — mutes weight
+  // International empty-container move — derived from the selected container type
+  // ("20ft Empty"/"40ft Empty"). Mutes the weight field and skips its validation.
+  const isIntlEmpty = containerMode === 'international' && /empty/i.test(containerType);
 
   const [goodsServiceType, setGoodsServiceType] = useState<RailServiceType>('terminalToTerminal');
   const [goodsOriginTerm,  setGoodsOriginTerm]  = useState('');
@@ -173,7 +183,6 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     setContainerType('');     setNumContainers(1);
     setTotalWeight('');       setCommodity('FAK (Freight of All Kinds)');
     setHazardous(false);      setReadyDate(new Date());
-    setIntlEmpty(false);
     setGoodsServiceType('terminalToTerminal');
     setGoodsOriginTerm('');   setGoodsOriginAddr('');
     setGoodsDestTerm('');     setGoodsDestAddr('');
@@ -219,7 +228,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
       if (!containerType)                                                           e.containerType  = 'Required';
       if (!parseNumber(numContainers) || (parseNumber(numContainers)||0) < 1)     e.numContainers  = 'Required';
       // Empty international containers carry no cargo — weight isn't required.
-      if (!(containerMode === 'international' && intlEmpty)) {
+      if (!isIntlEmpty) {
         if (!parseNumber(totalWeight) || (parseNumber(totalWeight)||0) < 1)       e.totalWeight    = 'Required';
       }
       if (!commodity)                                                               e.commodity      = 'Required';
@@ -246,13 +255,13 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           destinationTerminal: isDomestic && (domServiceType === 'terminalToTerminal' || domServiceType === 'doorToTerminal')  ? domDestTerminal   : undefined,
           containerType,
           numberOfContainers: parseNumber(numContainers) as number,
-          totalWeight:        (containerMode === 'international' && intlEmpty) ? 0 : (parseNumber(totalWeight) as number),
+          totalWeight:        isIntlEmpty ? 0 : (parseNumber(totalWeight) as number),
           cargoType:          commodity,
           hazardousCargo:     hazardous === true,
           readyDate:          readyDate?.toISOString().split('T')[0] || '',
           cargoValue:         0,
           insuranceRequired:  false,
-          ...(containerMode === 'international' && { etmsMovementType: movement, emptyContainer: intlEmpty }),
+          ...(containerMode === 'international' && { etmsMovementType: movement, emptyContainer: isIntlEmpty }),
         } as TrainContainerFormData;
       }
     } else if (activeTab === 'goods') {
@@ -525,30 +534,19 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             <label className="block text-sm font-medium text-gray-700 mb-1">Container Type <span className="text-red-500">*</span></label>
             <select value={containerType} onChange={e => setContainerType(e.target.value)} className={inp(!!errors.containerType)}>
               <option value="">Select Container Type</option>
-              {containerTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              {intlContainerTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
-        </div>
-        {/* Loaded vs Empty — empty containers carry no cargo, so weight is muted */}
-        <div className="flex items-center gap-4 mb-1">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Container Load</p>
-          {[{v:false,l:'Loaded'},{v:true,l:'Empty'}].map(o => (
-            <label key={String(o.v)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
-              <input type="radio" name="intlEmpty" checked={intlEmpty === o.v}
-                onChange={() => { setIntlEmpty(o.v); if (o.v) setErrors(p => ({ ...p, totalWeight: undefined as any })); }}
-                className="h-4 w-4 text-blue-600" /> {o.l}
-            </label>
-          ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Weight (KG) {!intlEmpty && <span className="text-red-500">*</span>}
+              Weight (KG) {!isIntlEmpty && <span className="text-red-500">*</span>}
             </label>
-            <input type="number" value={intlEmpty ? '' : totalWeight} disabled={intlEmpty}
-              placeholder={intlEmpty ? 'Not required (empty)' : 'e.g., 20000'}
+            <input type="number" value={isIntlEmpty ? '' : totalWeight} disabled={isIntlEmpty}
+              placeholder={isIntlEmpty ? 'Not required (empty container)' : 'e.g., 20000'}
               onChange={e => setTotalWeight(e.target.value === '' ? '' : Number(e.target.value))}
-              className={`${inp(!!errors.totalWeight)} ${intlEmpty ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`} />
+              className={`${inp(!!errors.totalWeight)} ${isIntlEmpty ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`} />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">No. of Containers <span className="text-red-500">*</span></label>

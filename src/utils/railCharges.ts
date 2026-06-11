@@ -78,12 +78,15 @@ export const computeRailCharges = ({
   baseRailFreight, isDomestic, containerType, numContainers,
   doorOrigin, doorDest, originPort, destPort,
 }: RailChargeInput): RailCharges => {
-  const thcPerSide   = isDomestic ? DOMESTIC_THC : (INTL_THC[containerType] || 8700);
+  // Empty-container types ("20ft Empty"/"40ft Empty") reuse their loaded base
+  // type's rate card for handling/mile lookups.
+  const ct = containerType.replace(/\bEmpty\b/i, 'Standard');
+  const thcPerSide   = isDomestic ? DOMESTIC_THC : (INTL_THC[ct] || 8700);
   const thcOrigin    = originPort ? 0 : thcPerSide * numContainers;
   const thcDest      = destPort   ? 0 : thcPerSide * numContainers;
-  const otherCharges = isDomestic ? 0 : (INTL_OTHER[containerType] || 1000) * numContainers;
-  const firstMile    = doorOrigin ? (FIRST_MILE[containerType] || 10500) * numContainers : 0;
-  const lastMile     = doorDest   ? (LAST_MILE[containerType]  || 12000) * numContainers : 0;
+  const otherCharges = isDomestic ? 0 : (INTL_OTHER[ct] || 1000) * numContainers;
+  const firstMile    = doorOrigin ? (FIRST_MILE[ct] || 10500) * numContainers : 0;
+  const lastMile     = doorDest   ? (LAST_MILE[ct]  || 12000) * numContainers : 0;
   const platformFee  = isDomestic ? 1000 : 1500;
   const subtotal     = baseRailFreight + thcOrigin + thcDest + otherCharges + firstMile + lastMile + platformFee;
   return { baseRailFreight, thcPerSide, thcOrigin, thcDest, otherCharges, firstMile, lastMile, platformFee, subtotal };
