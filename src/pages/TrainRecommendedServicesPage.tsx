@@ -120,21 +120,22 @@ const TrainRecommendedServicesPage: React.FC = () => {
       {/* Search summary bar */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex flex-wrap gap-0 divide-x divide-gray-200 rounded-xl border border-gray-200 overflow-hidden text-sm bg-gray-50">
+          <div className="flex flex-col sm:flex-row sm:items-stretch divide-y sm:divide-y-0 sm:divide-x divide-gray-200 rounded-xl border border-gray-200 overflow-hidden text-sm bg-gray-50">
             {[
               { label: 'Origin',      value: originLabel },
               { label: 'Destination', value: destLabel   },
               { label: 'Load',        value: loadLabel   },
               { label: 'Goods',       value: goodsLabel  },
-            ].map(f => (
-              <div key={f.label} className="flex items-center gap-2 px-4 py-3 flex-1 min-w-[120px]">
-                <div>
-                  <p className="text-xs text-gray-400 font-medium">{f.label} <span className="text-green-500">✓</span></p>
-                  <p className="text-sm font-bold text-gray-800 mt-0.5 truncate">{f.value}</p>
+            ].map(f => {
+              const clean = String(f.value).replace(/,?\s*India$/i, '');
+              return (
+                <div key={f.label} className="px-4 py-2.5 flex-1 min-w-0">
+                  <p className="text-[11px] text-gray-400 font-medium">{f.label} <span className="text-green-500">✓</span></p>
+                  <p className="text-sm font-bold text-gray-800 mt-0.5 truncate" title={clean}>{clean}</p>
                 </div>
-              </div>
-            ))}
-            <div className="flex items-center px-4">
+              );
+            })}
+            <div className="flex items-center justify-end sm:justify-center px-4 py-2 sm:py-0 flex-shrink-0">
               <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-blue-500 transition" title="Edit search">
                 <FaPencilAlt className="text-sm" />
               </button>
