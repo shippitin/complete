@@ -109,6 +109,29 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
+        // Domestic door/city fields: a 6-digit pincode resolves to real areas
+        // via India Post (the backend has no pincode dataset). e.g. 600001 -> Chennai.
+        if (locationType === 'city' && !global && /^\d{6}$/.test(val)) {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${val}`);
+          const data = await res.json();
+          const offices: any[] = data?.[0]?.PostOffice || [];
+          const mapped: Location[] = offices.map((po, i) => {
+            const area = (po.Name || '').trim();
+            return {
+              id: `${val}-${i}`,
+              name: area,
+              full_name: `${area}, ${po.District} - ${po.Pincode}`,
+              code: po.Pincode,
+              type: 'city',
+              state: [po.District, po.State].filter(Boolean).join(', '),
+              country: po.Country || 'India',
+            };
+          });
+          setSuggestions(mapped);
+          setShowDropdown(true);
+          return;
+        }
+
         const params: any = { q: val };
         // 'city'/door fields have no dedicated city dataset in the backend, so
         // searching type=city returns nothing. Drop the filter for these fields to
@@ -137,8 +160,9 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
       // International — show as "City, Country"
       displayValue = location.name;
     } else {
-      // Domestic — show only clean city name, no ICD/DCT/codes
-      displayValue = cleanName(location.name);
+      // Domestic — pincode results carry a full "Area, District - PIN" string;
+      // otherwise show the clean city name (no ICD/DCT/codes).
+      displayValue = location.full_name || cleanName(location.name);
     }
 
     setInputValue(displayValue);
