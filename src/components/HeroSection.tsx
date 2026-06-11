@@ -131,7 +131,7 @@ const HeroSection: React.FC = () => {
 
   return (
     <section
-      className="w-full py-6 px-4"
+      className="w-full pt-12 pb-10 px-4"
       style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%)' }}
     >
       <div className="max-w-6xl mx-auto">
