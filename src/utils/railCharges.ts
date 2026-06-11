@@ -28,10 +28,21 @@ export const INTL_OTHER: Record<string, number> = {
   '40ft Open Top High':    7000,
 };
 
-export const FIRST_LAST_MILE: Record<string, number> = {
+// First-mile (pickup) and last-mile (delivery) trucking, per container.
+// Kept as two maps so the two legs can differ (e.g. 20ft last mile costs more).
+export const FIRST_MILE: Record<string, number> = {
   '20ft Standard':         10500,
   '20ft High Cube':        10500,
   '20ft High Cube Reefer': 10500,
+  '40ft Standard':         12000,
+  '40ft High Cube':        12000,
+  '40ft High Cube Reefer': 12000,
+  '40ft Open Top High':    12000,
+};
+export const LAST_MILE: Record<string, number> = {
+  '20ft Standard':         12000,
+  '20ft High Cube':        12000,
+  '20ft High Cube Reefer': 12000,
   '40ft Standard':         12000,
   '40ft High Cube':        12000,
   '40ft High Cube Reefer': 12000,
@@ -71,8 +82,8 @@ export const computeRailCharges = ({
   const thcOrigin    = originPort ? 0 : thcPerSide * numContainers;
   const thcDest      = destPort   ? 0 : thcPerSide * numContainers;
   const otherCharges = isDomestic ? 0 : (INTL_OTHER[containerType] || 1000) * numContainers;
-  const firstMile    = doorOrigin ? (FIRST_LAST_MILE[containerType] || 10500) * numContainers : 0;
-  const lastMile     = doorDest   ? (FIRST_LAST_MILE[containerType] || 12000) * numContainers : 0;
+  const firstMile    = doorOrigin ? (FIRST_MILE[containerType] || 10500) * numContainers : 0;
+  const lastMile     = doorDest   ? (LAST_MILE[containerType]  || 12000) * numContainers : 0;
   const platformFee  = isDomestic ? 1000 : 1500;
   const subtotal     = baseRailFreight + thcOrigin + thcDest + otherCharges + firstMile + lastMile + platformFee;
   return { baseRailFreight, thcPerSide, thcOrigin, thcDest, otherCharges, firstMile, lastMile, platformFee, subtotal };
