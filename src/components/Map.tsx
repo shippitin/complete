@@ -219,8 +219,10 @@ const Map: React.FC<MapProps> = ({ path, shipmentType, statusTimeline, progress 
     vehicleTag.setMap(map);
     overlaysRef.current.push(vehicle, vehicleTag);
 
-    // Animate origin → target fraction; duration scales with distance for constant speed
-    const DURATION = Math.max(2500, 22000 * targetT);
+    // In transit: crawl toward the target so the % grows visibly and parks there.
+    // Delivered: a quick arrival glide so it settles on "✅ Delivered" fast instead
+    // of spending ~20s saying "En Route" (which contradicts the Delivered label).
+    const DURATION = delivered ? 4000 : Math.max(3000, 12000 * targetT);
     let start: number | null = null;
     const tick = (ts: number) => {
       if (start === null) start = ts;
