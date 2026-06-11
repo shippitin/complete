@@ -43,7 +43,7 @@ const TrainResultsPage: React.FC = () => {
   const [filteredResults, setFilteredResults]       = useState<FreightTrainResult[]>([]);
   const [loading, setLoading]                       = useState(true);
   const [error, setError]                           = useState<string | null>(null);
-  const [sortBy, setSortBy]                         = useState<'recommended' | 'cheapest' | 'fastest' | 'mostPopular'>('recommended');
+  const [sortBy, setSortBy]                         = useState<'recommended' | 'cheapest' | 'fastest' | 'mostPopular'>('cheapest');
   const [selectedTrainTypes, setSelectedTrainTypes] = useState<TrainTypeFilter[]>([]);
   const [selectedOperators, setSelectedOperators]   = useState<OperatorFilter[]>([]);
   const [selectedServiceTypes, setSelectedServiceTypes] = useState<ServiceTypeFilter[]>([]);
