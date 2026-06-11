@@ -92,6 +92,9 @@ const RailServiceDetailsPage: React.FC = () => {
   const addFirstMile = (formData as any)?.addFirstMile || false;
   const addLastMile  = (formData as any)?.addLastMile  || false;
   const addCustoms   = (formData as any)?.addCustoms   || false;
+  // Insurance is written as `addInsurance` by the Recommended Services page
+  // (older flows used `insuranceRequired` — honour both).
+  const addInsurance = (formData as any)?.addInsurance || insuranceRequired || false;
 
   const customsFee    = addCustoms ? 2000 : 0;
   const gstCustoms    = Math.round(customsFee * 0.18);
@@ -121,7 +124,7 @@ const RailServiceDetailsPage: React.FC = () => {
   const gstFLML     = Math.round((firstMile + lastMile) * 0.05);
   const gstPlatform = Math.round(platformFee * 0.18);
   const totalGST    = gstRail + gstTHC + gstFLML + gstPlatform + gstCustoms;
-  const insuranceAmt    = insuranceRequired ? Math.round(baseRailFreight * 0.01) : 0;
+  const insuranceAmt    = addInsurance ? 1000 : 0;
   const subtotalWithGST = subtotal + totalGST + insuranceAmt;
   const discountAmt     = promoCode && VALID_PROMOS[promoCode]
     ? Math.round(subtotalWithGST * VALID_PROMOS[promoCode]) : 0;
@@ -264,7 +267,7 @@ const RailServiceDetailsPage: React.FC = () => {
                 state: {
                   formData: formData!,
                   selectedTrainResult: selectedTrainResult!,
-                  initialInsuranceRequired: insuranceRequired,
+                  initialInsuranceRequired: addInsurance,
                   claimGstInput: gstInput,
                 },
               });
@@ -431,11 +434,11 @@ const RailServiceDetailsPage: React.FC = () => {
               </div>
 
               {/* Insurance */}
-              {insuranceRequired && (
+              {addInsurance && (
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-700">Cargo Insurance</p>
-                    <p className="text-xs text-gray-400">1% of base rail freight</p>
+                    <p className="text-xs text-gray-400">All-risk cargo cover</p>
                   </div>
                   <span className="text-sm font-semibold text-gray-800">{fmt(insuranceAmt)}</span>
                 </div>

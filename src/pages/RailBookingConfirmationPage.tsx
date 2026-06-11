@@ -133,6 +133,7 @@ const RailBookingConfirmationPage: React.FC = () => {
       setFormData(state.formData);
       setSelectedTrainResult(state.selectedTrainResult);
       setInsuranceRequired(state.initialInsuranceRequired || false);
+      setAddInsurance2(state.initialInsuranceRequired || false); // keep the toggle in sync
       setClaimGstInput(state.claimGstInput || false);
       setLoading(false);
     } else {
@@ -166,7 +167,7 @@ const RailBookingConfirmationPage: React.FC = () => {
     const gPlat   = Math.round(pf*0.18);
     const totalGST = gRail+gTHC+gFLML+gPlat;
     const subtotal = base+thcO+thcD+other+fm+lm+pf;
-    const insAmt   = insuranceRequired ? Math.round(base*0.01) : 0;
+    const insAmt   = insuranceRequired ? 1000 : 0;
     const grand    = subtotal+totalGST+insAmt;
     return { base,thcO,thcD,other,fm,lm,pf,gRail,gTHC,gFLML,gPlat,totalGST,subtotal,insAmt,grand,isDomestic,n,thcSide,isDoorO,isDoorD,isDestPort,isOrigPort };
   };
@@ -257,7 +258,7 @@ const RailBookingConfirmationPage: React.FC = () => {
     1: ['Full Name / Company *', 'Mobile Number *', 'Email ID *', 'GSTIN', 'Address *', 'City *', 'State *', 'Pincode', 'Country'],
     2: ['Full Name / Company *', 'Mobile Number *', 'Email ID *', 'GSTIN', 'Address *', 'City *', 'State *', 'Pincode', 'Country'],
     3: ['Description of Goods *', 'HSN Code', 'Nature of Packing', 'Weight / Container (MT) *', 'Invoice Number *', 'Invoice Date', 'Invoice Value (₹)', 'Special Instructions'],
-    4: ['First Mile Pickup (optional)', 'Last Mile Delivery (optional)', 'Customs Clearance ₹2,000 (optional)', 'Cargo Insurance 1% of value (optional)', 'CO₂ Credits', 'Miles Credits'],
+    4: ['First Mile Pickup (optional)', 'Last Mile Delivery (optional)', 'Customs Clearance ₹2,000 (optional)', 'Cargo Insurance ₹1,000 (optional)', 'CO₂ Credits', 'Miles Credits'],
     5: ['Payment Mode', 'Online / Bank Transfer / Credit Account'],
   };
 
@@ -576,7 +577,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         ))}
                         {[
                           { state: addCustoms,   setter: setAddCustoms,    label: '🛃 Customs Clearance', price: '₹2,000 / shipment', desc: 'CHA-assisted customs documentation' },
-                          { state: addInsurance, setter: (v: boolean) => { setAddInsurance2(v); setInsuranceRequired(v); }, label: '🛡️ Cargo Insurance', price: '1% of cargo value', desc: 'All-risk cargo insurance' },
+                          { state: addInsurance, setter: (v: boolean) => { setAddInsurance2(v); setInsuranceRequired(v); }, label: '🛡️ Cargo Insurance', price: '₹1,000 flat', desc: 'All-risk cargo insurance' },
                           { state: addCO2,       setter: setAddCO2,        label: '🌱 CO₂ Credits', price: 'Earn green credits', desc: 'Rail emits 75% less CO₂ than road' },
                           { state: addMiles,     setter: setAddMiles,      label: '⭐ Miles Credits', price: 'Earn reward miles', desc: 'Redeem for discounts on future bookings' },
                         ].map((item, i) => (
@@ -697,7 +698,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                 </div>
               )}
               {insuranceRequired && bd && (
-                <div className="flex justify-between text-sm"><span className="text-gray-500">Cargo Insurance (1%)</span><span className="font-semibold">{fmt(bd.insAmt)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-gray-500">Cargo Insurance</span><span className="font-semibold">{fmt(bd.insAmt)}</span></div>
               )}
               {bd && (
                 <div className="border-t border-gray-200 pt-3">
