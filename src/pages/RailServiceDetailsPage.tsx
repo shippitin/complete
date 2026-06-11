@@ -130,23 +130,21 @@ const RailServiceDetailsPage: React.FC = () => {
   const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-5">
 
         {/* ── LEFT ── */}
-        <div className="flex-grow space-y-4">
+        <div className="flex-grow space-y-3">
 
-          {/* Header — back only (title removed) */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
-            <button onClick={() => navigate('/train-results', { state: { formData: formData! } })}
-              className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium transition">
-              <FaArrowLeft className="mr-2" /> Back to Search Results
-            </button>
-          </div>
+          {/* Back (no box) */}
+          <button onClick={() => navigate('/train-results', { state: { formData: formData! } })}
+            className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium transition px-1">
+            <FaArrowLeft className="mr-2" /> Back to Search Results
+          </button>
 
           {/* Quote Details */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-2 mb-3">
               <FaClipboardList className="text-gray-500 text-lg" />
               <h2 className="text-lg font-bold text-gray-800">Your Quote Details</h2>
             </div>
@@ -161,41 +159,41 @@ const RailServiceDetailsPage: React.FC = () => {
                 { label: 'Weight',      value: formData!.totalWeight ? `${formData!.totalWeight} KG` : 'N/A' },
                 { label: 'Hazardous',   value: formData!.hazardousCargo ? 'Yes' : 'No' },
               ].map((row, i) => (
-                <div key={i} className="flex items-start justify-between py-2 border-b border-gray-100 last:border-0">
+                <div key={i} className="flex items-start justify-between py-1.5 border-b border-gray-100 last:border-0">
                   <span className="text-sm text-gray-500">{row.label}</span>
                   <span className="text-sm font-medium text-gray-800 text-right">{row.value || 'N/A'}</span>
                 </div>
               ))}
               {isContainer && <>
-                <div className="flex items-start justify-between py-2 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Container Type</span>
                   <span className="text-sm font-medium text-gray-800">{cfd.containerType}</span>
                 </div>
-                <div className="flex items-start justify-between py-2 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
                   <span className="text-sm text-gray-500">No. of Containers</span>
                   <span className="text-sm font-medium text-gray-800">{cfd.numberOfContainers}</span>
                 </div>
-                <div className="flex items-start justify-between py-2 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Booking Type</span>
                   <span className="text-sm font-medium text-gray-800">{isDomestic ? 'Domestic' : 'International'}</span>
                 </div>
-                <div className="flex items-start justify-between py-2 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Service Type</span>
                   <span className="text-sm font-medium text-gray-800">{cfd.serviceType || 'Terminal to Terminal'}</span>
                 </div>
               </>}
               {formData!.bookingType === 'Train Goods Booking' && <>
-                <div className="flex items-start justify-between py-2 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
                   <span className="text-sm text-gray-500">No. of Wagons</span>
                   <span className="text-sm font-medium text-gray-800">{(formData as TrainGoodsFormData).numberOfWagons}</span>
                 </div>
-                <div className="flex items-start justify-between py-2 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Wagon Type</span>
                   <span className="text-sm font-medium text-gray-800">{(formData as TrainGoodsFormData).wagonType}</span>
                 </div>
               </>}
               {formData!.bookingType === 'Train Parcel Booking' && (
-                <div className="flex items-start justify-between py-2 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Parcel Count</span>
                   <span className="text-sm font-medium text-gray-800">{(formData as TrainParcelFormData).parcelCount}</span>
                 </div>
@@ -203,9 +201,9 @@ const RailServiceDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Promo / Discount Code */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+          {/* Promo / Discount Code — no box */}
+          <div className="px-1">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
               <FaTag className="text-blue-500" /> Promo / Discount Code
             </p>
             {promoCode ? (
@@ -241,8 +239,8 @@ const RailServiceDetailsPage: React.FC = () => {
           </label>
 
           {/* Terms & Conditions */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-            <p className="text-xs text-gray-600 mb-3 leading-relaxed">
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <p className="text-xs text-gray-600 mb-2 leading-relaxed">
               This rate is valid for the current CONCOR tariff cycle. Rates are subject to change if the booking is not confirmed before the tariff revision date. For {isDomestic ? 'domestic' : 'international'} shipments, all charges are as per CONCOR's published Schedule of Charges.
             </p>
             <label className="flex items-start gap-3 cursor-pointer">
