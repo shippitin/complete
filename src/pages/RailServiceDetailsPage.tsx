@@ -234,7 +234,7 @@ const RailServiceDetailsPage: React.FC = () => {
             <input type="checkbox" checked={gstInput} onChange={e => setGstInput(e.target.checked)}
               className="h-5 w-5 accent-blue-600 rounded flex-shrink-0" />
             <span className="text-base font-semibold text-gray-800">
-              I have a GST number <span className="text-sm font-normal text-gray-400">(Optional)</span>
+              Claim GST Input
             </span>
           </label>
 
