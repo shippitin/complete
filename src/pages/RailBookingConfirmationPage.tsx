@@ -63,6 +63,7 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [currentStep, setCurrentStep]                 = useState(1);
   const [showBreakup, setShowBreakup]                 = useState(true);
   const [errors, setErrors]                           = useState<Record<string, string>>({});
+  const [claimGstInput, setClaimGstInput]             = useState(false);   // from service-details page; makes sender GSTIN required
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -126,11 +127,13 @@ const RailBookingConfirmationPage: React.FC = () => {
       formData: AllFormData;
       selectedTrainResult: FreightTrainResult;
       initialInsuranceRequired: boolean;
+      claimGstInput?: boolean;
     } | undefined;
     if (state?.formData && state?.selectedTrainResult) {
       setFormData(state.formData);
       setSelectedTrainResult(state.selectedTrainResult);
       setInsuranceRequired(state.initialInsuranceRequired || false);
+      setClaimGstInput(state.claimGstInput || false);
       setLoading(false);
     } else {
       setError('Booking details not found.');
@@ -178,6 +181,7 @@ const RailBookingConfirmationPage: React.FC = () => {
       if (!senderAddress.trim()) e.senderAddress = 'Required';
       if (!senderCity.trim())    e.senderCity    = 'Required';
       if (!senderState.trim())   e.senderState   = 'Required';
+      if (claimGstInput && !senderGstin.trim()) e.senderGstin = 'GSTIN required (you selected “I have a GST number”)';
     }
     if (step===2) {
       if (!receiverName.trim())    e.receiverName    = 'Required';
@@ -364,8 +368,9 @@ const RailBookingConfirmationPage: React.FC = () => {
                           {errors.senderEmail && <p className="text-xs text-red-500 mt-1">{errors.senderEmail}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">GSTIN (optional)</label>
-                          <input type="text" value={senderGstin} onChange={e=>setSenderGstin(e.target.value)} placeholder="e.g., 33AAAAA0000A1Z5" className={inp()} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">GSTIN {claimGstInput ? <span className="text-red-400">*</span> : '(optional)'}</label>
+                          <input type="text" value={senderGstin} onChange={e=>setSenderGstin(e.target.value.toUpperCase())} placeholder="e.g., 33AAAAA0000A1Z5" className={inp(!!errors.senderGstin)} />
+                          {errors.senderGstin && <p className="text-xs text-red-500 mt-1">{errors.senderGstin}</p>}
                         </div>
                         <div className="sm:col-span-2">
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Address <span className="text-red-400">*</span></label>

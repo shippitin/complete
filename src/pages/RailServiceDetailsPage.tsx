@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  FaClipboardList, FaShieldAlt, FaArrowLeft,
+  FaClipboardList, FaArrowLeft,
   FaArrowRight, FaChevronDown, FaChevronUp, FaTag,
 } from 'react-icons/fa';
 import type {
@@ -32,8 +32,7 @@ const RailServiceDetailsPage: React.FC = () => {
   const [promoCode, setPromoCode]                     = useState('');
   const [promoError, setPromoError]                   = useState('');
   const [termsConfirmed, setTermsConfirmed]           = useState(false);
-  const [gstInput, setGstInput]                       = useState(false);   // claim GST input credit?
-  const [gstNumber, setGstNumber]                     = useState('');
+  const [gstInput, setGstInput]                       = useState(false);   // "I have a GST number" — makes GSTIN required on the booking page
 
   useEffect(() => {
     const state = location.state as {
@@ -204,39 +203,11 @@ const RailServiceDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* GST */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <FaShieldAlt className="text-blue-500 text-lg" />
-              <h2 className="text-lg font-bold text-gray-800">GST</h2>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {[{ v: false, l: 'Without GST input' }, { v: true, l: 'With GST input' }].map(o => (
-                <label key={String(o.v)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium border transition ${gstInput === o.v ? 'bg-blue-50 text-blue-700 border-blue-300' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
-                  <input type="radio" name="gstInput" checked={gstInput === o.v}
-                    onChange={() => setGstInput(o.v)} className="h-4 w-4 text-blue-600" />
-                  {o.l}
-                </label>
-              ))}
-            </div>
-            {gstInput && (
-              <div className="mt-3">
-                <label className="block text-xs font-medium text-gray-500 mb-1">GST Number</label>
-                <input type="text" value={gstNumber}
-                  onChange={e => setGstNumber(e.target.value.toUpperCase())}
-                  placeholder="e.g., 33ABCDE1234F1Z5" maxLength={15}
-                  className="w-full sm:w-72 text-sm border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 uppercase" />
-              </div>
-            )}
-          </div>
-
           {/* Promo / Discount Code */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <FaTag className="text-blue-500 text-lg" />
-              <h2 className="text-lg font-bold text-gray-800">Promo / Discount Code</h2>
-            </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <FaTag className="text-blue-500" /> Promo / Discount Code
+            </p>
             {promoCode ? (
               <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 sm:max-w-md">
                 <div>
@@ -259,6 +230,15 @@ const RailServiceDetailsPage: React.FC = () => {
             )}
             {promoError && <p className="text-xs text-red-500 mt-1.5">{promoError}</p>}
           </div>
+
+          {/* GST — plain checkbox; the GSTIN itself is entered (and required) on the booking page */}
+          <label className="flex items-center gap-3 cursor-pointer px-1">
+            <input type="checkbox" checked={gstInput} onChange={e => setGstInput(e.target.checked)}
+              className="h-5 w-5 accent-blue-600 rounded flex-shrink-0" />
+            <span className="text-base font-semibold text-gray-800">
+              I have a GST number <span className="text-sm font-normal text-gray-400">(Optional)</span>
+            </span>
+          </label>
 
           {/* Terms & Conditions */}
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
@@ -287,8 +267,7 @@ const RailServiceDetailsPage: React.FC = () => {
                   formData: formData!,
                   selectedTrainResult: selectedTrainResult!,
                   initialInsuranceRequired: insuranceRequired,
-                  gstInput,
-                  gstNumber,
+                  claimGstInput: gstInput,
                 },
               });
             }}
