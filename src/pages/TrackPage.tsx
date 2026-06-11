@@ -314,8 +314,10 @@ const TrackPage: React.FC = () => {
             : booking.service_type === 'Truck' ? 'Truck'
             : 'Rail',
           path: booking.service_type === 'Sea'
-            ? [[13.0827, 80.2707], [1.3521, 103.8198]]
-            : [[17.3850, 78.4867], [13.0827, 80.2707]],
+            ? [[13.0827, 80.2707], [1.3521, 103.8198]]   // Chennai → Singapore
+            : booking.service_type === 'Air'
+            ? [[28.5562, 77.1000], [51.5074, -0.1278]]   // Delhi → London
+            : [[20.5937, 78.9629], [20.5937, 78.9629]],  // placeholder — geocoded to real origin/dest below
           statusTimeline: booking.tracking_events?.length > 0
             ? booking.tracking_events.map((event: any) => ({
                 date: new Date(event.timestamp).toLocaleDateString('en-IN'),
@@ -348,6 +350,18 @@ const TrackPage: React.FC = () => {
         };
         setShipment(realShipment);
         setLoading(false);
+        // The Rail/Truck path above is a placeholder. Geocode the REAL origin &
+        // destination so the map route matches the booking (e.g. Chennai →
+        // Tughlakabad/Delhi) instead of a hardcoded line. Sea/Air keep their
+        // preset international corridors (the geocoder is India-scoped).
+        if ((realShipment.shipmentType === 'Rail' || realShipment.shipmentType === 'Truck')
+            && booking.origin && booking.destination) {
+          Promise.all([geocode(booking.origin), geocode(booking.destination)]).then(([o, d]) => {
+            setShipment(prev =>
+              prev && prev.id === realShipment.id ? { ...prev, path: [o, d] } : prev
+            );
+          });
+        }
         return;
       }
     } catch (err) {
