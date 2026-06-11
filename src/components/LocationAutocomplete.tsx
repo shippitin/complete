@@ -3,6 +3,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaMapMarkerAlt, FaSpinner, FaTimes } from 'react-icons/fa';
 import api from '../services/api';
 
+// Google Places key. In a frontend app this is necessarily public (it ships in
+// the JS bundle) — protect billing by restricting it to the shippitin.co HTTP
+// referrer in Google Cloud Console. Overridable via VITE_GOOGLE_MAPS_KEY.
+const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || 'AIzaSyAMBNRVdFnvb3I2Z7FuFdzfy_BrBk77obY';
+
 interface Location {
   id: string;
   name: string;
@@ -109,24 +114,30 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        // Domestic door/city fields: a 6-digit pincode resolves to real areas
-        // via India Post (the backend has no pincode dataset). e.g. 600001 -> Chennai.
-        if (locationType === 'city' && !global && /^\d{6}$/.test(val)) {
-          const res = await fetch(`https://api.postalpincode.in/pincode/${val}`);
-          const data = await res.json();
-          const offices: any[] = data?.[0]?.PostOffice || [];
-          const mapped: Location[] = offices.map((po, i) => {
-            const area = (po.Name || '').trim();
-            return {
-              id: `${val}-${i}`,
-              name: area,
-              full_name: `${area}, ${po.District} - ${po.Pincode}`,
-              code: po.Pincode,
-              type: 'city',
-              state: [po.District, po.State].filter(Boolean).join(', '),
-              country: po.Country || 'India',
-            };
+        // Door/city fields use Google Places — resolves cities, areas, full
+        // addresses and pincodes (incl. ones India Post misses). Non-global
+        // fields are biased to India; global fields search worldwide.
+        if (locationType === 'city') {
+          const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_KEY },
+            body: JSON.stringify({ input: val, ...(global ? {} : { includedRegionCodes: ['in'] }) }),
           });
+          const data = await res.json();
+          const mapped: Location[] = (data.suggestions || [])
+            .filter((s: any) => s.placePrediction)
+            .map((s: any, i: number) => {
+              const p = s.placePrediction;
+              return {
+                id: p.placeId || `g-${i}`,
+                name: p.structuredFormat?.mainText?.text || p.text?.text || '',
+                full_name: p.text?.text || '',
+                code: '',
+                type: 'city',
+                state: p.structuredFormat?.secondaryText?.text || '',
+                country: '',
+              } as Location;
+            });
           setSuggestions(mapped);
           setShowDropdown(true);
           return;
@@ -156,13 +167,15 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   const handleSelect = (location: Location) => {
     let displayValue = '';
 
-    if (global) {
-      // International — show as "City, Country"
+    if (location.full_name) {
+      // Google Places result — store the full formatted place/address text.
+      displayValue = location.full_name;
+    } else if (global) {
+      // International backend result — "City, Country"
       displayValue = location.name;
     } else {
-      // Domestic — pincode results carry a full "Area, District - PIN" string;
-      // otherwise show the clean city name (no ICD/DCT/codes).
-      displayValue = location.full_name || cleanName(location.name);
+      // Domestic backend result — clean city name (no ICD/DCT/codes)
+      displayValue = cleanName(location.name);
     }
 
     setInputValue(displayValue);
