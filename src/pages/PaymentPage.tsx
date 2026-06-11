@@ -90,8 +90,15 @@ const PaymentPage: React.FC = () => {
                 serviceType,
               },
             });
-          } catch (error) {
-            toast.error('Payment verification failed. Please contact support.');
+          } catch (error: any) {
+            // Surface the backend's real reason so failures are diagnosable
+            // (signature mismatch, booking not found, etc.) instead of a generic message.
+            const status = error?.response?.status;
+            const serverMsg = error?.response?.data?.message;
+            console.error('Payment verify failed:', status, error?.response?.data);
+            toast.error(serverMsg
+              ? `Verify failed: ${serverMsg}`
+              : `Verify failed (${status || 'network error'}). Please contact support.`);
           }
         },
         modal: {
