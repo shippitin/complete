@@ -44,7 +44,7 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
   <div
     onClick={onClick}
     className={`
-      group flex flex-col items-center justify-end px-5 pt-3 pb-3 rounded-2xl cursor-pointer select-none
+      group flex flex-col items-center justify-end px-4 pt-2 pb-2 rounded-2xl cursor-pointer select-none
       transition-all duration-200 whitespace-nowrap flex-shrink-0
       ${isActive ? 'bg-blue-50 shadow-sm' : 'hover:bg-gray-50'}
     `}
@@ -138,12 +138,12 @@ const HeroSection: React.FC = () => {
       className="w-full pt-12 pb-10 px-4"
       style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%)' }}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-6xl mx-auto">
 
         {/* White tab strip — its own floating rounded box (MakeMyTrip style) */}
         <div
-          className="relative z-20 mx-2 sm:mx-4 bg-white px-6 sm:px-8 pt-5 pb-4 flex flex-wrap justify-center sm:justify-between items-end gap-2"
-          style={{ borderRadius: '22px', boxShadow: '0 10px 30px rgba(0,0,0,0.09)' }}
+          className="relative z-20 mx-4 sm:mx-10 bg-white px-4 pt-3 pb-2 flex flex-wrap justify-center sm:justify-between items-end gap-1"
+          style={{ borderRadius: '16px', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}
         >
           {tabs.map(tab => (
             <Tab
@@ -158,10 +158,10 @@ const HeroSection: React.FC = () => {
 
         {/* Form card — wider base, tucked just under the floating tab box */}
         <div
-          className="relative z-10 -mt-4 bg-white px-8 pt-10 pb-6"
+          className="relative z-10 -mt-3 bg-white px-6 pt-8 pb-5"
           style={{
-            borderRadius: '22px',
-            boxShadow: '0 14px 40px rgba(59,130,246,0.12), 0 2px 10px rgba(0,0,0,0.06)',
+            borderRadius: '16px',
+            boxShadow: '0 8px 32px rgba(59,130,246,0.10), 0 2px 8px rgba(0,0,0,0.06)',
           }}
         >
           {renderQuoteForm()}
