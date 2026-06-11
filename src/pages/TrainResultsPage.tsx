@@ -1,7 +1,7 @@
 // src/pages/TrainResultsPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaTrain, FaShip, FaMapMarkerAlt, FaRupeeSign, FaArrowRight, FaArrowLeft, FaFilter, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaTrain, FaShip, FaMapMarkerAlt, FaRupeeSign, FaArrowRight, FaArrowLeft, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, RailServiceType, TrainContainerFormData } from '../types/QuoteFormHandle';
 import API_BASE_URL from '../config/api';
 import { computeRailCharges, doorPortFlags } from '../utils/railCharges';
@@ -43,7 +43,7 @@ const TrainResultsPage: React.FC = () => {
   const [filteredResults, setFilteredResults]       = useState<FreightTrainResult[]>([]);
   const [loading, setLoading]                       = useState(true);
   const [error, setError]                           = useState<string | null>(null);
-  const [sortBy, setSortBy]                         = useState<'recommended' | 'cheapest' | 'fastest'>('recommended');
+  const [sortBy, setSortBy]                         = useState<'recommended' | 'cheapest' | 'fastest' | 'mostPopular'>('recommended');
   const [selectedTrainTypes, setSelectedTrainTypes] = useState<TrainTypeFilter[]>([]);
   const [selectedOperators, setSelectedOperators]   = useState<OperatorFilter[]>([]);
   const [selectedServiceTypes, setSelectedServiceTypes] = useState<ServiceTypeFilter[]>([]);
@@ -348,12 +348,28 @@ const TrainResultsPage: React.FC = () => {
               </>
             )}
           </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-5">
+
+        {/* Header: title + count on the left, sort options on the right */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Rail Freight Quotes</h1>
+            <p className="text-sm text-gray-400 mt-0.5">
+              {filteredResults.length} options ·{' '}
+              {domestic ? 'Domestic DCT rates' : `International — ${movement === 'import' ? 'Import' : 'Export'}`}
+              {' · Prices excl. GST'}
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">Sort by:</span>
             {[
-              { key: 'recommended', label: 'Recommended' },
               { key: 'cheapest',    label: 'Cheapest' },
               { key: 'fastest',     label: 'Fastest' },
+              { key: 'recommended', label: 'Recommended' },
+              { key: 'mostPopular', label: 'Most Popular' },
             ].map(s => (
               <button key={s.key} onClick={() => setSortBy(s.key as any)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${sortBy === s.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
@@ -362,70 +378,9 @@ const TrainResultsPage: React.FC = () => {
             ))}
           </div>
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6">
-
-        {/* Sidebar */}
-        <aside className="hidden lg:block w-56 flex-shrink-0">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-36">
-            <h3 className="font-bold text-gray-700 text-sm mb-4 flex items-center gap-2">
-              <FaFilter className="text-blue-400 text-xs" /> Filters
-            </h3>
-            <div className="space-y-5">
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Train Type</p>
-                {(['Premium Cargo', 'Express Cargo', 'Standard Cargo', 'Economy Cargo'] as TrainTypeFilter[]).map(t => (
-                  <label key={t} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 text-sm text-gray-600">
-                    <input type="checkbox" className="rounded text-blue-600"
-                      checked={selectedTrainTypes.includes(t)}
-                      onChange={() => handleFilter('trainType', t)} />
-                    {t}
-                  </label>
-                ))}
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Operators</p>
-                {operatorOptions.map(o => (
-                  <label key={o} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 text-sm text-gray-600">
-                    <input type="checkbox" className="rounded text-blue-600"
-                      checked={selectedOperators.includes(o as OperatorFilter)}
-                      onChange={() => handleFilter('operator', o)} />
-                    {o}
-                    {o === 'BCSL' && <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium ml-auto">New</span>}
-                  </label>
-                ))}
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Service Type</p>
-                {serviceTypeOptions.map(([v, l]) => (
-                  <label key={v} className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer hover:bg-gray-50 text-sm text-gray-600">
-                    <input type="checkbox" className="rounded text-blue-600"
-                      checked={selectedServiceTypes.includes(v as ServiceTypeFilter)}
-                      onChange={() => handleFilter('serviceType', v)} />
-                    {l}
-                  </label>
-                ))}
-              </div>
-              <button
-                onClick={() => { setSelectedTrainTypes([]); setSelectedOperators([]); setSelectedServiceTypes([]); }}
-                className="w-full bg-gray-100 text-gray-600 font-semibold py-2.5 rounded-xl hover:bg-gray-200 transition text-sm">
-                Clear Filters
-              </button>
-            </div>
-          </div>
-        </aside>
 
         {/* Results */}
-        <div className="flex-1 min-w-0">
-          <div className="mb-5">
-            <h1 className="text-xl font-bold text-gray-800">Rail Freight Quotes</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
-              {filteredResults.length} options ·{' '}
-              {domestic ? 'Domestic DCT rates' : `International — ${movement === 'import' ? 'Import' : 'Export'}`}
-              {' · Prices excl. GST'}
-            </p>
-          </div>
+        <div className="min-w-0">
 
           {filteredResults.length > 0 ? (
             <div className="space-y-4">
@@ -504,9 +459,7 @@ const TrainResultsPage: React.FC = () => {
           ) : (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
               <FaTrain className="text-gray-200 text-5xl mx-auto mb-4" />
-              <p className="text-gray-500 font-semibold">No train services found for your criteria.</p>
-              <button onClick={() => { setSelectedTrainTypes([]); setSelectedOperators([]); setSelectedServiceTypes([]); }}
-                className="mt-4 text-blue-600 text-sm hover:underline">Clear filters</button>
+              <p className="text-gray-500 font-semibold">No train services found.</p>
             </div>
           )}
         </div>
