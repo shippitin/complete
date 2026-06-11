@@ -75,22 +75,6 @@ const radioBtn = (active: boolean) =>
       : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
   }`;
 
-// Origin/Destination fields always sit inside a bordered MMT-style cell, so use the
-// borderless (unstyled) variant of the autocomplete everywhere in this form.
-const RailLoc = (p: React.ComponentProps<typeof LocationAutocomplete>) => (
-  <LocationAutocomplete {...p} unstyled />
-);
-
-// One field row rendered as a single bordered box split into cells by light dividers.
-// Lifts on hover and lights up with a soft blue ring when any field inside is focused
-// (the MakeMyTrip "the active cell glows" feel).
-const cellRow =
-  'grid grid-cols-1 md:grid-cols-4 rounded-2xl border border-gray-200 bg-white shadow-sm ' +
-  'transition-all duration-200 hover:border-gray-300 ' +
-  'focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100 ' +
-  'divide-y md:divide-y-0 md:divide-x divide-gray-200 ' +
-  '[&>div]:px-4 [&>div]:py-3';
-
 const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   initialActiveService = 'container', prefillData, showButtons = true, embedded = false,
 }, ref) => {
@@ -171,10 +155,9 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     return intlDestICD;
   };
 
-  // Borderless input — sits inside a bordered MMT-style cell (see cellRow).
   const inp = (err: boolean) =>
-    `block w-full px-0 py-1 text-sm font-medium bg-transparent border-0 focus:outline-none focus:ring-0 ${
-      err ? 'text-orange-600' : 'text-gray-900'
+    `block w-full px-3 py-2.5 text-sm rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition ${
+      err ? 'border-orange-400' : 'border-gray-300'
     }`;
 
   const resetAll = () => {
@@ -369,62 +352,62 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           </div>
           {errors.serviceType && <p className="text-xs text-orange-500 mt-1">{errors.serviceType}</p>}
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             {isDoorO
-              ? <RailLoc key="dom-origin-city" label="Origin" required value={domOriginAddress}
+              ? <LocationAutocomplete key="dom-origin-city" label="Origin" required value={domOriginAddress}
                   onChange={v => { setDomOriginAddress(v); setErrors(p => ({ ...p, originAddress: undefined as any })); }}
                   placeholder="e.g., Chennai, 600001" locationType="city" />
-              : <RailLoc key="dom-origin-term" label="Origin" required value={domOriginTerminal}
+              : <LocationAutocomplete key="dom-origin-term" label="Origin" required value={domOriginTerminal}
                   onChange={v => { setDomOriginTerminal(v); setErrors(p => ({ ...p, originTerminal: undefined as any })); }}
                   placeholder="e.g., Chennai" locationType="rail_terminal" />}
             {(errors.originAddress || errors.originTerminal) && <p className="text-xs text-orange-500 mt-1">{errors.originAddress || errors.originTerminal}</p>}
           </div>
           <div>
             {isDoorD
-              ? <RailLoc key="dom-dest-city" label="Destination" required value={domDestAddress}
+              ? <LocationAutocomplete key="dom-dest-city" label="Destination" required value={domDestAddress}
                   onChange={v => { setDomDestAddress(v); setErrors(p => ({ ...p, destAddress: undefined as any })); }}
                   placeholder="e.g., Delhi, 110001" locationType="city" />
-              : <RailLoc key="dom-dest-term" label="Destination" required value={domDestTerminal}
+              : <LocationAutocomplete key="dom-dest-term" label="Destination" required value={domDestTerminal}
                   onChange={v => { setDomDestTerminal(v); setErrors(p => ({ ...p, destTerminal: undefined as any })); }}
                   placeholder="e.g., Delhi" locationType="rail_terminal" />}
             {(errors.destAddress || errors.destTerminal) && <p className="text-xs text-orange-500 mt-1">{errors.destAddress || errors.destTerminal}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Ready Date <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ready Date <span className="text-red-500">*</span></label>
             <input type="date" value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
               onChange={e => setReadyDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Container Type <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Container Type <span className="text-red-500">*</span></label>
             <select value={containerType} onChange={e => setContainerType(e.target.value)} className={inp(!!errors.containerType)}>
               <option value="">Select</option>
               {containerTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
             <input type="number" value={totalWeight} placeholder="e.g., 20000"
               onChange={e => setTotalWeight(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.totalWeight)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">No. of Containers <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Containers <span className="text-red-500">*</span></label>
             <input type="number" value={numContainers} min="1" placeholder="1"
               onChange={e => setNumContainers(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.numContainers)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Cargo Type <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type <span className="text-red-500">*</span></label>
             <select value={commodity} onChange={e => setCommodity(e.target.value)} className={inp(!!errors.commodity)}>
               {allCommodities.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
             <div className="flex gap-4 mt-1">
               {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
                 <label key={String(o.v)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
@@ -510,9 +493,9 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             ))}
           </div>
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
           <div>
-            <RailLoc key={`intl-origin-${movement}-${st}`} label="Origin" required
+            <LocationAutocomplete key={`intl-origin-${movement}-${st}`} label="Origin" required
               value={getOriginValue()} onChange={setOriginValue}
               placeholder={isOriginDoor ? 'e.g., City / address' : isOriginGlobal ? 'e.g., Shanghai Port' : 'e.g., Chennai'}
               locationType={isOriginDoor ? 'city' : isOriginGlobal ? 'seaport' : 'rail_terminal'}
@@ -520,7 +503,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             {errors.intlOrigin && <p className="text-xs text-orange-500 mt-1">{errors.intlOrigin}</p>}
           </div>
           <div>
-            <RailLoc key={`intl-dest-${movement}-${st}`} label="Destination" required
+            <LocationAutocomplete key={`intl-dest-${movement}-${st}`} label="Destination" required
               value={getDestValue()} onChange={setDestValue}
               placeholder={isDestDoor ? 'e.g., City / address' : movement === 'export' && (st === 'terminalToPort' || st === 'doorToPort') ? 'e.g., JNPT, Mundra' : 'e.g., Delhi'}
               locationType={isDestDoor ? 'city' : movement === 'export' && (st === 'terminalToPort' || st === 'doorToPort') ? 'seaport' : 'rail_terminal'}
@@ -528,40 +511,40 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             {errors.intlDest && <p className="text-xs text-orange-500 mt-1">{errors.intlDest}</p>}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Date <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
             <input type="date" value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
               onChange={e => setReadyDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Container Type <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Container Type <span className="text-red-500">*</span></label>
             <select value={containerType} onChange={e => setContainerType(e.target.value)} className={inp(!!errors.containerType)}>
               <option value="">Select Container Type</option>
               {containerTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
             <input type="number" value={totalWeight} placeholder="e.g., 20000"
               onChange={e => setTotalWeight(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.totalWeight)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">No. of Containers <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Containers <span className="text-red-500">*</span></label>
             <input type="number" value={numContainers} min="1"
               onChange={e => setNumContainers(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.numContainers)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Cargo Type <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type <span className="text-red-500">*</span></label>
             <select value={commodity} onChange={e => setCommodity(e.target.value)} className={inp(!!errors.commodity)}>
               {allCommodities.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
             <div className="flex items-center gap-4 pt-1">
               {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
                 <label key={String(o.v)} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
@@ -591,56 +574,56 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             </label>
           ))}
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             {isDoorO
-              ? <RailLoc key="goods-origin-city" label="Origin" required value={goodsOriginAddr}
+              ? <LocationAutocomplete key="goods-origin-city" label="Origin" required value={goodsOriginAddr}
                   onChange={v => setGoodsOriginAddr(v)} placeholder="City / address" locationType="city" />
-              : <RailLoc key="goods-origin-term" label="Origin" required value={goodsOriginTerm}
+              : <LocationAutocomplete key="goods-origin-term" label="Origin" required value={goodsOriginTerm}
                   onChange={v => setGoodsOriginTerm(v)} placeholder="e.g., Delhi" locationType="rail_terminal" />}
           </div>
           <div>
             {isDoorD
-              ? <RailLoc key="goods-dest-city" label="Destination" required value={goodsDestAddr}
+              ? <LocationAutocomplete key="goods-dest-city" label="Destination" required value={goodsDestAddr}
                   onChange={v => setGoodsDestAddr(v)} placeholder="City / address" locationType="city" />
-              : <RailLoc key="goods-dest-term" label="Destination" required value={goodsDestTerm}
+              : <LocationAutocomplete key="goods-dest-term" label="Destination" required value={goodsDestTerm}
                   onChange={v => setGoodsDestTerm(v)} placeholder="e.g., Mumbai" locationType="rail_terminal" />}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Date <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
             <input type="date" value={goodsDate ? goodsDate.toISOString().split('T')[0] : ''}
               onChange={e => setGoodsDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Wagon Type <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Wagon Type <span className="text-red-500">*</span></label>
             <select value={goodsWagonType} onChange={e => setGoodsWagonType(e.target.value)} className={inp(!!errors.wagonType)}>
               <option value="">Select</option>
               {wagonTypes.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Weight (Tons) <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (Tons) <span className="text-red-500">*</span></label>
             <input type="number" value={goodsWeight} placeholder="e.g., 50"
               onChange={e => setGoodsWeight(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.goodsWeight)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">No. of Wagons <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">No. of Wagons <span className="text-red-500">*</span></label>
             <input type="number" value={numWagons} min="1"
               onChange={e => setNumWagons(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.numWagons)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Cargo Type <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Type <span className="text-red-500">*</span></label>
             <select value={goodsCommodity} onChange={e => setGoodsCommodity(e.target.value)} className={inp(false)}>
               {allCommodities.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
             <div className="flex gap-4 mt-1">
               {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
                 <label key={String(o.v)} className="flex items-center gap-1.5 text-sm cursor-pointer">
@@ -670,53 +653,53 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             </label>
           ))}
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             {isDoorO
-              ? <RailLoc key="parcel-origin-city" label="Origin" required value={parcelOriginAddr}
+              ? <LocationAutocomplete key="parcel-origin-city" label="Origin" required value={parcelOriginAddr}
                   onChange={v => setParcelOriginAddr(v)} placeholder="City / address" locationType="city" />
-              : <RailLoc key="parcel-origin-term" label="Origin" required value={parcelOriginTerm}
+              : <LocationAutocomplete key="parcel-origin-term" label="Origin" required value={parcelOriginTerm}
                   onChange={v => setParcelOriginTerm(v)} placeholder="e.g., Chennai" locationType="rail_terminal" />}
           </div>
           <div>
             {isDoorD
-              ? <RailLoc key="parcel-dest-city" label="Destination" required value={parcelDestAddr}
+              ? <LocationAutocomplete key="parcel-dest-city" label="Destination" required value={parcelDestAddr}
                   onChange={v => setParcelDestAddr(v)} placeholder="City / address" locationType="city" />
-              : <RailLoc key="parcel-dest-term" label="Destination" required value={parcelDestTerm}
+              : <LocationAutocomplete key="parcel-dest-term" label="Destination" required value={parcelDestTerm}
                   onChange={v => setParcelDestTerm(v)} placeholder="e.g., Delhi" locationType="rail_terminal" />}
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Date <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
             <input type="date" value={parcelDate ? parcelDate.toISOString().split('T')[0] : ''}
               onChange={e => setParcelDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Dimensions (LxWxH cm) <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dimensions (LxWxH cm) <span className="text-red-500">*</span></label>
             <input type="text" value={parcelDims} placeholder="e.g., 60x40x40"
               onChange={e => setParcelDims(e.target.value)} className={inp(!!errors.parcelDims)} />
           </div>
         </div>
-        <div className={cellRow}>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
             <input type="number" value={parcelWeight} placeholder="e.g., 10"
               onChange={e => setParcelWeight(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.parcelWeight)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Description <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
             <input type="text" value={parcelDesc} placeholder="e.g., Books, documents"
               onChange={e => setParcelDesc(e.target.value)} className={inp(!!errors.parcelDesc)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Parcel Count <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Parcel Count <span className="text-red-500">*</span></label>
             <input type="number" value={parcelCount} min="1"
               onChange={e => setParcelCount(e.target.value === '' ? '' : Number(e.target.value))}
               className={inp(!!errors.parcelCount)} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Hazardous <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hazardous <span className="text-red-500">*</span></label>
             <div className="flex gap-4 mt-1">
               {[{v:true,l:'Yes'},{v:false,l:'No'}].map(o => (
                 <label key={String(o.v)} className="flex items-center gap-1.5 text-sm cursor-pointer">
