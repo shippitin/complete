@@ -82,10 +82,14 @@ const RailLoc = (p: React.ComponentProps<typeof LocationAutocomplete>) => (
 );
 
 // One field row rendered as a single bordered box split into cells by light dividers.
+// Lifts on hover and lights up with a soft blue ring when any field inside is focused
+// (the MakeMyTrip "the active cell glows" feel).
 const cellRow =
-  'grid grid-cols-1 md:grid-cols-4 rounded-2xl border border-gray-300 bg-white ' +
+  'grid grid-cols-1 md:grid-cols-4 rounded-2xl border border-gray-200 bg-white shadow-sm ' +
+  'transition-all duration-200 hover:border-gray-300 ' +
+  'focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100 ' +
   'divide-y md:divide-y-0 md:divide-x divide-gray-200 ' +
-  '[&>div]:px-4 [&>div]:py-2.5';
+  '[&>div]:px-4 [&>div]:py-3';
 
 const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   initialActiveService = 'container', prefillData, showButtons = true, embedded = false,
@@ -169,8 +173,8 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
 
   // Borderless input — sits inside a bordered MMT-style cell (see cellRow).
   const inp = (err: boolean) =>
-    `block w-full px-0 py-1 text-sm bg-transparent border-0 focus:outline-none focus:ring-0 ${
-      err ? 'text-orange-600' : 'text-gray-800'
+    `block w-full px-0 py-1 text-sm font-medium bg-transparent border-0 focus:outline-none focus:ring-0 ${
+      err ? 'text-orange-600' : 'text-gray-900'
     }`;
 
   const resetAll = () => {

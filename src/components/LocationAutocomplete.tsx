@@ -177,7 +177,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     <div className={`relative ${className}`}>
       {label && (
         <label
-          className={`block ${unstyled ? 'text-xs font-medium text-gray-500' : 'text-sm font-medium text-gray-700'} mb-1`}
+          className={`block ${unstyled ? 'text-[11px] font-semibold uppercase tracking-wide text-gray-500' : 'text-sm font-medium text-gray-700'} mb-1`}
           htmlFor={id}
         >
           {label}{required && <span className="text-red-500 ml-1">*</span>}
@@ -202,7 +202,9 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
           autoComplete="off"
           className={
             unstyled
-              ? 'w-full pl-6 pr-7 py-1 text-sm bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none'
+              ? `w-full pl-6 pr-7 py-1 bg-transparent placeholder-gray-400 focus:outline-none transition-all ${
+                  inputValue ? 'text-base font-semibold text-gray-900' : 'text-sm text-gray-700'
+                }`
               : 'w-full pl-9 pr-8 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition bg-white'
           }
         />
