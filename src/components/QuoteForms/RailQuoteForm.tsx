@@ -83,6 +83,11 @@ const radioBtn = (active: boolean) =>
       : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
   }`;
 
+// True once RailQuoteForm has mounted in this document/session. Lets us tell a
+// manual page refresh (first mount of a freshly loaded document → start blank)
+// apart from an in-app back-navigation (a later remount → restore the saved form).
+let railFormMountedThisSession = false;
+
 const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   initialActiveService = 'container', prefillData, showButtons = true, embedded = false,
 }, ref) => {
@@ -180,9 +185,21 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     parcelCount,
   });
 
-  // Restore once on mount
+  // Restore once on mount — but ONLY when arriving via back/forward (or in-app
+  // navigation), NOT on a manual page refresh. On reload, start with a fresh form.
   useEffect(() => {
     try {
+      // First mount of a freshly loaded document = a fresh visit or a manual
+      // refresh → start blank (don't restore). Any later remount in the same
+      // session = an in-app back-navigation → restore the saved form.
+      const firstMountAfterLoad = !railFormMountedThisSession;
+      railFormMountedThisSession = true;
+      if (firstMountAfterLoad) {
+        sessionStorage.removeItem(RAIL_FORM_KEY);
+        prevMovement.current = 'export';
+        setHydrated(true);
+        return;
+      }
       const raw = sessionStorage.getItem(RAIL_FORM_KEY);
       if (raw) {
         const s = JSON.parse(raw);
