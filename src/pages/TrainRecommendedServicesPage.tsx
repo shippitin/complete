@@ -65,8 +65,9 @@ const TrainRecommendedServicesPage: React.FC = () => {
       state: {
         formData: {
           ...formData,
-          addFirstMile:  firstMile,
-          addLastMile:   lastMile,
+          // Only a door origin/destination can have first/last-mile trucking.
+          addFirstMile:  autoFirstMile && firstMile,
+          addLastMile:   autoLastMile  && lastMile,
           addCustoms:    customs,
           addInsurance:  insurance,
         },
@@ -75,14 +76,15 @@ const TrainRecommendedServicesPage: React.FC = () => {
   };
 
   const Toggle = ({
-    value, onChange,
-  }: { value: boolean; onChange: (v: boolean) => void }) => (
+    value, onChange, disabled = false,
+  }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean }) => (
     <button
       type="button"
       role="switch"
       aria-checked={value}
-      onClick={() => onChange(!value)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${value ? 'bg-blue-600' : 'bg-gray-300'}`}
+      disabled={disabled}
+      onClick={() => { if (!disabled) onChange(!value); }}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${disabled ? 'bg-gray-200 cursor-not-allowed' : value ? 'bg-blue-600' : 'bg-gray-300'}`}
     >
       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`} />
     </button>
@@ -163,28 +165,32 @@ const TrainRecommendedServicesPage: React.FC = () => {
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
 
-            {/* First Mile */}
-            <div>
+            {/* First Mile — only when the service has a door origin */}
+            <div className={autoFirstMile ? '' : 'opacity-60'}>
               <h2 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
                 First Mile Pickup
                 <span className="text-gray-400 text-xs border border-gray-300 rounded-full w-4 h-4 inline-flex items-center justify-center font-bold cursor-help">?</span>
               </h2>
-              <label className="flex items-center justify-between gap-4 cursor-pointer">
-                <p className={`text-sm font-medium ${firstMile ? 'text-gray-800' : 'text-gray-500'}`}>
-                  {firstMile ? 'Yes - Add first mile pickup to terminal' : 'No - I will deliver to the terminal myself'}
+              <label className={`flex items-center justify-between gap-4 ${autoFirstMile ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                <p className={`text-sm font-medium ${!autoFirstMile ? 'text-gray-400' : firstMile ? 'text-gray-800' : 'text-gray-500'}`}>
+                  {!autoFirstMile
+                    ? 'Not applicable — your origin is a terminal'
+                    : firstMile ? 'Yes - Add first mile pickup to terminal' : 'No - I will deliver to the terminal myself'}
                 </p>
-                <Toggle value={firstMile} onChange={setFirstMile} />
+                <Toggle value={autoFirstMile && firstMile} onChange={setFirstMile} disabled={!autoFirstMile} />
               </label>
             </div>
 
-            {/* Last Mile */}
-            <div>
+            {/* Last Mile — only when the service has a door destination */}
+            <div className={autoLastMile ? '' : 'opacity-60'}>
               <h2 className="text-sm font-bold text-gray-700 mb-3">Last Mile Delivery</h2>
-              <label className="flex items-center justify-between gap-4 cursor-pointer">
-                <p className={`text-sm font-medium ${lastMile ? 'text-gray-800' : 'text-gray-500'}`}>
-                  {lastMile ? 'Yes - Add last mile delivery from terminal' : 'No - Receiver will collect from terminal'}
+              <label className={`flex items-center justify-between gap-4 ${autoLastMile ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                <p className={`text-sm font-medium ${!autoLastMile ? 'text-gray-400' : lastMile ? 'text-gray-800' : 'text-gray-500'}`}>
+                  {!autoLastMile
+                    ? 'Not applicable — your destination is a terminal'
+                    : lastMile ? 'Yes - Add last mile delivery from terminal' : 'No - Receiver will collect from terminal'}
                 </p>
-                <Toggle value={lastMile} onChange={setLastMile} />
+                <Toggle value={autoLastMile && lastMile} onChange={setLastMile} disabled={!autoLastMile} />
               </label>
             </div>
 
