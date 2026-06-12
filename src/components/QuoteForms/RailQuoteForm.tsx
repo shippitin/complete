@@ -117,6 +117,20 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   // ("20ft Empty"/"40ft Empty"). Mutes the weight field and skips its validation.
   const isIntlEmpty = containerMode === 'international' && /empty/i.test(containerType);
 
+  // Earliest selectable booking date is today — no backward-dated bookings.
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  const _now = new Date();
+  const todayStr = `${_now.getFullYear()}-${pad2(_now.getMonth() + 1)}-${pad2(_now.getDate())}`;
+  // Block typing a minus sign / exponent into number fields (no negative weights).
+  const blockNeg = (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === '-' || e.key === 'e' || e.key === 'E') e.preventDefault(); };
+  // Backstop for a manually-typed past date (the `min` attr blocks the picker).
+  const isPastDate = (d: Date | null) => {
+    if (!d) return false;
+    const t = new Date(); t.setHours(0, 0, 0, 0);
+    const x = new Date(d); x.setHours(0, 0, 0, 0);
+    return x < t;
+  };
+
   const [goodsServiceType, setGoodsServiceType] = useState<RailServiceType>('terminalToTerminal');
   const [goodsOriginTerm,  setGoodsOriginTerm]  = useState('');
   const [goodsOriginAddr,  setGoodsOriginAddr]  = useState('');
@@ -326,6 +340,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
       if (!commodity)                                                               e.commodity      = 'Required';
       if (hazardous === '')                                                         e.hazardous      = 'Required';
       if (!readyDate)                                                               e.readyDate      = 'Required';
+      else if (isPastDate(readyDate))                                              e.readyDate      = 'Date cannot be in the past';
 
       if (Object.keys(e).length === 0) {
         const st         = containerMode === 'domestic' ? domServiceType : intlServiceType;
@@ -371,6 +386,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
       if (!parseNumber(numWagons))   e.numWagons   = 'Required';
       if (goodsHazardous === '')     e.hazardous   = 'Required';
       if (!goodsDate)                e.readyDate   = 'Required';
+      else if (isPastDate(goodsDate)) e.readyDate  = 'Date cannot be in the past';
       if (Object.keys(e).length === 0) {
         fd = {
           bookingType:        'Train Goods Booking',
@@ -406,6 +422,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
       if (!parseNumber(parcelCount)) e.parcelCount  = 'Required';
       if (parcelHazardous === '')    e.hazardous    = 'Required';
       if (!parcelDate)               e.readyDate    = 'Required';
+      else if (isPastDate(parcelDate)) e.readyDate  = 'Date cannot be in the past';
       if (Object.keys(e).length === 0) {
         fd = {
           bookingType:        'Train Parcel Booking',
@@ -481,7 +498,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Ready Date <span className="text-red-500">*</span></label>
-            <input type="date" value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
+            <input type="date" min={todayStr} value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
               onChange={e => setReadyDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
@@ -496,8 +513,8 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
-            <input type="number" value={totalWeight} placeholder="e.g., 20000"
-              onChange={e => setTotalWeight(e.target.value === '' ? '' : Number(e.target.value))}
+            <input type="number" min={1} onKeyDown={blockNeg} value={totalWeight} placeholder="e.g., 20000"
+              onChange={e => setTotalWeight(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
               className={inp(!!errors.totalWeight)} />
           </div>
           <div>
@@ -618,7 +635,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
-            <input type="date" value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
+            <input type="date" min={todayStr} value={readyDate ? readyDate.toISOString().split('T')[0] : ''}
               onChange={e => setReadyDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
@@ -635,9 +652,9 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Weight (KG) {!isIntlEmpty && <span className="text-red-500">*</span>}
             </label>
-            <input type="number" value={isIntlEmpty ? '' : totalWeight} disabled={isIntlEmpty}
+            <input type="number" min={1} onKeyDown={blockNeg} value={isIntlEmpty ? '' : totalWeight} disabled={isIntlEmpty}
               placeholder={isIntlEmpty ? 'Not required (empty container)' : 'e.g., 20000'}
-              onChange={e => setTotalWeight(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={e => setTotalWeight(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
               className={`${inp(!!errors.totalWeight)} ${isIntlEmpty ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`} />
           </div>
           <div>
@@ -700,7 +717,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
-            <input type="date" value={goodsDate ? goodsDate.toISOString().split('T')[0] : ''}
+            <input type="date" min={todayStr} value={goodsDate ? goodsDate.toISOString().split('T')[0] : ''}
               onChange={e => setGoodsDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
@@ -715,8 +732,8 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Weight (Tons) <span className="text-red-500">*</span></label>
-            <input type="number" value={goodsWeight} placeholder="e.g., 50"
-              onChange={e => setGoodsWeight(e.target.value === '' ? '' : Number(e.target.value))}
+            <input type="number" min={1} onKeyDown={blockNeg} value={goodsWeight} placeholder="e.g., 50"
+              onChange={e => setGoodsWeight(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
               className={inp(!!errors.goodsWeight)} />
           </div>
           <div>
@@ -779,7 +796,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
-            <input type="date" value={parcelDate ? parcelDate.toISOString().split('T')[0] : ''}
+            <input type="date" min={todayStr} value={parcelDate ? parcelDate.toISOString().split('T')[0] : ''}
               onChange={e => setParcelDate(e.target.value ? new Date(e.target.value) : null)}
               className={inp(!!errors.readyDate)} />
           </div>
@@ -792,8 +809,8 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Weight (KG) <span className="text-red-500">*</span></label>
-            <input type="number" value={parcelWeight} placeholder="e.g., 10"
-              onChange={e => setParcelWeight(e.target.value === '' ? '' : Number(e.target.value))}
+            <input type="number" min={1} onKeyDown={blockNeg} value={parcelWeight} placeholder="e.g., 10"
+              onChange={e => setParcelWeight(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
               className={inp(!!errors.parcelWeight)} />
           </div>
           <div>
