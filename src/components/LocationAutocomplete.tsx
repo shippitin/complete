@@ -30,11 +30,15 @@ interface LocationAutocompleteProps {
   global?: boolean;
 }
 
-// City symbol for all place types (port/anchor and rail/train symbols removed)
-const getTypeIcon = (type: string) => {
+// Distinct symbol per place type so a port reads as a port, a terminal as a
+// terminal, and a city as a city (in both domestic and international fields).
+const getTypeIcon = (type?: string) => {
   switch (type) {
-    case 'airport': return '✈️';
-    default:        return '🏙️';
+    case 'seaport':       return '⚓';
+    case 'airport':       return '✈️';
+    case 'rail_terminal': return '🚆';
+    case 'city':          return '🏙️';
+    default:              return '🏙️';
   }
 };
 
@@ -257,7 +261,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
               onClick={() => handleSelect(loc)}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition text-left border-b border-gray-50 last:border-0"
             >
-              <span className="text-lg flex-shrink-0">{getTypeIcon(loc.type)}</span>
+              <span className="text-lg flex-shrink-0">{getTypeIcon(loc.type || locationType)}</span>
               <div className="flex-1 min-w-0">
                 {/* Clean city name — no ICD/DCT/codes */}
           
@@ -269,7 +273,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
                 </p>
               </div>
               <span className="text-xs text-gray-300 flex-shrink-0 bg-gray-50 px-2 py-0.5 rounded-full">
-                {global ? (loc.country || 'Global') : getTypeLabel(loc.type)}
+                {global ? (loc.country || 'Global') : getTypeLabel(loc.type || locationType || '')}
               </span>
             </button>
           ))}
