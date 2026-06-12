@@ -12,10 +12,12 @@ import type {
 
 import { computeRailCharges } from '../utils/railCharges';
 
-const VALID_PROMOS: Record<string, number> = {
-  SHIP10:   0.10,
-  RAIL5:    0.05,
-  DEMO2026: 0.15,
+// Promo codes. `percent` takes a fraction off the total; `flat` is a fixed ₹ amount.
+const VALID_PROMOS: Record<string, { type: 'percent' | 'flat'; value: number }> = {
+  SHIP10:       { type: 'percent', value: 0.10 },
+  RAIL5:        { type: 'percent', value: 0.05 },
+  DEMO2026:     { type: 'percent', value: 0.15 },
+  SHIPPITINNEW: { type: 'flat',    value: 1000 },
 };
 
 // Ocean carriers offered for the sea leg of an international (door/terminal-to-port) booking.
@@ -71,7 +73,7 @@ const RailServiceDetailsPage: React.FC = () => {
   const applyPromo = () => {
     const code = promoInput.trim().toUpperCase();
     if (VALID_PROMOS[code]) { setPromoCode(code); setPromoError(''); }
-    else { setPromoCode(''); setPromoError('Invalid promo code. Try SHIP10, RAIL5 or DEMO2026.'); }
+    else { setPromoCode(''); setPromoError('Invalid promo code. Try SHIPPITINNEW, SHIP10, RAIL5 or DEMO2026.'); }
   };
   const removePromo = () => { setPromoCode(''); setPromoInput(''); setPromoError(''); };
 
@@ -146,8 +148,12 @@ const RailServiceDetailsPage: React.FC = () => {
   const gstInsurance = Math.round(insuranceAmt * 0.18);
   const totalGST    = gstRail + gstTHC + gstFLML + gstPlatform + gstCustoms + gstInsurance;
   const subtotalWithGST = subtotal + totalGST + insuranceAmt;
-  const discountAmt     = promoCode && VALID_PROMOS[promoCode]
-    ? Math.round(subtotalWithGST * VALID_PROMOS[promoCode]) : 0;
+  const promo           = promoCode ? VALID_PROMOS[promoCode] : undefined;
+  const discountAmt     = promo
+    ? (promo.type === 'flat'
+        ? Math.min(promo.value, subtotalWithGST)
+        : Math.round(subtotalWithGST * promo.value))
+    : 0;
   const grandTotal      = subtotalWithGST - discountAmt;
 
   const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
@@ -312,6 +318,8 @@ const RailServiceDetailsPage: React.FC = () => {
                   initialInsuranceRequired: addInsurance,
                   claimGstInput: gstInput,
                   shippingLine: !isDomestic ? shippingLine : undefined,
+                  promoCode: promoCode || undefined,
+                  promoDiscount: discountAmt,
                 },
               });
             }}
@@ -493,7 +501,7 @@ const RailServiceDetailsPage: React.FC = () => {
 
               {discountAmt > 0 && (
                 <div className="flex justify-between items-center text-green-600">
-                  <span className="text-sm font-medium">Discount ({(VALID_PROMOS[promoCode] * 100).toFixed(0)}%)</span>
+                  <span className="text-sm font-medium">Discount {promo?.type === 'percent' ? `(${(promo.value * 100).toFixed(0)}%)` : `(${promoCode})`}</span>
                   <span className="text-sm font-bold">− {fmt(discountAmt)}</span>
                 </div>
               )}

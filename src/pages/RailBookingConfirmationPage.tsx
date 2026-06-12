@@ -65,6 +65,8 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [errors, setErrors]                           = useState<Record<string, string>>({});
   const [claimGstInput, setClaimGstInput]             = useState(false);   // from service-details page; makes sender GSTIN required
   const [shippingLine,  setShippingLine]              = useState('');      // ocean carrier (international) from service-details page
+  const [promoCode,     setPromoCode]                 = useState('');      // applied promo from service-details page
+  const [promoDiscount, setPromoDiscount]             = useState(0);       // ₹ discount carried from service-details page
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -130,6 +132,8 @@ const RailBookingConfirmationPage: React.FC = () => {
       initialInsuranceRequired: boolean;
       claimGstInput?: boolean;
       shippingLine?: string;
+      promoCode?: string;
+      promoDiscount?: number;
     } | undefined;
     if (state?.formData && state?.selectedTrainResult) {
       setFormData(state.formData);
@@ -138,6 +142,8 @@ const RailBookingConfirmationPage: React.FC = () => {
       setAddInsurance2(state.initialInsuranceRequired || false); // keep the toggle in sync
       setClaimGstInput(state.claimGstInput || false);
       setShippingLine(state.shippingLine || '');
+      setPromoCode(state.promoCode || '');
+      setPromoDiscount(state.promoDiscount || 0);
       // Carry over the add-ons the customer already picked on Recommended
       // Services so those toggles start ON here (domestic + international).
       const fd = state.formData as any;
@@ -183,8 +189,11 @@ const RailBookingConfirmationPage: React.FC = () => {
     const gIns    = Math.round(insAmt*0.18);
     const totalGST = gRail+gTHC+gFLML+gPlat+gIns;
     const subtotal = base+thcO+thcD+other+fm+lm+pf;
-    const grand    = subtotal+totalGST+insAmt;
-    return { base,thcO,thcD,other,fm,lm,pf,gRail,gTHC,gFLML,gPlat,gIns,totalGST,subtotal,insAmt,grand,isDomestic,n,thcSide,isDoorO,isDoorD,isDestPort,isOrigPort };
+    const preDiscount = subtotal+totalGST+insAmt;
+    // Promo discount carried from the Service Details page (e.g. SHIPPITINNEW −₹1,000).
+    const discount = Math.min(promoDiscount || 0, preDiscount);
+    const grand    = preDiscount - discount;
+    return { base,thcO,thcD,other,fm,lm,pf,gRail,gTHC,gFLML,gPlat,gIns,totalGST,subtotal,insAmt,discount,grand,isDomestic,n,thcSide,isDoorO,isDoorD,isDestPort,isOrigPort };
   };
   const bd = getBreakdown();
 
@@ -245,7 +254,9 @@ const RailBookingConfirmationPage: React.FC = () => {
       insuranceRequired,
       shippingLine,
       claimGstInput,
-      charges:         bd,   // full charge breakdown (base, THC, mile, insurance, GST, grand)
+      promoCode:       promoCode || undefined,
+      promoDiscount:   bd?.discount || 0,
+      charges:         bd,   // full charge breakdown (base, THC, mile, insurance, discount, GST, grand)
     };
     sessionStorage.setItem('lastBookingDetails', JSON.stringify(finalBooking));
     navigate('/booking-confirmation', { state: { bookingDetails: finalBooking } });
@@ -715,6 +726,12 @@ const RailBookingConfirmationPage: React.FC = () => {
                   <div className="flex justify-between text-gray-600"><span>Platform Fee GST @18%</span><span>{fmt(bd.gPlat)}</span></div>
                   {bd.insAmt>0 && <div className="flex justify-between text-gray-600"><span>Insurance GST @18%</span><span>{fmt(bd.gIns)}</span></div>}
                   <div className="flex justify-between font-bold text-gray-700 pt-1 border-t border-amber-200"><span>Total GST</span><span>{fmt(bd.totalGST)}</span></div>
+                </div>
+              )}
+              {bd && bd.discount > 0 && (
+                <div className="flex justify-between items-center text-green-600 text-sm">
+                  <span className="font-medium">Discount{promoCode ? ` (${promoCode})` : ''}</span>
+                  <span className="font-bold">− {fmt(bd.discount)}</span>
                 </div>
               )}
               {bd && (
