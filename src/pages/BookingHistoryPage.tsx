@@ -7,7 +7,7 @@ import {
   FaBoxOpen, FaTruck, FaShip, FaPlane, FaTrain, FaAnchor,
   FaMapMarkerAlt, FaCalendarAlt, FaWeight, FaRupeeSign,
   FaDownload, FaSearchLocation, FaTimes, FaPlus, FaChevronRight,
-  FaCheckCircle, FaClock, FaTimesCircle, FaBoxes,
+  FaBoxes, FaPencilAlt, FaSave,
 } from 'react-icons/fa';
 
 interface Booking {
@@ -64,6 +64,17 @@ const saveStatusOverride = (id: string, status: string) => {
   try { localStorage.setItem(STATUS_OVERRIDE_KEY, JSON.stringify(o)); } catch { /* quota */ }
 };
 
+// Local detail overrides — lets a customer complete missing sender/receiver/cargo
+// info for the demo (there's no backend update endpoint yet); kept in localStorage.
+const DETAILS_OVERRIDE_KEY = 'bookingDetailOverrides';
+const loadDetailOverrides = (): Record<string, any> => {
+  try { return JSON.parse(localStorage.getItem(DETAILS_OVERRIDE_KEY) || '{}'); } catch { return {}; }
+};
+const saveDetailOverride = (id: string, patch: any) => {
+  const o = loadDetailOverrides(); o[id] = { ...(o[id] || {}), ...patch };
+  try { localStorage.setItem(DETAILS_OVERRIDE_KEY, JSON.stringify(o)); } catch { /* quota */ }
+};
+
 const formatRoute = (st?: string): string | null => {
   if (!st) return null;
   const map: Record<string, string> = {
@@ -75,26 +86,46 @@ const formatRoute = (st?: string): string | null => {
   return map[st] || st;
 };
 
-const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, status: string) => void }> = ({ booking, onChangeStatus }) => {
+const BookingCard: React.FC<{
+  booking: Booking;
+  details?: any;
+  onChangeStatus: (id: string, status: string) => void;
+  onSaveDetails: (id: string, patch: any) => void;
+}> = ({ booking, details, onChangeStatus, onSaveDetails }) => {
   const st = (booking.status || '').toLowerCase().replace(/[\s-]+/g, '_');
   const stKey = (st === 'intransit' || st === 'transit') ? 'in_transit' : st;
   const navigate = useNavigate();
   const statusConfig = getStatusConfig(booking.status);
   const [expanded, setExpanded] = useState(false);
-  const [details, setDetails] = useState<any>(null);
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [editing, setEditing]   = useState(false);
 
-  const toggleExpand = async () => {
-    const next = !expanded;
-    setExpanded(next);
-    if (next && !details) {
-      setLoadingDetails(true);
-      try {
-        const res = await bookingAPI.getById(booking.id);
-        setDetails(res.data?.data || res.data || null);
-      } catch { /* fall back to the list data we already have */ }
-      finally { setLoadingDetails(false); }
+  const d: any = { ...booking, ...(details || {}) };
+  // Complete once sender + receiver + a cargo type/description are on file. Until
+  // the full record arrives (details === undefined) assume complete so the button
+  // doesn't briefly flash "Edit details".
+  const isComplete = details
+    ? !!(details.sender_name && details.receiver_name && (details.goods_description || details.cargo_type || booking.cargo_type))
+    : true;
+
+  const [form, setForm] = useState({
+    sender_name: '', sender_phone: '', sender_email: '', sender_address: '',
+    receiver_name: '', receiver_phone: '', receiver_email: '', receiver_address: '',
+    goods_description: '',
+  });
+  const toggleEdit = () => {
+    if (!editing) {
+      setForm({
+        sender_name: d.sender_name || '', sender_phone: d.sender_phone || '', sender_email: d.sender_email || '', sender_address: d.sender_address || '',
+        receiver_name: d.receiver_name || '', receiver_phone: d.receiver_phone || '', receiver_email: d.receiver_email || '', receiver_address: d.receiver_address || '',
+        goods_description: d.goods_description || '',
+      });
     }
+    setEditing(v => !v);
+  };
+  const saveEdit = () => {
+    onSaveDetails(booking.id, { ...form });
+    setEditing(false);
+    setExpanded(true);
   };
 
   const handleDownload = () => {
@@ -149,8 +180,8 @@ const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, sta
           </span>
         </div>
 
-        {/* Details grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        {/* Details grid — From · To · Date · Cargo · Rate */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
           <div>
             <p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><FaMapMarkerAlt className="text-xs" />FROM</p>
             <p className="text-sm font-semibold text-gray-700 truncate">{booking.origin}</p>
@@ -167,14 +198,14 @@ const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, sta
             <p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><FaWeight className="text-xs" />CARGO</p>
             <p className="text-sm font-semibold text-gray-700 truncate">{booking.cargo_type || 'General'}</p>
           </div>
+          <div>
+            <p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><FaRupeeSign className="text-xs" />RATE</p>
+            <p className="text-sm font-bold text-gray-900">₹{(booking.estimated_price || 0).toLocaleString('en-IN')}</p>
+          </div>
         </div>
 
-        {/* Footer: amount + actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-          <p className="text-xl font-black text-gray-900 flex items-center gap-1">
-            <FaRupeeSign className="text-base text-blue-500" />
-            {(booking.estimated_price || 0).toLocaleString('en-IN')}
-          </p>
+        {/* Footer: actions left · view/edit right */}
+        <div className="flex items-center justify-between gap-2 flex-wrap pt-4 border-t border-gray-50">
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
@@ -196,23 +227,60 @@ const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, sta
               <FaTimes className="text-xs" /> Cancel
             </button>
           </div>
+          {isComplete ? (
+            <button
+              onClick={() => setExpanded(v => !v)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition"
+            >
+              {expanded ? 'Hide details' : 'View details'}
+              <FaChevronRight className={`text-[10px] transition-transform ${expanded ? 'rotate-90' : ''}`} />
+            </button>
+          ) : (
+            <button
+              onClick={toggleEdit}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-semibold transition"
+            >
+              <FaPencilAlt className="text-[10px]" /> {editing ? 'Close' : 'Edit details'}
+            </button>
+          )}
         </div>
 
-        {/* View details — full booking breakdown */}
-        <button
-          onClick={toggleExpand}
-          className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
-        >
-          {expanded ? 'Hide details' : 'View details'}
-          <FaChevronRight className={`text-[10px] transition-transform ${expanded ? 'rotate-90' : ''}`} />
-        </button>
+        {/* Edit form — complete the missing sender / receiver / cargo details */}
+        {editing && (
+          <div className="mt-3 pt-4 border-t border-gray-100">
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Complete your booking details</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {([
+                ['sender_name','Sender Name'], ['sender_phone','Sender Phone'],
+                ['sender_email','Sender Email'], ['sender_address','Sender Address'],
+                ['receiver_name','Receiver Name'], ['receiver_phone','Receiver Phone'],
+                ['receiver_email','Receiver Email'], ['receiver_address','Receiver Address'],
+              ] as [keyof typeof form, string][]).map(([k, label]) => (
+                <div key={k}>
+                  <label className="block text-[11px] text-gray-400 mb-0.5">{label}</label>
+                  <input value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                </div>
+              ))}
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] text-gray-400 mb-0.5">Goods Description</label>
+                <input value={form.goods_description} onChange={e => setForm(f => ({ ...f, goods_description: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-3">
+              <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 transition">Cancel</button>
+              <button onClick={saveEdit} disabled={!form.sender_name.trim() || !form.receiver_name.trim()}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">
+                <FaSave className="text-xs" /> Save details
+              </button>
+            </div>
+          </div>
+        )}
 
         {expanded && (
           <div className="mt-3 pt-4 border-t border-gray-100">
-            {loadingDetails ? (
-              <p className="text-xs text-gray-400 text-center py-2">Loading details…</p>
-            ) : (() => {
-              const d: any = { ...booking, ...(details || {}) };
+            {(() => {
               const cb: any = d.charges_breakdown || null;
               const money = (n: any) => `₹${Number(n).toLocaleString('en-IN')}`;
               const rows: [string, any][] = [
@@ -222,6 +290,7 @@ const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, sta
                 ['No. of Containers', d.number_of_containers],
                 ['Weight',            d.weight ? `${d.weight} KG` : null],
                 ['Cargo Type',        d.cargo_type],
+                ['Goods Description', d.goods_description],
                 ['Hazardous',         d.hazardous === true ? 'Yes' : d.hazardous === false ? 'No' : null],
                 ['Shipping Line',     d.shipping_line],
                 ['Operator',          d.operator],
@@ -288,6 +357,7 @@ const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, sta
 const BookingHistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [detailsById, setDetailsById] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
 
@@ -312,14 +382,35 @@ const BookingHistoryPage: React.FC = () => {
     if (status === 'cancelled') bookingAPI.cancel(id).catch(() => { /* keep optimistic UI */ });
   };
 
+  // Persist completed details locally (no backend update endpoint yet) and reflect
+  // them immediately so the card flips from "Edit details" to "View details".
+  const saveDetails = (id: string, patch: any) => {
+    saveDetailOverride(id, patch);
+    setDetailsById(prev => ({ ...prev, [id]: { ...(prev[id] || {}), ...patch } }));
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
         const response = await bookingAPI.getAll();
-        setBookings(sortLatestFirst(applyOverrides(response.data.data || [])));
+        const list = sortLatestFirst(applyOverrides(response.data.data || []));
+        setBookings(list);
+        setLoading(false);
+        // The list is lean (no sender/receiver), so prefetch each full record to
+        // decide View vs Edit and make expanding instant. Merge any local overrides.
+        const ov = loadDetailOverrides();
+        const entries = await Promise.all(list.map(async (b) => {
+          try {
+            const r = await bookingAPI.getById(b.id);
+            const full = r.data?.data || r.data || {};
+            return [b.id, { ...full, ...(ov[b.id] || {}) }] as [string, any];
+          } catch {
+            return [b.id, ov[b.id] ? { ...ov[b.id] } : null] as [string, any];
+          }
+        }));
+        setDetailsById(Object.fromEntries(entries));
       } catch (error) {
         console.error('Error fetching bookings:', error);
-      } finally {
         setLoading(false);
       }
     };
@@ -415,7 +506,7 @@ const BookingHistoryPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {filtered.map(booking => (
-              <BookingCard key={booking.id} booking={booking} onChangeStatus={changeStatus} />
+              <BookingCard key={booking.id} booking={booking} details={detailsById[booking.id]} onChangeStatus={changeStatus} onSaveDetails={saveDetails} />
             ))}
           </div>
         )}
