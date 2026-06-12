@@ -237,17 +237,6 @@ const BookingConfirmationPage: React.FC = () => {
   };
 
   // ── Navigate to track with booking ID + route info ──
-  const handleTrack = () => {
-    if (!bookingDetails) return;
-    const id     = bookingDetails.bookingId || '';
-    const origin = bookingDetails.selectedResult?.originStation
-      || bookingDetails.selectedResult?.originPort || '';
-    const dest   = bookingDetails.selectedResult?.destinationStation
-      || bookingDetails.selectedResult?.destinationPort || '';
-    const type   = bookingDetails.originalFormData?.bookingType || '';
-    navigate(`/track?id=${id}&origin=${encodeURIComponent(origin)}&dest=${encodeURIComponent(dest)}&type=${encodeURIComponent(type)}`);
-  };
-
   if (loading) return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-10">
       <div className="animate-spin rounded-full h-14 w-14 border-4 border-blue-600 border-t-transparent mb-4"></div>
@@ -396,10 +385,6 @@ const BookingConfirmationPage: React.FC = () => {
           <button onClick={() => navigate('/my-bookings')}
             className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold shadow-xl transition flex items-center justify-center gap-2 text-sm">
             <FaHistory /> My Bookings
-          </button>
-          <button onClick={handleTrack}
-            className="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-bold shadow-xl transition flex items-center justify-center gap-2 text-sm">
-            <ServiceIcon /> Track Shipment
           </button>
         </div>
 
