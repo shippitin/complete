@@ -299,32 +299,30 @@ const RailBookingConfirmationPage: React.FC = () => {
 
         <div className="flex-grow space-y-3">
 
-          {/* Header */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <button onClick={()=>navigate('/train-service-details',{state:{formData,selectedTrainResult}})}
-              className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium mb-3 transition">
-              <FaArrowLeft className="mr-2 text-xs" /> Back to Service Details
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-blue-50"><MainIcon className="text-xl text-blue-500" /></div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">Complete Your Booking</h1>
-                <p className="text-gray-400 text-sm">Click any section to fill in details</p>
+          {/* Header + stepper — single compact card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-2 rounded-lg bg-blue-50 flex-shrink-0"><MainIcon className="text-base text-blue-500" /></div>
+                <div className="min-w-0">
+                  <h1 className="text-base font-bold text-gray-800 leading-tight">Complete Your Booking</h1>
+                  <p className="text-gray-400 text-xs">Click any section to fill in details</p>
+                </div>
               </div>
+              <button onClick={()=>navigate('/train-service-details',{state:{formData,selectedTrainResult}})}
+                className="flex items-center text-blue-500 hover:text-blue-600 text-xs font-medium transition flex-shrink-0 ml-2">
+                <FaArrowLeft className="mr-1.5 text-[10px]" /> Back
+              </button>
             </div>
-          </div>
-
-          {/* Stepper */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3.5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between border-t border-gray-50 pt-3">
               {STEPS.map((step, idx) => {
                 const Icon     = step.icon;
                 const isActive = currentStep === step.id;
                 const isDone   = currentStep > step.id;
                 return (
                   <React.Fragment key={step.id}>
-                    <button onClick={() => goToStep(step.id)} className="flex flex-col items-center gap-1.5 group">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                    <button onClick={() => goToStep(step.id)} className="flex flex-col items-center gap-1 group">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
                         isDone   ? 'bg-green-500 text-white' :
                         isActive ? `${step.activeBg} text-white shadow-lg` :
                                    'bg-gray-100 text-gray-400 group-hover:bg-gray-200'
