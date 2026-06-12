@@ -16,6 +16,7 @@ interface Booking {
   service_type: string;
   status: string;
   booking_date: string;
+  created_at?: string;
   estimated_price: number;
   origin: string;
   destination: string;
@@ -310,6 +311,15 @@ const BookingHistoryPage: React.FC = () => {
     return list.map(b => (ov[b.id] ? { ...b, status: ov[b.id] } : b));
   };
 
+  // Newest booking first — prefer the precise created_at timestamp, fall back to
+  // the (date-only) booking_date so same-day bookings still order sensibly.
+  const sortLatestFirst = (list: Booking[]): Booking[] =>
+    [...list].sort((a, b) => {
+      const ta = new Date(a.created_at || a.booking_date || 0).getTime() || 0;
+      const tb = new Date(b.created_at || b.booking_date || 0).getTime() || 0;
+      return tb - ta;
+    });
+
   const changeStatus = (id: string, status: string) => {
     setBookings(prev => prev.map(b => (b.id === id ? { ...b, status } : b)));
     saveStatusOverride(id, status);
@@ -320,7 +330,7 @@ const BookingHistoryPage: React.FC = () => {
     const load = async () => {
       try {
         const response = await bookingAPI.getAll();
-        setBookings(applyOverrides(response.data.data || []));
+        setBookings(sortLatestFirst(applyOverrides(response.data.data || [])));
       } catch (error) {
         console.error('Error fetching bookings:', error);
       } finally {
