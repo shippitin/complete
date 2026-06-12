@@ -377,25 +377,7 @@ const BookingHistoryPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Stats row */}
-        {!loading && bookings.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
-            {[
-              { label: 'Confirmed',  count: counts.confirmed,  color: 'text-green-600',  bg: 'bg-green-50' },
-              { label: 'Pending',    count: counts.pending,    color: 'text-yellow-600', bg: 'bg-yellow-50' },
-              { label: 'In Transit', count: counts.in_transit, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { label: 'Delivered',  count: counts.delivered,  color: 'text-blue-600',   bg: 'bg-blue-50' },
-              { label: 'Cancelled',  count: counts.cancelled,  color: 'text-red-500',    bg: 'bg-red-50' },
-            ].map(s => (
-              <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center`}>
-                <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
-                <p className="text-xs text-gray-500 font-medium">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
+      <div className="max-w-5xl mx-auto px-4 pt-4 pb-8">
         {/* Filter tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {filters.map(status => (
