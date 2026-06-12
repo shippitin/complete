@@ -50,6 +50,7 @@ const RailServiceDetailsPage: React.FC = () => {
   const [termsConfirmed, setTermsConfirmed]           = useState(false);
   const [gstInput, setGstInput]                       = useState(true);    // "Claim GST Input" — default ON; drives GST rates + requires GSTIN on booking page
   const [shippingLine, setShippingLine]               = useState('');      // ocean carrier for international bookings
+  const [shippingLineOther, setShippingLineOther]     = useState('');      // free-text when "Other (not listed)" is picked
 
   useEffect(() => {
     const state = location.state as {
@@ -158,6 +159,9 @@ const RailServiceDetailsPage: React.FC = () => {
 
   const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
+  // When "Other (not listed)" is chosen, the typed carrier name is the real shipping line.
+  const effectiveShippingLine = shippingLine === 'Other' ? shippingLineOther.trim() : shippingLine;
+
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-5">
@@ -242,7 +246,17 @@ const RailServiceDetailsPage: React.FC = () => {
                 >
                   <option value="">Select shipping line</option>
                   {SHIPPING_LINES.map(l => <option key={l} value={l}>{l}</option>)}
+                  <option value="Other">Other (not listed)</option>
                 </select>
+                {shippingLine === 'Other' && (
+                  <input
+                    type="text"
+                    value={shippingLineOther}
+                    onChange={e => setShippingLineOther(e.target.value)}
+                    placeholder="Enter shipping line name"
+                    className="w-full mt-2 px-3 py-2.5 border border-gray-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                  />
+                )}
               </div>
             )}
           </div>
@@ -303,29 +317,29 @@ const RailServiceDetailsPage: React.FC = () => {
           </div>
 
           {/* International requires picking a shipping line before proceeding */}
-          {!isDomestic && !shippingLine && termsConfirmed && (
-            <p className="text-xs text-orange-500 -mt-2">Please select a shipping line above to continue.</p>
+          {!isDomestic && !effectiveShippingLine && termsConfirmed && (
+            <p className="text-xs text-orange-500 -mt-2">Please select (or enter) a shipping line above to continue.</p>
           )}
 
           {/* Proceed to Book */}
           <button
             onClick={() => {
-              if (!termsConfirmed || (!isDomestic && !shippingLine)) return;
+              if (!termsConfirmed || (!isDomestic && !effectiveShippingLine)) return;
               navigate('/rail-booking-confirmation', {
                 state: {
                   formData: formData!,
                   selectedTrainResult: selectedTrainResult!,
                   initialInsuranceRequired: addInsurance,
                   claimGstInput: gstInput,
-                  shippingLine: !isDomestic ? shippingLine : undefined,
+                  shippingLine: !isDomestic ? effectiveShippingLine : undefined,
                   promoCode: promoCode || undefined,
                   promoDiscount: discountAmt,
                 },
               });
             }}
-            disabled={!termsConfirmed || (!isDomestic && !shippingLine)}
+            disabled={!termsConfirmed || (!isDomestic && !effectiveShippingLine)}
             className={`w-full py-3.5 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
-              termsConfirmed && (isDomestic || shippingLine)
+              termsConfirmed && (isDomestic || effectiveShippingLine)
                 ? 'bg-blue-700 hover:bg-blue-800 text-white cursor-pointer'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
