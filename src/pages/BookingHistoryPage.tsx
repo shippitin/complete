@@ -21,6 +21,8 @@ interface Booking {
   destination: string;
   cargo_type: string;
   weight: number;
+  container_type?: string;
+  number_of_containers?: number;
 }
 
 const getServiceIcon = (type: string) => {
@@ -49,6 +51,22 @@ const getStatusConfig = (status: string) => {
 const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
   const navigate = useNavigate();
   const statusConfig = getStatusConfig(booking.status);
+  const [expanded, setExpanded] = useState(false);
+  const [details, setDetails] = useState<any>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+
+  const toggleExpand = async () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !details) {
+      setLoadingDetails(true);
+      try {
+        const res = await bookingAPI.getById(booking.id);
+        setDetails(res.data?.data || res.data || null);
+      } catch { /* fall back to the list data we already have */ }
+      finally { setLoadingDetails(false); }
+    }
+  };
 
   const handleDownload = () => {
     const doc = new jsPDF();
@@ -150,6 +168,49 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
             </button>
           </div>
         </div>
+
+        {/* View details — full booking breakdown */}
+        <button
+          onClick={toggleExpand}
+          className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
+        >
+          {expanded ? 'Hide details' : 'View details'}
+          <FaChevronRight className={`text-[10px] transition-transform ${expanded ? 'rotate-90' : ''}`} />
+        </button>
+
+        {expanded && (
+          <div className="mt-3 pt-4 border-t border-gray-100">
+            {loadingDetails ? (
+              <p className="text-xs text-gray-400 text-center py-2">Loading details…</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
+                {(() => {
+                  const d: any = { ...booking, ...(details || {}) };
+                  const rows: [string, any][] = [
+                    ['Booking Type',     d.service_type],
+                    ['Container Type',   d.container_type],
+                    ['No. of Containers', d.number_of_containers],
+                    ['Weight',           d.weight ? `${d.weight} KG` : null],
+                    ['Cargo Type',       d.cargo_type],
+                    ['Origin',           d.origin],
+                    ['Destination',      d.destination],
+                    ['Booking Date',     d.booking_date ? new Date(d.booking_date).toLocaleDateString('en-IN') : null],
+                    ['Amount',           d.estimated_price != null ? `₹${Number(d.estimated_price).toLocaleString('en-IN')}` : null],
+                    ['Status',           statusConfig.label],
+                  ];
+                  return rows
+                    .filter(([, v]) => v !== null && v !== undefined && v !== '')
+                    .map(([label, value]) => (
+                      <div key={label}>
+                        <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
+                        <p className="text-sm font-semibold text-gray-700 break-words">{value}</p>
+                      </div>
+                    ));
+                })()}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
