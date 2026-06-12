@@ -261,7 +261,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
               onClick={() => handleSelect(loc)}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition text-left border-b border-gray-50 last:border-0"
             >
-              <span className="text-lg flex-shrink-0">{getTypeIcon(loc.type || locationType)}</span>
+              <span className="text-lg flex-shrink-0">{getTypeIcon(locationType || loc.type)}</span>
               <div className="flex-1 min-w-0">
                 {/* Clean city name — no ICD/DCT/codes */}
           
@@ -273,7 +273,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
                 </p>
               </div>
               <span className="text-xs text-gray-300 flex-shrink-0 bg-gray-50 px-2 py-0.5 rounded-full">
-                {global ? (loc.country || 'Global') : getTypeLabel(loc.type || locationType || '')}
+                {global ? (loc.country || 'Global') : getTypeLabel(locationType || loc.type || '')}
               </span>
             </button>
           ))}
