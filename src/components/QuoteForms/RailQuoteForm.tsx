@@ -595,8 +595,11 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
         else setIntlDestICD(v);
       }
     };
-    const isOriginGlobal = movement === 'import';
+    // Rail legs are always within India — the foreign port is reached by sea, not
+    // rail. So every origin/destination here stays India-only (no global search);
+    // an import's origin is the Indian port of discharge / inland terminal.
     const isOriginDoor   = movement === 'export' && (st === 'doorToPort' || st === 'doorToTerminal');
+    const isImportPort   = movement === 'import' && (st === 'portToTerminal' || st === 'portToDoor');
     const isDestDoor     = movement === 'import' && (st === 'portToDoor' || st === 'terminalToDoor');
 
     return (
@@ -637,9 +640,9 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           <div>
             <LocationAutocomplete key={`intl-origin-${movement}-${st}`} label="Origin" required
               value={getOriginValue()} onChange={setOriginValue}
-              placeholder={isOriginDoor ? 'e.g., City / address' : isOriginGlobal ? 'e.g., Shanghai Port' : 'e.g., Chennai'}
-              locationType={isOriginDoor ? 'city' : isOriginGlobal ? 'seaport' : 'rail_terminal'}
-              global={isOriginGlobal} />
+              placeholder={isOriginDoor ? 'e.g., City / address' : isImportPort ? 'e.g., JNPT, Mundra' : 'e.g., Chennai'}
+              locationType={isOriginDoor ? 'city' : isImportPort ? 'seaport' : 'rail_terminal'}
+              global={false} />
             {errors.intlOrigin && <p className="text-xs text-orange-500 mt-1">{errors.intlOrigin}</p>}
           </div>
           <div>
