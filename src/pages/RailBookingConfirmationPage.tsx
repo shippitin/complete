@@ -4,7 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FaArrowLeft, FaArrowRight, FaCheckCircle,
   FaTrain, FaCube, FaBoxOpen, FaCreditCard, FaUser,
-  FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp, FaTag, FaShieldAlt, FaTruck,
+  FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp, FaTag, FaTruck,
+  FaFileUpload, FaFileAlt, FaTimes,
 } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, TrainContainerFormData } from '../types/QuoteFormHandle';
 
@@ -39,7 +40,7 @@ const formatServiceType = (st: string) => {
 };
 
 const inp = (err?: boolean) =>
-  `w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition ${
+  `w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition ${
     err ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'
   }`;
 
@@ -110,6 +111,7 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [bolNo,               setBolNo]               = useState('');
   const [poNo,                setPoNo]                = useState('');
   const [lcNo,                setLcNo]                = useState('');
+  const [uploadedDocs,        setUploadedDocs]        = useState<File[]>([]);
 
   // Add-ons
   const [addFirstMile,  setAddFirstMile]  = useState(false);
@@ -245,7 +247,7 @@ const RailBookingConfirmationPage: React.FC = () => {
       originalFormData: formData!,
       senderDetails:   { senderName, senderPhone, senderEmail, senderGstin, senderAddress, senderCity, senderState, senderPincode, senderCountry },
       receiverDetails: { receiverName, receiverPhone, receiverEmail, receiverGstin, receiverAddress, receiverCity, receiverState, receiverPincode, receiverCountry },
-      cargoDetails:    { goodsDescription, hsnCode, natureOfPacking, weightPerContainer, invoiceNumber, invoiceDate, invoiceValue, specialInstructions, hazardousUN, hazardousClass, reeferTemp },
+      cargoDetails:    { goodsDescription, hsnCode, natureOfPacking, weightPerContainer, invoiceNumber, invoiceDate, invoiceValue, specialInstructions, hazardousUN, hazardousClass, reeferTemp, documents: uploadedDocs.map(f => f.name) },
       paymentDetails:  { paymentMode, creditAccount },
       bookingDate:     new Date().toLocaleDateString('en-IN'),
       bookingTime:     new Date().toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' }),
@@ -292,15 +294,15 @@ const RailBookingConfirmationPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+    <div className="min-h-screen bg-gray-50 py-5 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4">
 
-        <div className="flex-grow space-y-4">
+        <div className="flex-grow space-y-3">
 
           {/* Header */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <button onClick={()=>navigate('/train-service-details',{state:{formData,selectedTrainResult}})}
-              className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium mb-5 transition">
+              className="flex items-center text-blue-500 hover:text-blue-600 text-sm font-medium mb-3 transition">
               <FaArrowLeft className="mr-2 text-xs" /> Back to Service Details
             </button>
             <div className="flex items-center gap-3">
@@ -313,7 +315,7 @@ const RailBookingConfirmationPage: React.FC = () => {
           </div>
 
           {/* Stepper */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-5">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3.5">
             <div className="flex items-center justify-between">
               {STEPS.map((step, idx) => {
                 const Icon     = step.icon;
@@ -353,7 +355,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                   isActive ? `${step.border} border-2` : 'border-gray-100'
                 }`}>
                 <button onClick={() => goToStep(step.id)}
-                  className="w-full flex items-center justify-between px-6 py-4 text-left">
+                  className="w-full flex items-center justify-between px-5 py-3 text-left">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       isDone ? 'bg-green-500' : isActive ? step.activeBg : 'bg-gray-100'
@@ -377,11 +379,11 @@ const RailBookingConfirmationPage: React.FC = () => {
                 </button>
 
                 {isActive && (
-                  <div className="px-6 pb-6 border-t border-gray-50">
+                  <div className="px-5 pb-5 border-t border-gray-50">
 
                     {/* SENDER */}
                     {step.id === 1 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Full Name / Company <span className="text-red-400">*</span></label>
                           <input type="text" value={senderName} onChange={e=>setSenderName(e.target.value)} placeholder="e.g., Raj Textiles Pvt Ltd" className={inp(!!errors.senderName)} />
@@ -430,7 +432,7 @@ const RailBookingConfirmationPage: React.FC = () => {
 
                     {/* RECEIVER */}
                     {step.id === 2 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Full Name / Company <span className="text-red-400">*</span></label>
                           <input type="text" value={receiverName} onChange={e=>setReceiverName(e.target.value)} placeholder="e.g., Delhi Exports Ltd" className={inp(!!errors.receiverName)} />
@@ -478,7 +480,7 @@ const RailBookingConfirmationPage: React.FC = () => {
 
                     {/* CARGO */}
                     {step.id === 3 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div className="sm:col-span-2">
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description of Goods <span className="text-red-400">*</span></label>
                           <input type="text" value={goodsDescription} onChange={e=>setGoodsDescription(e.target.value)} placeholder="e.g., Cotton fabric rolls, automotive spare parts" className={inp(!!errors.goodsDescription)} />
@@ -558,6 +560,32 @@ const RailBookingConfirmationPage: React.FC = () => {
                         <div className="sm:col-span-2 border-t border-gray-100 pt-3 mt-1">
                           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Documents (optional)</p>
                         </div>
+                        <div className="sm:col-span-2">
+                          <label htmlFor="cargo-docs" className="flex flex-col items-center justify-center gap-1 border-2 border-dashed border-gray-200 rounded-xl px-4 py-4 cursor-pointer hover:border-blue-300 hover:bg-blue-50/40 transition text-center">
+                            <FaFileUpload className="text-blue-400 text-lg" />
+                            <span className="text-xs font-semibold text-gray-600">Click to upload documents</span>
+                            <span className="text-[11px] text-gray-400">Invoice, packing list, e-way bill, etc. · PDF / JPG / PNG</span>
+                            <input id="cargo-docs" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
+                              onChange={e => { setUploadedDocs(prev => [...prev, ...Array.from(e.target.files || [])]); e.target.value = ''; }}
+                              className="hidden" />
+                          </label>
+                          {uploadedDocs.length > 0 && (
+                            <div className="mt-2 space-y-1.5">
+                              {uploadedDocs.map((f, i) => (
+                                <div key={i} className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5">
+                                  <span className="text-xs text-gray-600 flex items-center gap-2 min-w-0">
+                                    <FaFileAlt className="text-gray-400 flex-shrink-0" />
+                                    <span className="truncate">{f.name}</span>
+                                    <span className="text-gray-300 flex-shrink-0">{(f.size/1024).toFixed(0)} KB</span>
+                                  </span>
+                                  <button type="button" onClick={() => setUploadedDocs(prev => prev.filter((_, j) => j !== i))} className="text-gray-300 hover:text-red-500 transition flex-shrink-0 ml-2">
+                                    <FaTimes className="text-xs" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Waybill Number</label>
                           <input type="text" value={waybillNo} onChange={e=>setWaybillNo(e.target.value)} placeholder="e.g., WB-2026-001234" className={inp()} />
@@ -579,13 +607,13 @@ const RailBookingConfirmationPage: React.FC = () => {
 
                     {/* ADD-ONS */}
                     {step.id === 4 && (
-                      <div className="mt-4 space-y-3">
-                        <p className="text-xs text-gray-400 mb-4">Select optional services to add to your booking.</p>
+                      <div className="mt-3 space-y-2.5">
+                        <p className="text-xs text-gray-400 mb-3">Select optional services to add to your booking.</p>
                         {[
                           { state: addFirstMile, setter: setAddFirstMile, label: 'First Mile Pickup', icon: <FaTruck className="text-teal-500" />, price: '₹10,500 / container', desc: 'Door pickup from factory/warehouse to ICD/terminal', hasAddr: true, addr: firstMileAddr, setAddr: setFirstMileAddr, addrPlaceholder: 'Factory/warehouse address' },
                           { state: addLastMile,  setter: setAddLastMile,  label: 'Last Mile Delivery', icon: <FaTruck className="text-teal-500" />, price: '₹12,000 / container', desc: 'Delivery from ICD/terminal to receiver\'s door', hasAddr: true, addr: lastMileAddr, setAddr: setLastMileAddr, addrPlaceholder: 'Delivery address' },
                         ].map((item, i) => (
-                          <div key={i} className={`border rounded-xl p-4 transition ${item.state ? 'border-teal-300 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                          <div key={i} className={`border rounded-xl p-3 transition ${item.state ? 'border-teal-300 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                             <label className="flex items-start gap-3 cursor-pointer">
                               <input type="checkbox" checked={item.state} onChange={e=>item.setter(e.target.checked)} className="mt-1 h-4 w-4 text-teal-600 rounded" />
                               <div className="flex-1">
@@ -611,7 +639,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                           { state: addCO2,       setter: setAddCO2,        label: '🌱 CO₂ Credits', price: 'Earn green credits', desc: 'Rail emits 75% less CO₂ than road' },
                           { state: addMiles,     setter: setAddMiles,      label: '⭐ Miles Credits', price: 'Earn reward miles', desc: 'Redeem for discounts on future bookings' },
                         ].map((item, i) => (
-                          <div key={i} className={`border rounded-xl p-4 transition ${item.state ? 'border-teal-300 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'}`}>
+                          <div key={i} className={`border rounded-xl p-3 transition ${item.state ? 'border-teal-300 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'}`}>
                             <label className="flex items-start gap-3 cursor-pointer">
                               <input type="checkbox" checked={item.state} onChange={e=>item.setter(e.target.checked)} className="mt-1 h-4 w-4 text-teal-600 rounded" />
                               <div className="flex-1">
@@ -653,7 +681,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                     )}
 
                     {/* Nav buttons */}
-                    <div className="flex justify-between mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex justify-between mt-5 pt-3 border-t border-gray-100">
                       <button type="button" onClick={()=>goToStep(Math.max(currentStep-1,1))} disabled={currentStep===1}
                         className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition ${currentStep===1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:bg-gray-100'}`}>
                         <FaArrowLeft className="text-xs" /> Previous
@@ -690,13 +718,13 @@ const RailBookingConfirmationPage: React.FC = () => {
         {/* RIGHT sticky summary */}
         <div className="w-full lg:w-[340px] flex-shrink-0">
           <div className="sticky top-6 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
+            <div className="px-5 py-3 border-b border-gray-100">
               <h3 className="text-base font-bold text-gray-800">Order Summary</h3>
               <p className="text-xs text-gray-400 mt-0.5">
                 {cfd?.numberOfContainers||1} × {cfd?.containerType||'20ft Standard'} · {isDomestic?'Domestic':'International'}
               </p>
             </div>
-            <div className="px-5 py-4 space-y-4">
+            <div className="px-5 py-3 space-y-3">
               <button onClick={()=>setShowBreakup(!showBreakup)}
                 className="w-full flex items-center justify-between text-xs font-semibold text-gray-400 uppercase tracking-wide hover:text-blue-500 transition">
                 <span>Charges Breakup</span>
