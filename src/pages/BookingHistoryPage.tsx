@@ -48,6 +48,17 @@ const getStatusConfig = (status: string) => {
   }
 };
 
+const formatRoute = (st?: string): string | null => {
+  if (!st) return null;
+  const map: Record<string, string> = {
+    terminalToTerminal: 'Terminal to Terminal', doorToDoor: 'Door to Door',
+    doorToTerminal: 'Door to Terminal', terminalToDoor: 'Terminal to Door',
+    terminalToPort: 'Terminal to Port', doorToPort: 'Door to Port',
+    portToTerminal: 'Port to Terminal', portToDoor: 'Port to Door',
+  };
+  return map[st] || st;
+};
+
 const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
   const navigate = useNavigate();
   const statusConfig = getStatusConfig(booking.status);
@@ -182,33 +193,73 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
           <div className="mt-3 pt-4 border-t border-gray-100">
             {loadingDetails ? (
               <p className="text-xs text-gray-400 text-center py-2">Loading details…</p>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
-                {(() => {
-                  const d: any = { ...booking, ...(details || {}) };
-                  const rows: [string, any][] = [
-                    ['Booking Type',     d.service_type],
-                    ['Container Type',   d.container_type],
-                    ['No. of Containers', d.number_of_containers],
-                    ['Weight',           d.weight ? `${d.weight} KG` : null],
-                    ['Cargo Type',       d.cargo_type],
-                    ['Origin',           d.origin],
-                    ['Destination',      d.destination],
-                    ['Booking Date',     d.booking_date ? new Date(d.booking_date).toLocaleDateString('en-IN') : null],
-                    ['Amount',           d.estimated_price != null ? `₹${Number(d.estimated_price).toLocaleString('en-IN')}` : null],
-                    ['Status',           statusConfig.label],
-                  ];
-                  return rows
-                    .filter(([, v]) => v !== null && v !== undefined && v !== '')
-                    .map(([label, value]) => (
+            ) : (() => {
+              const d: any = { ...booking, ...(details || {}) };
+              const cb: any = d.charges_breakdown || null;
+              const money = (n: any) => `₹${Number(n).toLocaleString('en-IN')}`;
+              const rows: [string, any][] = [
+                ['Service Type',      formatRoute(d.route_type)],
+                ['Booking Type',      d.service_type],
+                ['Container Type',    d.container_type],
+                ['No. of Containers', d.number_of_containers],
+                ['Weight',            d.weight ? `${d.weight} KG` : null],
+                ['Cargo Type',        d.cargo_type],
+                ['Hazardous',         d.hazardous === true ? 'Yes' : d.hazardous === false ? 'No' : null],
+                ['Shipping Line',     d.shipping_line],
+                ['Operator',          d.operator],
+                ['Transit Time',      d.transit_time],
+                ['Insurance',         d.insurance_required ? 'Yes (₹1,000)' : null],
+                ['Origin',            d.origin],
+                ['Destination',       d.destination],
+                ['Sender',            d.sender_name],
+                ['Sender Phone',      d.sender_phone],
+                ['Receiver',          d.receiver_name],
+                ['Receiver Phone',    d.receiver_phone],
+                ['Booking Date',      d.booking_date ? new Date(d.booking_date).toLocaleDateString('en-IN') : null],
+                ['Status',            statusConfig.label],
+              ];
+              const chargeLines: [string, any][] = cb ? [
+                ['Base Rail Freight', cb.base],
+                ['Terminal Handling (THC)', (cb.thcO || 0) + (cb.thcD || 0) || null],
+                ['Other Terminal Charges', cb.other],
+                ['First Mile', cb.fm],
+                ['Last Mile', cb.lm],
+                ['Cargo Insurance', cb.insAmt],
+                ['Platform Fee', cb.pf],
+                ['Total GST', cb.totalGST],
+              ] : [];
+              return (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
+                    {rows.filter(([, v]) => v !== null && v !== undefined && v !== '').map(([label, value]) => (
                       <div key={label}>
                         <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
                         <p className="text-sm font-semibold text-gray-700 break-words">{value}</p>
                       </div>
-                    ));
-                })()}
-              </div>
-            )}
+                    ))}
+                  </div>
+
+                  {cb && (
+                    <div className="mt-4 pt-3 border-t border-gray-100">
+                      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Charges Breakup</p>
+                      <div className="space-y-1 text-xs bg-gray-50 rounded-xl p-3">
+                        {chargeLines.filter(([, v]) => v).map(([label, v]) => (
+                          <div key={label} className="flex justify-between">
+                            <span className="text-gray-500">{label}</span>
+                            <span className="font-medium text-gray-700">{money(v)}</span>
+                          </div>
+                        ))}
+                        {cb.grand != null && (
+                          <div className="flex justify-between pt-1.5 mt-1 border-t border-gray-200 font-bold text-gray-800">
+                            <span>Grand Total</span><span>{money(cb.grand)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </div>

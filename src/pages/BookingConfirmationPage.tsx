@@ -150,6 +150,24 @@ const BookingConfirmationPage: React.FC = () => {
                 status:               'pending',
                 container_type:       details.originalFormData?.containerType || null,
                 number_of_containers: details.originalFormData?.numberOfContainers || 1,
+                // ── Extended details so the full booking shows in My Bookings ──
+                route_type:           details.originalFormData?.serviceType || null,   // doorToDoor / terminalToTerminal …
+                is_domestic:          details.originalFormData?.isDomestic !== false,
+                shipping_line:        details.shippingLine || null,
+                operator:             details.selectedResult?.operator || null,
+                transit_time:         details.selectedResult?.transitDuration || null,
+                hazardous:            !!details.originalFormData?.hazardousCargo,
+                insurance_required:   !!details.insuranceRequired,
+                sender_name:          details.senderDetails?.senderName    || null,
+                sender_phone:         details.senderDetails?.senderPhone    || null,
+                sender_email:         details.senderDetails?.senderEmail    || null,
+                sender_gstin:         details.senderDetails?.senderGstin    || null,
+                sender_address:       details.senderDetails?.senderAddress  || null,
+                receiver_name:        details.receiverDetails?.receiverName    || null,
+                receiver_phone:       details.receiverDetails?.receiverPhone    || null,
+                receiver_email:       details.receiverDetails?.receiverEmail    || null,
+                receiver_address:     details.receiverDetails?.receiverAddress  || null,
+                charges_breakdown:    details.charges || null,   // JSON: base, THC, mile, insurance, GST, grand
               }),
             });
           }

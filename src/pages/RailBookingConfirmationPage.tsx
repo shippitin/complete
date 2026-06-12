@@ -64,6 +64,7 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [showBreakup, setShowBreakup]                 = useState(true);
   const [errors, setErrors]                           = useState<Record<string, string>>({});
   const [claimGstInput, setClaimGstInput]             = useState(false);   // from service-details page; makes sender GSTIN required
+  const [shippingLine,  setShippingLine]              = useState('');      // ocean carrier (international) from service-details page
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -128,6 +129,7 @@ const RailBookingConfirmationPage: React.FC = () => {
       selectedTrainResult: FreightTrainResult;
       initialInsuranceRequired: boolean;
       claimGstInput?: boolean;
+      shippingLine?: string;
     } | undefined;
     if (state?.formData && state?.selectedTrainResult) {
       setFormData(state.formData);
@@ -135,6 +137,7 @@ const RailBookingConfirmationPage: React.FC = () => {
       setInsuranceRequired(state.initialInsuranceRequired || false);
       setAddInsurance2(state.initialInsuranceRequired || false); // keep the toggle in sync
       setClaimGstInput(state.claimGstInput || false);
+      setShippingLine(state.shippingLine || '');
       setLoading(false);
     } else {
       setError('Booking details not found.');
@@ -232,6 +235,9 @@ const RailBookingConfirmationPage: React.FC = () => {
       bookingId,
       finalAmount:     bd?.grand || 0,
       insuranceRequired,
+      shippingLine,
+      claimGstInput,
+      charges:         bd,   // full charge breakdown (base, THC, mile, insurance, GST, grand)
     };
     sessionStorage.setItem('lastBookingDetails', JSON.stringify(finalBooking));
     navigate('/booking-confirmation', { state: { bookingDetails: finalBooking } });
