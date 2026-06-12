@@ -122,6 +122,10 @@ const BookingConfirmationPage: React.FC = () => {
   const [smsSent, setSmsSent]               = useState(false);
   const [sending, setSending]               = useState<'email' | 'sms' | null>(null);
 
+  // Land at the top so the payment banner / header is the first thing seen
+  // (SPA navigation otherwise keeps the previous page's scroll offset).
+  useEffect(() => { window.scrollTo(0, 0); }, []);
+
   useEffect(() => {
     let details = location.state?.bookingDetails;
     if (!details) {
