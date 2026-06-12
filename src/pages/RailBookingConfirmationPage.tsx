@@ -138,6 +138,12 @@ const RailBookingConfirmationPage: React.FC = () => {
       setAddInsurance2(state.initialInsuranceRequired || false); // keep the toggle in sync
       setClaimGstInput(state.claimGstInput || false);
       setShippingLine(state.shippingLine || '');
+      // Carry over the add-ons the customer already picked on Recommended
+      // Services so those toggles start ON here (domestic + international).
+      const fd = state.formData as any;
+      setAddFirstMile(!!fd.addFirstMile);
+      setAddLastMile(!!fd.addLastMile);
+      setAddCustoms(!!fd.addCustoms);
       setLoading(false);
     } else {
       setError('Booking details not found.');
@@ -153,8 +159,10 @@ const RailBookingConfirmationPage: React.FC = () => {
     const ct = (cfd.containerType || '20ft Standard').replace(/\bEmpty\b/i, 'Standard');
     const n  = cfd.numberOfContainers || 1;
     const st = cfd.serviceType || 'terminalToTerminal';
-    const isDoorO    = st==='doorToDoor'||st==='doorToTerminal'||st==='doorToPort';
-    const isDoorD    = st==='doorToDoor'||st==='terminalToDoor'||st==='portToDoor';
+    // Honour both the service type and an explicitly toggled add-on (matches the
+    // Service Details page) so first/last mile reflects the Add-ons selections.
+    const isDoorO    = addFirstMile || st==='doorToDoor'||st==='doorToTerminal'||st==='doorToPort';
+    const isDoorD    = addLastMile  || st==='doorToDoor'||st==='terminalToDoor'||st==='portToDoor';
     const isDestPort = st==='terminalToPort'||st==='doorToPort';
     const isOrigPort = st==='portToTerminal'||st==='portToDoor';
     const base    = selectedTrainResult.price;
