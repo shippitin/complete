@@ -42,6 +42,10 @@ const getStatusConfig = (status: string) => {
   switch (status?.toLowerCase()) {
     case 'confirmed': return { label: 'Confirmed', pill: 'bg-green-50 text-green-700 border border-green-200', dot: 'bg-green-500', border: '#22c55e' };
     case 'pending':   return { label: 'Pending',   pill: 'bg-yellow-50 text-yellow-700 border border-yellow-200', dot: 'bg-yellow-500', border: '#eab308' };
+    case 'in_transit':
+    case 'in transit':
+    case 'intransit':
+    case 'transit':   return { label: 'In Transit', pill: 'bg-indigo-50 text-indigo-700 border border-indigo-200', dot: 'bg-indigo-500', border: '#6366f1' };
     case 'delivered': return { label: 'Delivered', pill: 'bg-blue-50 text-blue-700 border border-blue-200', dot: 'bg-blue-500', border: '#3b82f6' };
     case 'cancelled': return { label: 'Cancelled', pill: 'bg-red-50 text-red-700 border border-red-200', dot: 'bg-red-500', border: '#ef4444' };
     default:          return { label: status,      pill: 'bg-gray-50 text-gray-600 border border-gray-200', dot: 'bg-gray-400', border: 'transparent' };
@@ -287,17 +291,24 @@ const BookingHistoryPage: React.FC = () => {
     load();
   }, []);
 
-  const filters = ['All', 'pending', 'confirmed', 'delivered', 'cancelled'];
+  // Normalise status variants ("In Transit" / "in-transit" / "intransit") to one key.
+  const normStatus = (s?: string) => {
+    const x = (s || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+    return (x === 'intransit' || x === 'transit') ? 'in_transit' : x;
+  };
+
+  const filters = ['All', 'pending', 'confirmed', 'in_transit', 'delivered', 'cancelled'];
   const filtered = filter === 'All'
     ? bookings
-    : bookings.filter(b => b.status.toLowerCase() === filter.toLowerCase());
+    : bookings.filter(b => normStatus(b.status) === filter);
 
   const counts = {
     All: bookings.length,
-    pending:   bookings.filter(b => b.status.toLowerCase() === 'pending').length,
-    confirmed: bookings.filter(b => b.status.toLowerCase() === 'confirmed').length,
-    delivered: bookings.filter(b => b.status.toLowerCase() === 'delivered').length,
-    cancelled: bookings.filter(b => b.status.toLowerCase() === 'cancelled').length,
+    pending:    bookings.filter(b => normStatus(b.status) === 'pending').length,
+    confirmed:  bookings.filter(b => normStatus(b.status) === 'confirmed').length,
+    in_transit: bookings.filter(b => normStatus(b.status) === 'in_transit').length,
+    delivered:  bookings.filter(b => normStatus(b.status) === 'delivered').length,
+    cancelled:  bookings.filter(b => normStatus(b.status) === 'cancelled').length,
   };
 
   return (
@@ -320,12 +331,13 @@ const BookingHistoryPage: React.FC = () => {
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Stats row */}
         {!loading && bookings.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
             {[
-              { label: 'Confirmed', count: counts.confirmed, color: 'text-green-600', bg: 'bg-green-50' },
-              { label: 'Pending',   count: counts.pending,   color: 'text-yellow-600', bg: 'bg-yellow-50' },
-              { label: 'Delivered', count: counts.delivered, color: 'text-blue-600',   bg: 'bg-blue-50' },
-              { label: 'Cancelled', count: counts.cancelled, color: 'text-red-500',    bg: 'bg-red-50' },
+              { label: 'Confirmed',  count: counts.confirmed,  color: 'text-green-600',  bg: 'bg-green-50' },
+              { label: 'Pending',    count: counts.pending,    color: 'text-yellow-600', bg: 'bg-yellow-50' },
+              { label: 'In Transit', count: counts.in_transit, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { label: 'Delivered',  count: counts.delivered,  color: 'text-blue-600',   bg: 'bg-blue-50' },
+              { label: 'Cancelled',  count: counts.cancelled,  color: 'text-red-500',    bg: 'bg-red-50' },
             ].map(s => (
               <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center`}>
                 <p className={`text-2xl font-black ${s.color}`}>{s.count}</p>
@@ -347,7 +359,7 @@ const BookingHistoryPage: React.FC = () => {
                   : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
+              {status === 'in_transit' ? 'In Transit' : status.charAt(0).toUpperCase() + status.slice(1)}
               <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
                 filter === status ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
               }`}>
