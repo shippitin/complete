@@ -277,9 +277,28 @@ const BookingConfirmationPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
             <FaCheckCircle className="text-4xl" />
           </div>
-          <h1 className="text-4xl font-black tracking-tight">Booking Confirmed!</h1>
-          <p className="opacity-90 mt-2 text-lg font-medium">Your shipment has been successfully scheduled.</p>
+          <h1 className="text-4xl font-black tracking-tight">{finalAmount > 0 ? 'Booking Created!' : 'Booking Confirmed!'}</h1>
+          <p className="opacity-90 mt-2 text-lg font-medium">
+            {finalAmount > 0 ? 'One step left — complete your payment to confirm the shipment.' : 'Your shipment has been successfully scheduled.'}
+          </p>
         </div>
+
+        {/* Payment Pending — primary call to action */}
+        {finalAmount > 0 && (
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-5">
+            <div className="text-center sm:text-left">
+              <p className="text-xs font-black uppercase tracking-widest text-amber-600 flex items-center gap-2 justify-center sm:justify-start">
+                <FaInfoCircle /> Payment Pending
+              </p>
+              <p className="text-3xl font-black text-slate-900 mt-1">{fmt(finalAmount)}</p>
+              <p className="text-sm text-slate-500">Pay now to confirm your booking — it stays pending until paid.</p>
+            </div>
+            <button onClick={handlePayNow}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-black px-10 py-4 rounded-2xl shadow-lg shadow-blue-200 transition text-lg flex items-center gap-2 whitespace-nowrap">
+              <FaCreditCard /> Pay {fmt(finalAmount)} Now
+            </button>
+          </div>
+        )}
 
         {/* Booking reference */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 text-center">
@@ -293,15 +312,6 @@ const BookingConfirmationPage: React.FC = () => {
               <FaClock className="text-blue-500" /> {bookingTime}
             </span>
           </div>
-          {finalAmount > 0 && (
-            <div className="mt-6">
-              <button onClick={handlePayNow}
-                className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-black px-10 py-4 rounded-2xl shadow-lg shadow-blue-200 transition text-lg">
-                <FaCreditCard /> Pay {fmt(finalAmount)} Now
-              </button>
-              <p className="text-xs text-slate-400 mt-2">Secure payment via Razorpay</p>
-            </div>
-          )}
         </div>
 
         {/* Shipment summary */}
