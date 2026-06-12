@@ -287,7 +287,7 @@ const RailBookingConfirmationPage: React.FC = () => {
     1: ['Full Name / Company *', 'Mobile Number *', 'Email ID *', 'GSTIN', 'Address *', 'City *', 'State *', 'Pincode', 'Country'],
     2: ['Full Name / Company *', 'Mobile Number *', 'Email ID *', 'GSTIN', 'Address *', 'City *', 'State *', 'Pincode', 'Country'],
     3: ['Description of Goods *', 'HSN Code', 'Nature of Packing', 'Weight / Container (MT) *', 'Invoice Number *', 'Invoice Date', 'Invoice Value (₹)', 'Special Instructions'],
-    4: ['First Mile Pickup (optional)', 'Last Mile Delivery (optional)', 'Customs Clearance ₹2,000 (optional)', 'Cargo Insurance ₹1,000 (optional)', 'CO₂ Credits', 'Miles Credits'],
+    4: ['First Mile Pickup (optional)', 'Last Mile Delivery (optional)', ...(!isDomestic ? ['Customs Clearance ₹2,000 (optional)'] : []), 'Cargo Insurance ₹1,000 (optional)', 'CO₂ Credits', 'Miles Credits'],
     5: ['Payment Mode', 'Online / Bank Transfer / Credit Account'],
   };
 
@@ -605,7 +605,8 @@ const RailBookingConfirmationPage: React.FC = () => {
                           </div>
                         ))}
                         {[
-                          { state: addCustoms,   setter: setAddCustoms,    label: '🛃 Customs Clearance', price: '₹2,000 / shipment', desc: 'CHA-assisted customs documentation' },
+                          // Customs Clearance is an international-only service.
+                          ...(!isDomestic ? [{ state: addCustoms, setter: setAddCustoms, label: '🛃 Customs Clearance', price: '₹2,000 / shipment', desc: 'CHA-assisted customs documentation' }] : []),
                           { state: addInsurance, setter: (v: boolean) => { setAddInsurance2(v); setInsuranceRequired(v); }, label: '🛡️ Cargo Insurance', price: '₹1,000 flat', desc: 'All-risk cargo insurance' },
                           { state: addCO2,       setter: setAddCO2,        label: '🌱 CO₂ Credits', price: 'Earn green credits', desc: 'Rail emits 75% less CO₂ than road' },
                           { state: addMiles,     setter: setAddMiles,      label: '⭐ Miles Credits', price: 'Earn reward miles', desc: 'Redeem for discounts on future bookings' },
