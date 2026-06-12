@@ -293,7 +293,7 @@ const AppContent: React.FC = () => {
 
           {/* User Pages — Protected */}
           <Route path="/my-wallet" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><MyWalletPage /></div></ProtectedRoute>} />
-          <Route path="/booking-confirmation" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingConfirmationPage /></div></ProtectedRoute>} />
+          <Route path="/booking-confirmation" element={<ProtectedRoute><BookingConfirmationPage /></ProtectedRoute>} />
           <Route path="/my-bookings" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingHistoryPage /></div></ProtectedRoute>} />
           <Route path="/booking-summary" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><BookingSummaryPage /></div></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><div className="max-w-7xl mx-auto px-4 py-10"><ProfilePage /></div></ProtectedRoute>} />

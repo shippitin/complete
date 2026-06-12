@@ -272,7 +272,7 @@ const BookingConfirmationPage: React.FC = () => {
     : FaTrain;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-6 px-4 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] pt-4 pb-8 px-4 font-sans">
       <div className="max-w-4xl mx-auto space-y-4">
 
         {/* Success banner */}
