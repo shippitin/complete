@@ -272,58 +272,58 @@ const BookingConfirmationPage: React.FC = () => {
     : FaTrain;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-10 px-4 font-sans">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#F8FAFC] py-6 px-4 font-sans">
+      <div className="max-w-4xl mx-auto space-y-4">
 
         {/* Success banner */}
-        <div className="bg-emerald-600 rounded-3xl p-10 text-center text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10 text-9xl"><ServiceIcon /></div>
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 rounded-full mb-4">
-            <FaCheckCircle className="text-4xl" />
+        <div className="bg-emerald-600 rounded-2xl p-5 text-center text-white shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10 text-7xl"><ServiceIcon /></div>
+          <div className="inline-flex items-center justify-center w-11 h-11 bg-white/20 rounded-full mb-2">
+            <FaCheckCircle className="text-xl" />
           </div>
-          <h1 className="text-4xl font-black tracking-tight">{finalAmount > 0 ? 'Booking Created!' : 'Booking Confirmed!'}</h1>
-          <p className="opacity-90 mt-2 text-lg font-medium">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{finalAmount > 0 ? 'Booking Created!' : 'Booking Confirmed!'}</h1>
+          <p className="opacity-90 mt-1 text-sm font-medium">
             {finalAmount > 0 ? 'One step left — complete your payment to confirm the shipment.' : 'Your shipment has been successfully scheduled.'}
           </p>
         </div>
 
         {/* Payment Pending — primary call to action */}
         {finalAmount > 0 && (
-          <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-5">
+          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-center sm:text-left">
-              <p className="text-xs font-black uppercase tracking-widest text-amber-600 flex items-center gap-2 justify-center sm:justify-start">
+              <p className="text-[11px] font-black uppercase tracking-widest text-amber-600 flex items-center gap-2 justify-center sm:justify-start">
                 <FaInfoCircle /> Payment Pending
               </p>
-              <p className="text-3xl font-black text-slate-900 mt-1">{fmt(finalAmount)}</p>
-              <p className="text-sm text-slate-500">Pay now to confirm your booking — it stays pending until paid.</p>
+              <p className="text-2xl font-black text-slate-900 mt-0.5">{fmt(finalAmount)}</p>
+              <p className="text-xs text-slate-500">Pay now to confirm your booking — it stays pending until paid.</p>
             </div>
             <button onClick={handlePayNow}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-black px-10 py-4 rounded-2xl shadow-lg shadow-blue-200 transition text-lg flex items-center gap-2 whitespace-nowrap">
+              className="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3 rounded-xl shadow-lg shadow-blue-200 transition text-base flex items-center gap-2 whitespace-nowrap">
               <FaCreditCard /> Pay {fmt(finalAmount)} Now
             </button>
           </div>
         )}
 
         {/* Booking reference */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8 text-center">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Booking Reference</p>
-          <h2 className="text-5xl font-black text-slate-900 tracking-tighter">{bookingId}</h2>
-          <div className="flex items-center justify-center gap-4 mt-5">
-            <span className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-200 text-sm font-bold text-slate-500">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 text-center">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-1">Booking Reference</p>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tighter">{bookingId}</h2>
+          <div className="flex items-center justify-center gap-3 mt-3">
+            <span className="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-full border border-slate-200 text-xs font-bold text-slate-500">
               <FaCalendarAlt className="text-blue-500" /> {bookingDate}
             </span>
-            <span className="flex items-center gap-2 px-4 py-1.5 bg-slate-50 rounded-full border border-slate-200 text-sm font-bold text-slate-500">
+            <span className="flex items-center gap-2 px-3 py-1 bg-slate-50 rounded-full border border-slate-200 text-xs font-bold text-slate-500">
               <FaClock className="text-blue-500" /> {bookingTime}
             </span>
           </div>
         </div>
 
         {/* Shipment summary */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
             <ServiceIcon className="text-blue-500" /> Shipment Summary
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { label: 'From',      value: selectedResult.originStation      || selectedResult.originPort      || '—' },
               { label: 'To',        value: selectedResult.destinationStation || selectedResult.destinationPort || '—' },
@@ -343,12 +343,12 @@ const BookingConfirmationPage: React.FC = () => {
         </div>
 
         {/* Invoice & Notifications */}
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-base font-bold text-slate-800 mb-2">Invoice & Notifications</h3>
-          <p className="text-sm text-slate-400 mb-5">Download your invoice or send it to email / phone</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+          <h3 className="text-sm font-bold text-slate-800 mb-0.5">Invoice & Notifications</h3>
+          <p className="text-xs text-slate-400 mb-3">Download your invoice or send it to email / phone</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button onClick={handleDownload}
-              className="flex items-center gap-3 p-4 border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-2xl transition">
+              className="flex items-center gap-3 p-3 border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-2xl transition">
               <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
                 <FaDownload className="text-white text-sm" />
               </div>
@@ -358,7 +358,7 @@ const BookingConfirmationPage: React.FC = () => {
               </div>
             </button>
             <button onClick={handlePrint}
-              className="flex items-center gap-3 p-4 border-2 border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-2xl transition">
+              className="flex items-center gap-3 p-3 border-2 border-slate-200 bg-slate-50 hover:bg-slate-100 rounded-2xl transition">
               <div className="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center flex-shrink-0">
                 <FaPrint className="text-white text-sm" />
               </div>
@@ -391,13 +391,13 @@ const BookingConfirmationPage: React.FC = () => {
         </div>
 
         {/* Bottom navigation */}
-        <div className="bg-slate-900 rounded-3xl p-6 flex flex-col sm:flex-row gap-3">
+        <div className="bg-slate-900 rounded-2xl p-3 flex flex-col sm:flex-row gap-3">
           <button onClick={() => navigate('/')}
-            className="flex-1 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-2xl font-bold transition flex items-center justify-center gap-2 text-sm">
+            className="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition flex items-center justify-center gap-2 text-sm">
             <FaHome /> Back to Home
           </button>
           <button onClick={() => navigate('/my-bookings')}
-            className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold shadow-xl transition flex items-center justify-center gap-2 text-sm">
+            className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-xl transition flex items-center justify-center gap-2 text-sm">
             <FaHistory /> My Bookings
           </button>
         </div>
