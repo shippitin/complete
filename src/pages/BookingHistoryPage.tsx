@@ -52,6 +52,17 @@ const getStatusConfig = (status: string) => {
   }
 };
 
+// Local status overrides — so a Cancel reflects immediately (past the backend's
+// ~1-min list cache) and so a booking can be moved to In Transit / Delivered for demo.
+const STATUS_OVERRIDE_KEY = 'bookingStatusOverrides';
+const loadStatusOverrides = (): Record<string, string> => {
+  try { return JSON.parse(localStorage.getItem(STATUS_OVERRIDE_KEY) || '{}'); } catch { return {}; }
+};
+const saveStatusOverride = (id: string, status: string) => {
+  const o = loadStatusOverrides(); o[id] = status;
+  try { localStorage.setItem(STATUS_OVERRIDE_KEY, JSON.stringify(o)); } catch { /* quota */ }
+};
+
 const formatRoute = (st?: string): string | null => {
   if (!st) return null;
   const map: Record<string, string> = {
@@ -63,7 +74,9 @@ const formatRoute = (st?: string): string | null => {
   return map[st] || st;
 };
 
-const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
+const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, status: string) => void }> = ({ booking, onChangeStatus }) => {
+  const st = (booking.status || '').toLowerCase().replace(/[\s-]+/g, '_');
+  const stKey = (st === 'intransit' || st === 'transit') ? 'in_transit' : st;
   const navigate = useNavigate();
   const statusConfig = getStatusConfig(booking.status);
   const [expanded, setExpanded] = useState(false);
@@ -130,9 +143,23 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
               <p className="text-xs text-gray-400">{booking.service_type}</p>
             </div>
           </div>
-          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusConfig.pill}`}>
-            {statusConfig.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusConfig.pill}`}>
+              {statusConfig.label}
+            </span>
+            <select
+              value={stKey || 'pending'}
+              onChange={e => onChangeStatus(booking.id, e.target.value)}
+              title="Set status"
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-500 bg-white cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-300"
+            >
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="in_transit">In Transit</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
         </div>
 
         {/* Details grid */}
@@ -175,8 +202,8 @@ const BookingCard: React.FC<{ booking: Booking }> = ({ booking }) => {
               <FaSearchLocation className="text-xs" /> Track
             </button>
             <button
-              onClick={() => bookingAPI.cancel(booking.id).then(() => window.location.reload())}
-              disabled={booking.status === 'cancelled' || booking.status === 'delivered'}
+              onClick={() => { if (window.confirm(`Cancel shipment ${booking.booking_number}? The entire booking will be cancelled.`)) onChangeStatus(booking.id, 'cancelled'); }}
+              disabled={stKey === 'cancelled' || stKey === 'delivered'}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 text-xs font-semibold transition disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <FaTimes className="text-xs" /> Cancel
@@ -277,11 +304,23 @@ const BookingHistoryPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
 
+  // Apply local status overrides on top of the fetched bookings
+  const applyOverrides = (list: Booking[]): Booking[] => {
+    const ov = loadStatusOverrides();
+    return list.map(b => (ov[b.id] ? { ...b, status: ov[b.id] } : b));
+  };
+
+  const changeStatus = (id: string, status: string) => {
+    setBookings(prev => prev.map(b => (b.id === id ? { ...b, status } : b)));
+    saveStatusOverride(id, status);
+    if (status === 'cancelled') bookingAPI.cancel(id).catch(() => { /* keep optimistic UI */ });
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
         const response = await bookingAPI.getAll();
-        setBookings(response.data.data || []);
+        setBookings(applyOverrides(response.data.data || []));
       } catch (error) {
         console.error('Error fetching bookings:', error);
       } finally {
@@ -398,7 +437,7 @@ const BookingHistoryPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {filtered.map(booking => (
-              <BookingCard key={booking.id} booking={booking} />
+              <BookingCard key={booking.id} booking={booking} onChangeStatus={changeStatus} />
             ))}
           </div>
         )}
