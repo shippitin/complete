@@ -165,71 +165,14 @@ const TrainResultsPage: React.FC = () => {
     const data = state.formData;
     setFormData(data);
 
-    (async () => {
-      try {
-        const token    = localStorage.getItem('shippitin_token');
-        const cd       = data as TrainContainerFormData;
-        const domestic = isDomesticBooking(data);
-        const st       = (data as any).serviceType as RailServiceType;
-        const originRaw      = getOriginDisplay(data, true);
-        const destinationRaw = getDestinationDisplay(data, true);
-
-        const res = await fetch(`${API_BASE_URL}/api/quotes/rail/quotes`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({
-            origin:             originRaw      || '',
-            destination:        destinationRaw || '',
-            containerType:      cd.containerType       || '20ft Standard',
-            numberOfContainers: cd.numberOfContainers  || 1,
-            weight:             data.totalWeight       || 0,
-            cargoType:          data.cargoType         || 'FAK (Freight of All Kinds)',
-            serviceType:        st || 'terminalToTerminal',
-            isDomestic:         domestic,
-            bookingDate:        data.readyDate         || new Date().toISOString().split('T')[0],
-            etmsMovementType:   (cd as any).etmsMovementType || null,
-          }),
-        });
-
-        const json = await res.json();
-
-        if (json.success && json.data?.length > 0) {
-          const serviceFeature = formatServiceType(st);
-          const domestic2 = isDomesticBooking(data);
-          const operators  = domestic2 ? ['CONCOR', 'Adani Logistics'] : ['CONCOR', 'BCSL', 'Maersk', 'MSC', 'CMA CGM'];
-
-          const mapped: FreightTrainResult[] = json.data.map((r: any, i: number) => ({
-            id:                   `TRN00${i + 1}`,
-            serviceName:          SERVICE_NAMES[i] || `Service ${i + 1}`,
-            operator:             r.provider || operators[i % operators.length],
-            originStation:        formatLocation(r.origin      || originRaw      || '', domestic2),
-            destinationStation:   formatLocation(r.destination || destinationRaw || '', domestic2),
-            departureTime:        'As per schedule',
-            arrivalTime:          'Estimated',
-            transitDuration:      `${r.transitDays} Days`,
-            availableCapacity:    `${(r.availableRakes || 5) * 10} Containers`,
-            price:                r.price,
-            features:             ['GPS Tracking', 'Real-time Updates', serviceFeature],
-            cargoType:            (data as TrainContainerFormData).containerType || 'General',
-            isHazardousCompatible: i < 2,
-            sourceDocument:       r.sourceDocument,
-            isDomestic:           domestic2,
-          }));
-          setAllSearchResults(mapped);
-          setFilteredResults(mapped);
-        } else {
-          const sim = simulateResults(data);
-          setAllSearchResults(sim);
-          setFilteredResults(sim);
-        }
-      } catch (err) {
-        const sim = simulateResults(data);
-        setAllSearchResults(sim);
-        setFilteredResults(sim);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    // Deterministic, device-independent results. The backend rail-quote endpoint
+    // returned a different number of options and a different base rate depending on
+    // auth/availability — so the same search showed 4 quotes on one device and 1 on
+    // another. Use the consistent CONCOR SNF-tariff list everywhere instead.
+    const sim = simulateResults(data);
+    setAllSearchResults(sim);
+    setFilteredResults(sim);
+    setLoading(false);
   }, [location.state]);
 
   useEffect(() => {
