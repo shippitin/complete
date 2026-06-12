@@ -1,6 +1,6 @@
 // src/components/QuoteForms/RailQuoteForm.tsx
 // CHANGE: navigate to /train-recommended-services instead of /train-results
-import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocationAutocomplete from '../LocationAutocomplete';
 import {
@@ -144,10 +144,102 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   const [errors,     setErrors]     = useState<Record<string,string>>({});
   const [showValMsg, setShowValMsg] = useState(false);
 
+  // ── Persist the whole form across navigation (page 1 → results → back) so the
+  // customer never re-types. Saved to sessionStorage; restored once on mount. ──
+  const RAIL_FORM_KEY = 'railQuoteForm';
+  const [hydrated, setHydrated] = useState(false);
+  const prevMovement = useRef<MovementType | null>(null); // so restoring `movement` doesn't reset the restored service type
+
+  const formSnapshot = JSON.stringify({
+    activeTab,
+    domServiceType, domOriginTerminal, domOriginAddress, domDestTerminal, domDestAddress,
+    movement, intlServiceType, intlOriginICD, intlOriginPort, intlOriginAddr, intlOriginForeign,
+    intlDestICD, intlDestPort, intlDestAddr, intlDestForeign,
+    containerMode, containerType, numContainers, totalWeight, commodity, hazardous,
+    readyDate: readyDate ? readyDate.toISOString() : null,
+    goodsServiceType, goodsOriginTerm, goodsOriginAddr, goodsDestTerm, goodsDestAddr,
+    goodsWeight, goodsCommodity, goodsWagonType, numWagons, goodsHazardous,
+    goodsDate: goodsDate ? goodsDate.toISOString() : null,
+    parcelServiceType, parcelOriginTerm, parcelOriginAddr, parcelDestTerm, parcelDestAddr,
+    parcelWeight, parcelDims, parcelDesc, parcelHazardous,
+    parcelDate: parcelDate ? parcelDate.toISOString() : null,
+    parcelCount,
+  });
+
+  // Restore once on mount
   useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(RAIL_FORM_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (s.activeTab) setActiveTab(s.activeTab);
+        if (s.domServiceType) setDomServiceType(s.domServiceType);
+        if (s.domOriginTerminal != null) setDomOriginTerminal(s.domOriginTerminal);
+        if (s.domOriginAddress  != null) setDomOriginAddress(s.domOriginAddress);
+        if (s.domDestTerminal   != null) setDomDestTerminal(s.domDestTerminal);
+        if (s.domDestAddress    != null) setDomDestAddress(s.domDestAddress);
+        if (s.movement) setMovement(s.movement);
+        if (s.intlServiceType) setIntlServiceType(s.intlServiceType);
+        if (s.intlOriginICD     != null) setIntlOriginICD(s.intlOriginICD);
+        if (s.intlOriginPort    != null) setIntlOriginPort(s.intlOriginPort);
+        if (s.intlOriginAddr    != null) setIntlOriginAddr(s.intlOriginAddr);
+        if (s.intlOriginForeign != null) setIntlOriginForeign(s.intlOriginForeign);
+        if (s.intlDestICD       != null) setIntlDestICD(s.intlDestICD);
+        if (s.intlDestPort      != null) setIntlDestPort(s.intlDestPort);
+        if (s.intlDestAddr      != null) setIntlDestAddr(s.intlDestAddr);
+        if (s.intlDestForeign   != null) setIntlDestForeign(s.intlDestForeign);
+        if (s.containerMode) setContainerMode(s.containerMode);
+        if (s.containerType != null) setContainerType(s.containerType);
+        if (s.numContainers != null) setNumContainers(s.numContainers);
+        if (s.totalWeight   != null) setTotalWeight(s.totalWeight);
+        if (s.commodity) setCommodity(s.commodity);
+        if (s.hazardous != null) setHazardous(s.hazardous);
+        if (s.readyDate) setReadyDate(new Date(s.readyDate));
+        if (s.goodsServiceType) setGoodsServiceType(s.goodsServiceType);
+        if (s.goodsOriginTerm != null) setGoodsOriginTerm(s.goodsOriginTerm);
+        if (s.goodsOriginAddr != null) setGoodsOriginAddr(s.goodsOriginAddr);
+        if (s.goodsDestTerm   != null) setGoodsDestTerm(s.goodsDestTerm);
+        if (s.goodsDestAddr   != null) setGoodsDestAddr(s.goodsDestAddr);
+        if (s.goodsWeight     != null) setGoodsWeight(s.goodsWeight);
+        if (s.goodsCommodity) setGoodsCommodity(s.goodsCommodity);
+        if (s.goodsWagonType  != null) setGoodsWagonType(s.goodsWagonType);
+        if (s.numWagons       != null) setNumWagons(s.numWagons);
+        if (s.goodsHazardous  != null) setGoodsHazardous(s.goodsHazardous);
+        if (s.goodsDate) setGoodsDate(new Date(s.goodsDate));
+        if (s.parcelServiceType) setParcelServiceType(s.parcelServiceType);
+        if (s.parcelOriginTerm != null) setParcelOriginTerm(s.parcelOriginTerm);
+        if (s.parcelOriginAddr != null) setParcelOriginAddr(s.parcelOriginAddr);
+        if (s.parcelDestTerm   != null) setParcelDestTerm(s.parcelDestTerm);
+        if (s.parcelDestAddr   != null) setParcelDestAddr(s.parcelDestAddr);
+        if (s.parcelWeight     != null) setParcelWeight(s.parcelWeight);
+        if (s.parcelDims       != null) setParcelDims(s.parcelDims);
+        if (s.parcelDesc       != null) setParcelDesc(s.parcelDesc);
+        if (s.parcelHazardous  != null) setParcelHazardous(s.parcelHazardous);
+        if (s.parcelDate) setParcelDate(new Date(s.parcelDate));
+        if (s.parcelCount != null) setParcelCount(s.parcelCount);
+        // Align so the movement→serviceType effect treats the restored movement
+        // as already-applied (won't clobber the restored intl service type).
+        prevMovement.current = s.movement || 'export';
+      } else {
+        prevMovement.current = 'export';
+      }
+    } catch { /* ignore corrupt snapshot */ }
+    setHydrated(true);
+  }, []);
+
+  // Save on every change (after hydration so we never overwrite with defaults)
+  useEffect(() => {
+    if (!hydrated) return;
+    try { sessionStorage.setItem(RAIL_FORM_KEY, formSnapshot); } catch { /* quota */ }
+  }, [hydrated, formSnapshot]);
+
+  useEffect(() => {
+    if (!hydrated) return;                       // don't run during restore
+    if (prevMovement.current === movement) return; // movement didn't actually change
+    prevMovement.current = movement;
     if (movement === 'export') setIntlServiceType('terminalToPort');
     else                       setIntlServiceType('portToTerminal');
-  }, [movement]);
+  }, [movement, hydrated]);
 
   const getIntlOrigin = (): string => {
     if (movement === 'export') {
