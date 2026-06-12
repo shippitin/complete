@@ -165,6 +165,10 @@ const AppContent: React.FC = () => {
     initializeAuth();
   }, []);
 
+  // Always open a new page at the top — SPA navigation otherwise keeps the
+  // previous page's scroll offset (e.g. landing mid-page after "Proceed to Book").
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
+
   const handleVoiceCommand = (command: ParsedVoiceCommand) => {
     const updatedCommand: ParsedVoiceCommand = { ...command };
     setVoicePrefillData(updatedCommand);
