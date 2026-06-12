@@ -86,6 +86,36 @@ const formatRoute = (st?: string): string | null => {
   return map[st] || st;
 };
 
+// Full sender / receiver / cargo field set — mirrors the rail booking page so a
+// customer can complete exactly the details they skipped there.
+const SENDER_FIELDS: [string, string][] = [
+  ['sender_name', 'Full Name / Company'], ['sender_phone', 'Mobile Number'],
+  ['sender_email', 'Email ID'], ['sender_gstin', 'GSTIN'],
+  ['sender_address', 'Address'], ['sender_city', 'City'],
+  ['sender_state', 'State'], ['sender_pincode', 'Pincode'], ['sender_country', 'Country'],
+];
+const RECEIVER_FIELDS: [string, string][] = [
+  ['receiver_name', 'Full Name / Company'], ['receiver_phone', 'Mobile Number'],
+  ['receiver_email', 'Email ID'], ['receiver_gstin', 'GSTIN'],
+  ['receiver_address', 'Address'], ['receiver_city', 'City'],
+  ['receiver_state', 'State'], ['receiver_pincode', 'Pincode'], ['receiver_country', 'Country'],
+];
+const CARGO_FIELDS: [string, string][] = [
+  ['goods_description', 'Description of Goods'], ['hsn_code', 'HSN Code'],
+  ['nature_of_packing', 'Nature of Packing'], ['weight_per_container', 'Gross Weight / Container (MT)'],
+  ['invoice_number', 'Invoice Number'], ['invoice_date', 'Invoice Date'],
+  ['invoice_value', 'Invoice Value (₹)'], ['num_packages', 'No. of Packages'],
+  ['package_size', 'Package Size (L×W×H cm)'], ['special_instructions', 'Special Instructions'],
+];
+const DETAIL_SECTIONS: [string, [string, string][]][] = [
+  ['Sender Details', SENDER_FIELDS],
+  ['Receiver Details', RECEIVER_FIELDS],
+  ['Cargo Details', CARGO_FIELDS],
+];
+const ALL_DETAIL_KEYS = [...SENDER_FIELDS, ...RECEIVER_FIELDS, ...CARGO_FIELDS].map(([k]) => k);
+const WIDE_DETAIL_FIELDS = new Set(['sender_address', 'receiver_address', 'goods_description', 'special_instructions', 'package_size']);
+const blankDetailForm = Object.fromEntries(ALL_DETAIL_KEYS.map(k => [k, ''])) as Record<string, string>;
+
 const BookingCard: React.FC<{
   booking: Booking;
   details?: any;
@@ -107,18 +137,10 @@ const BookingCard: React.FC<{
     ? !!(details.sender_name && details.receiver_name && (details.goods_description || details.cargo_type || booking.cargo_type))
     : true;
 
-  const [form, setForm] = useState({
-    sender_name: '', sender_phone: '', sender_email: '', sender_address: '',
-    receiver_name: '', receiver_phone: '', receiver_email: '', receiver_address: '',
-    goods_description: '',
-  });
+  const [form, setForm] = useState<Record<string, string>>(blankDetailForm);
   const toggleEdit = () => {
     if (!editing) {
-      setForm({
-        sender_name: d.sender_name || '', sender_phone: d.sender_phone || '', sender_email: d.sender_email || '', sender_address: d.sender_address || '',
-        receiver_name: d.receiver_name || '', receiver_phone: d.receiver_phone || '', receiver_email: d.receiver_email || '', receiver_address: d.receiver_address || '',
-        goods_description: d.goods_description || '',
-      });
+      setForm(Object.fromEntries(ALL_DETAIL_KEYS.map(k => [k, d[k] != null ? String(d[k]) : ''])) as Record<string, string>);
     }
     setEditing(v => !v);
   };
@@ -245,32 +267,30 @@ const BookingCard: React.FC<{
           )}
         </div>
 
-        {/* Edit form — complete the missing sender / receiver / cargo details */}
+        {/* Edit form — the same sender / receiver / cargo details as the booking page */}
         {editing && (
-          <div className="mt-3 pt-4 border-t border-gray-100">
-            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Complete your booking details</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {([
-                ['sender_name','Sender Name'], ['sender_phone','Sender Phone'],
-                ['sender_email','Sender Email'], ['sender_address','Sender Address'],
-                ['receiver_name','Receiver Name'], ['receiver_phone','Receiver Phone'],
-                ['receiver_email','Receiver Email'], ['receiver_address','Receiver Address'],
-              ] as [keyof typeof form, string][]).map(([k, label]) => (
-                <div key={k}>
-                  <label className="block text-[11px] text-gray-400 mb-0.5">{label}</label>
-                  <input value={form[k]} onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          <div className="mt-3 pt-4 border-t border-gray-100 space-y-4">
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">Complete your booking details</p>
+            {DETAIL_SECTIONS.map(([title, fields]) => (
+              <div key={title}>
+                <p className="text-xs font-bold text-gray-600 mb-2">{title}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {fields.map(([k, label]) => (
+                    <div key={k} className={WIDE_DETAIL_FIELDS.has(k) ? 'sm:col-span-2' : ''}>
+                      <label className="block text-[11px] text-gray-400 mb-0.5">{label}</label>
+                      <input
+                        type={k === 'invoice_date' ? 'date' : 'text'}
+                        value={form[k] || ''}
+                        onChange={e => setForm(f => ({ ...f, [k]: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                    </div>
+                  ))}
                 </div>
-              ))}
-              <div className="sm:col-span-2">
-                <label className="block text-[11px] text-gray-400 mb-0.5">Goods Description</label>
-                <input value={form.goods_description} onChange={e => setForm(f => ({ ...f, goods_description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
               </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-3">
+            ))}
+            <div className="flex justify-end gap-2">
               <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 transition">Cancel</button>
-              <button onClick={saveEdit} disabled={!form.sender_name.trim() || !form.receiver_name.trim()}
+              <button onClick={saveEdit} disabled={!form.sender_name?.trim() || !form.receiver_name?.trim()}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">
                 <FaSave className="text-xs" /> Save details
               </button>
@@ -298,10 +318,25 @@ const BookingCard: React.FC<{
                 ['Insurance',         d.insurance_required ? 'Yes (₹1,000)' : null],
                 ['Origin',            d.origin],
                 ['Destination',       d.destination],
+                ['HSN Code',          d.hsn_code],
+                ['Nature of Packing', d.nature_of_packing],
+                ['Gross Weight / Cont.', d.weight_per_container ? `${d.weight_per_container} MT` : null],
+                ['Invoice Number',    d.invoice_number],
+                ['Invoice Date',      d.invoice_date ? new Date(d.invoice_date).toLocaleDateString('en-IN') : null],
+                ['Invoice Value',     d.invoice_value ? `₹${Number(d.invoice_value).toLocaleString('en-IN')}` : null],
+                ['No. of Packages',   d.num_packages],
+                ['Package Size',      d.package_size],
+                ['Special Instructions', d.special_instructions],
                 ['Sender',            d.sender_name],
                 ['Sender Phone',      d.sender_phone],
+                ['Sender Email',      d.sender_email],
+                ['Sender GSTIN',      d.sender_gstin],
+                ['Sender Address',    [d.sender_address, d.sender_city, d.sender_state, d.sender_pincode].filter(Boolean).join(', ') || null],
                 ['Receiver',          d.receiver_name],
                 ['Receiver Phone',    d.receiver_phone],
+                ['Receiver Email',    d.receiver_email],
+                ['Receiver GSTIN',    d.receiver_gstin],
+                ['Receiver Address',  [d.receiver_address, d.receiver_city, d.receiver_state, d.receiver_pincode].filter(Boolean).join(', ') || null],
                 ['Booking Date',      d.booking_date ? new Date(d.booking_date).toLocaleDateString('en-IN') : null],
                 ['Status',            statusConfig.label],
               ];
