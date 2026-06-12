@@ -144,23 +144,9 @@ const BookingCard: React.FC<{ booking: Booking; onChangeStatus: (id: string, sta
               <p className="text-xs text-gray-400">{booking.service_type}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusConfig.pill}`}>
-              {statusConfig.label}
-            </span>
-            <select
-              value={stKey || 'pending'}
-              onChange={e => onChangeStatus(booking.id, e.target.value)}
-              title="Set status"
-              className="text-xs border border-gray-200 rounded-lg px-2 py-1 text-gray-500 bg-white cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-300"
-            >
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="in_transit">In Transit</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
+          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${statusConfig.pill}`}>
+            {statusConfig.label}
+          </span>
         </div>
 
         {/* Details grid */}
