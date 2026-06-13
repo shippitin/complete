@@ -19,16 +19,25 @@ import toast from 'react-hot-toast';
 import { ChevronDown } from 'lucide-react';
 
 // ── Persona list (value = role string stored on the user) ──
+// Partner is CONCOR (which expands into sub-roles below) plus CTO, meaning
+// container train operators OTHER THAN CONCOR.
 const PERSONAS: { value: string; label: string; group: string }[] = [
-  { value: 'exporter',            label: 'Shipper / Exporter',              group: 'Trade' },
-  { value: 'importer',            label: 'Importer / Consignee',            group: 'Trade' },
-  { value: 'freight_forwarder',   label: 'Freight Forwarder',               group: 'Trade' },
-  { value: 'cha',                 label: 'Customs Agent / CHA',             group: 'Partner' },
-  { value: 'shipping_line',       label: 'Shipping Line',                   group: 'Partner' },
-  { value: 'shipping_line_agent', label: 'Shipping Line Agent',             group: 'Partner' },
-  { value: 'transporter',         label: 'Transporter / Truck Operator',    group: 'Partner' },
-  { value: 'cto',                 label: 'Container Train Operator (CONCOR/CTO)', group: 'Partner' },
-  { value: 'customer',            label: 'Shippitin Customer',              group: 'General' },
+  { value: 'exporter',          label: 'Shipper / Exporter',                      group: 'Trade' },
+  { value: 'importer',          label: 'Importer / Consignee',                    group: 'Trade' },
+  { value: 'freight_forwarder', label: 'Freight Forwarder',                       group: 'Trade' },
+  { value: 'concor',            label: 'CONCOR (Container Corporation of India)',  group: 'Partner' },
+  { value: 'cto',               label: 'Container Train Operator (other than CONCOR)', group: 'Partner' },
+  { value: 'customer',          label: 'Shippitin Customer',                      group: 'General' },
+];
+
+// ── CONCOR sub-roles (shown only when CONCOR is selected) ──
+const CONCOR_ROLES: { value: string; label: string }[] = [
+  { value: 'business_associate', label: 'Business Associate' },
+  { value: 'administration',     label: 'Administration' },
+  { value: 'terminal_manager',   label: 'Terminal Manager' },
+  { value: 'customer',           label: 'Customer' },
+  { value: 'cha',                label: 'CHA (Customs House Agent)' },
+  { value: 'flml',               label: 'FLML (First & Last Mile Logistics)' },
 ];
 
 type ExtraField = {
@@ -57,24 +66,6 @@ const ROLE_FIELDS: Record<string, ExtraField[]> = {
     { name: 'iata',  label: 'IATA Cargo Agent Code', placeholder: '00-0 0000', help: 'For air freight (optional)', required: false },
     { name: 'gstin', label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
   ],
-  cha: [
-    { name: 'cb_license', label: 'Customs Broker Licence No.', placeholder: 'CB/00/2024', help: 'CBLR 2018 licence issued by CBIC', required: true, upper: true },
-    { name: 'gstin',      label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
-  ],
-  shipping_line: [
-    { name: 'scac',  label: 'SCAC Code', placeholder: 'MAEU', help: 'Standard Carrier Alpha Code (2–4 letters)', required: true, upper: true },
-    { name: 'imo',   label: 'IMO Company Number', placeholder: '1234567', help: '7-digit IMO identifier (optional)', required: false, len: 7, numeric: true },
-    { name: 'gstin', label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
-  ],
-  shipping_line_agent: [
-    { name: 'agency_code', label: 'Agency / MLO Code', placeholder: 'AGT-0000', help: 'Main Line Operator / agency code', required: true, upper: true },
-    { name: 'gstin',       label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
-  ],
-  transporter: [
-    { name: 'transporter_id', label: 'GST Transporter ID', placeholder: '88AAAAA0000A1Z5', help: '15-character TRANSIN used for e-way bills', required: true, len: 15, upper: true },
-    { name: 'fleet_size',     label: 'Fleet Size', placeholder: '25', help: 'Number of trucks (optional)', required: false, numeric: true },
-    { name: 'gstin',          label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: 'Optional', required: false, len: 15, upper: true },
-  ],
   cto: [
     { name: 'cto_license', label: 'CTO Licence No.', placeholder: 'CTO/IR/0000', help: 'Container Train Operator licence (Indian Railways)', required: true, upper: true },
     { name: 'gstin',       label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
@@ -84,10 +75,37 @@ const ROLE_FIELDS: Record<string, ExtraField[]> = {
   ],
 };
 
+// ── Credential fields per CONCOR sub-role (sensible defaults — easy to adjust) ──
+const CONCOR_FIELDS: Record<string, ExtraField[]> = {
+  business_associate: [
+    { name: 'ba_code', label: 'Business Associate Code', placeholder: 'BA/0000', help: 'CONCOR-issued BA code', required: true, upper: true },
+    { name: 'gstin',   label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: 'Optional', required: false, len: 15, upper: true },
+  ],
+  administration: [
+    { name: 'employee_id', label: 'CONCOR Employee ID', placeholder: 'EMP00000', help: 'Your CONCOR staff ID', required: true, upper: true },
+  ],
+  terminal_manager: [
+    { name: 'terminal_code', label: 'Terminal / ICD Code', placeholder: 'ICD-TKD', help: 'CONCOR terminal/ICD you manage', required: true, upper: true },
+    { name: 'employee_id',   label: 'CONCOR Employee ID', placeholder: 'EMP00000', help: 'Optional', required: false, upper: true },
+  ],
+  customer: [
+    { name: 'gstin', label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
+  ],
+  cha: [
+    { name: 'cb_license', label: 'Customs Broker Licence No.', placeholder: 'CB/00/2024', help: 'CBLR 2018 licence issued by CBIC', required: true, upper: true },
+    { name: 'gstin',      label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: 'Optional', required: false, len: 15, upper: true },
+  ],
+  flml: [
+    { name: 'transporter_id', label: 'GST Transporter ID', placeholder: '88AAAAA0000A1Z5', help: '15-character TRANSIN used for e-way bills', required: true, len: 15, upper: true },
+    { name: 'fleet_size',     label: 'Fleet Size', placeholder: '25', help: 'Number of trucks (optional)', required: false, numeric: true },
+  ],
+};
+
 const SignUpPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [role, setRole] = useState('');
+  const [concorRole, setConcorRole] = useState('');
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -110,13 +128,22 @@ const SignUpPage: React.FC = () => {
 
   const chooseRole = (value: string) => {
     setRole(value);
-    setExtras({}); // clear previous persona's fields
+    setConcorRole(''); // reset CONCOR sub-role
+    setExtras({});     // clear previous persona's fields
+  };
+
+  const chooseConcorRole = (value: string) => {
+    setConcorRole(value);
+    setExtras({}); // clear previous sub-role's fields
   };
 
   const handleExtraChange = (field: ExtraField, value: string) => {
     const v = field.upper ? value.toUpperCase() : value;
     setExtras(prev => ({ ...prev, [field.name]: v }));
   };
+
+  // Active credential fields depend on the persona — and the CONCOR sub-role.
+  const roleFields = role === 'concor' ? (CONCOR_FIELDS[concorRole] || []) : (ROLE_FIELDS[role] || []);
 
   const handleSignup = async () => {
     // ── validation (common) ──
@@ -132,9 +159,12 @@ const SignUpPage: React.FC = () => {
       toast.error('Please select your persona / role.');
       return;
     }
+    if (role === 'concor' && !concorRole) {
+      toast.error('Please select your role at CONCOR.');
+      return;
+    }
     // ── validation (persona-specific) ──
-    const fields = ROLE_FIELDS[role] || [];
-    for (const f of fields) {
+    for (const f of roleFields) {
       const val = (extras[f.name] || '').trim();
       if (f.required && !val) {
         toast.error(`${f.label} is required.`);
@@ -162,11 +192,19 @@ const SignUpPage: React.FC = () => {
 
       // ── attach persona + codes to the user on the client so role-based
       //    screens work immediately (server persistence is a post-demo follow-up) ──
+      const baseLabel = PERSONAS.find(p => p.value === role)?.label || role;
+      const concorLabel = CONCOR_ROLES.find(c => c.value === concorRole)?.label;
+      const persona_label = role === 'concor' && concorLabel ? `CONCOR — ${concorLabel}` : baseLabel;
+
       const enrichedUser = {
         ...user,
         role,
-        persona_label: PERSONAS.find(p => p.value === role)?.label || role,
-        profile: { ...extras },
+        concor_role: role === 'concor' ? concorRole : undefined,
+        persona_label,
+        profile: {
+          ...extras,
+          ...(role === 'concor' ? { concor_role: concorRole } : {}),
+        },
       };
 
       localStorage.setItem('shippitin_token', token);
@@ -187,14 +225,16 @@ const SignUpPage: React.FC = () => {
     'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 ' +
     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
 
-  const selectClass =
+  const selectBase =
     'w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-sm ' +
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ' +
-    (role ? 'text-gray-800' : 'text-gray-400');
+    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ';
+  const selectClassFor = (filled: boolean) => selectBase + (filled ? 'text-gray-800' : 'text-gray-400');
 
-  const roleFields = ROLE_FIELDS[role] || [];
-  const selectedPersona = PERSONAS.find(p => p.value === role);
   const groupOrder = Array.from(new Set(PERSONAS.map(p => p.group)));
+  const credentialsLabel =
+    role === 'concor'
+      ? (CONCOR_ROLES.find(c => c.value === concorRole)?.label || 'CONCOR')
+      : (PERSONAS.find(p => p.value === role)?.label || '');
   const phoneLocal = formData.phone.replace(/^\+91\s?/, '');
 
   return (
@@ -216,7 +256,7 @@ const SignUpPage: React.FC = () => {
                 <select
                   value={role}
                   onChange={e => chooseRole(e.target.value)}
-                  className={selectClass}
+                  className={selectClassFor(!!role)}
                 >
                   <option value="">Select your role</option>
                   {groupOrder.map(group => (
@@ -230,6 +270,28 @@ const SignUpPage: React.FC = () => {
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
             </div>
+
+            {/* CONCOR sub-role dropdown (only when CONCOR is selected) */}
+            {role === 'concor' && (
+              <div className="animate-fade-in">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Your role at CONCOR <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={concorRole}
+                    onChange={e => chooseConcorRole(e.target.value)}
+                    className={selectClassFor(!!concorRole)}
+                  >
+                    <option value="">Select your CONCOR role</option>
+                    {CONCOR_ROLES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+            )}
 
             {/* Full Name */}
             <div>
@@ -271,10 +333,10 @@ const SignUpPage: React.FC = () => {
             </div>
 
             {/* Persona-specific credential fields */}
-            {role && roleFields.length > 0 && (
+            {roleFields.length > 0 && (
               <div className="animate-fade-in rounded-xl border border-blue-100 bg-blue-50/50 p-4 space-y-4">
                 <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-                  {selectedPersona?.label} — required credentials
+                  {credentialsLabel} — required credentials
                 </p>
                 {roleFields.map(f => (
                   <div key={f.name}>
