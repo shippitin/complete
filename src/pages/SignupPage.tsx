@@ -16,6 +16,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
+import { ChevronDown } from 'lucide-react';
 
 // ── Persona list (value = role string stored on the user) ──
 const PERSONAS: { value: string; label: string; group: string }[] = [
@@ -101,6 +102,12 @@ const SignUpPage: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ── Phone: fixed +91 country code; store the full value, edit local digits only ──
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(-10); // last 10 digits
+    setFormData(prev => ({ ...prev, phone: digits ? `+91 ${digits}` : '' }));
+  };
+
   const chooseRole = (value: string) => {
     setRole(value);
     setExtras({}); // clear previous persona's fields
@@ -180,83 +187,89 @@ const SignUpPage: React.FC = () => {
     'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 ' +
     'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
 
+  const selectClass =
+    'w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-sm ' +
+    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ' +
+    (role ? 'text-gray-800' : 'text-gray-400');
+
   const roleFields = ROLE_FIELDS[role] || [];
   const selectedPersona = PERSONAS.find(p => p.value === role);
   const groupOrder = Array.from(new Set(PERSONAS.map(p => p.group)));
+  const phoneLocal = formData.phone.replace(/^\+91\s?/, '');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg">
-        {/* Brand badge */}
-        <div className="text-center mb-5">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-            Join Shippitin
-          </span>
+      <div className="w-full max-w-md">
+        {/* Brand */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-black tracking-tight text-gray-900">SHIPPITIN</h1>
+          <p className="text-xs text-gray-400 mt-0.5">India's Rail Freight Platform</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-6 sm:p-8">
-          <h2 className="text-2xl font-bold text-center text-gray-900">
-            Create your account
-          </h2>
-          <p className="text-center text-sm text-gray-500 mt-1 mb-6">
-            Pick your role — we’ll ask only for the credentials that apply to you.
+          <h2 className="text-xl font-bold text-gray-900">Create your account</h2>
+          <p className="text-sm text-gray-500 mt-1 mb-6">
+            Tell us who you are — we’ll ask only for the credentials that apply.
           </p>
 
-          <div className="space-y-5">
-            {/* Persona selector — grouped pills */}
+          <div className="space-y-4">
+            {/* Role dropdown (grouped) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 I am a… <span className="text-red-500">*</span>
               </label>
-              <div className="space-y-3">
-                {groupOrder.map(group => (
-                  <div key={group}>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">{group}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {PERSONAS.filter(p => p.group === group).map(p => {
-                        const active = role === p.value;
-                        return (
-                          <button
-                            key={p.value}
-                            type="button"
-                            onClick={() => chooseRole(p.value)}
-                            className={
-                              'rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ' +
-                              (active
-                                ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold ring-1 ring-blue-600'
-                                : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-blue-50')
-                            }
-                          >
-                            {p.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+              <div className="relative">
+                <select
+                  value={role}
+                  onChange={e => chooseRole(e.target.value)}
+                  className={selectClass}
+                >
+                  <option value="">Select your role</option>
+                  {groupOrder.map(group => (
+                    <optgroup key={group} label={group}>
+                      {PERSONAS.filter(p => p.group === group).map(p => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
             </div>
 
-            {/* Common fields */}
+            {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
               <input type="text" name="full_name" value={formData.full_name} onChange={handleChange}
                 className={fieldClass} placeholder="John Doe" />
             </div>
 
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email Address <span className="text-red-500">*</span></label>
               <input type="email" name="email" value={formData.email} onChange={handleChange}
-                className={fieldClass} placeholder="you@example.com" />
+                className={fieldClass} placeholder="you@company.com" />
             </div>
 
+            {/* Phone with fixed +91 country code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
-              <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
-                className={fieldClass} placeholder="+91 9876543210" />
+              <div className="flex rounded-xl border border-gray-300 overflow-hidden transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+                <span className="inline-flex items-center gap-1 px-3 bg-gray-50 border-r border-gray-300 text-sm text-gray-600 select-none">
+                  🇮🇳 +91
+                </span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={phoneLocal}
+                  onChange={handlePhoneChange}
+                  className="flex-1 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                  placeholder="98765 43210"
+                />
+              </div>
             </div>
 
+            {/* Company */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Company Name <span className="text-gray-400 font-normal">(optional)</span></label>
               <input type="text" name="company_name" value={formData.company_name} onChange={handleChange}
@@ -287,25 +300,30 @@ const SignUpPage: React.FC = () => {
               </div>
             )}
 
+            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
               <input type="password" name="password" value={formData.password} onChange={handleChange}
-                className={fieldClass} placeholder="••••••••" />
+                className={fieldClass} placeholder="At least 6 characters" />
             </div>
 
             <button onClick={handleSignup} disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
-              {loading ? 'Creating account…' : 'Sign Up'}
+              {loading ? 'Creating account…' : 'Create account'}
             </button>
           </div>
 
           <p className="mt-5 text-center text-sm text-gray-500">
             Already have an account?{' '}
             <span className="text-blue-600 hover:underline cursor-pointer font-semibold" onClick={() => navigate('/login')}>
-              Login
+              Log in
             </span>
           </p>
         </div>
+
+        <p className="mt-6 text-center text-xs text-gray-400">
+          🔒 Your trade credentials are used only to verify your business.
+        </p>
       </div>
     </div>
   );
