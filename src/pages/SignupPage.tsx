@@ -198,14 +198,8 @@ const SignUpPage: React.FC = () => {
   const phoneLocal = formData.phone.replace(/^\+91\s?/, '');
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-start justify-center px-4 pt-6 pb-12">
       <div className="w-full max-w-md">
-        {/* Brand */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-black tracking-tight text-gray-900">SHIPPITIN</h1>
-          <p className="text-xs text-gray-400 mt-0.5">India's Rail Freight Platform</p>
-        </div>
-
         <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-6 sm:p-8">
           <h2 className="text-xl font-bold text-gray-900">Create your account</h2>
           <p className="text-sm text-gray-500 mt-1 mb-6">
