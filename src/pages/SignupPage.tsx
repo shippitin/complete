@@ -101,8 +101,8 @@ const SignUpPage: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRole(e.target.value);
+  const chooseRole = (value: string) => {
+    setRole(value);
     setExtras({}); // clear previous persona's fields
   };
 
@@ -177,101 +177,135 @@ const SignUpPage: React.FC = () => {
   };
 
   const fieldClass =
-    'w-full border rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#5A7A97] border-[#E0E0E0] text-[#333333] placeholder-[#666666]';
+    'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 ' +
+    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
 
   const roleFields = ROLE_FIELDS[role] || [];
+  const selectedPersona = PERSONAS.find(p => p.value === role);
+  const groupOrder = Array.from(new Set(PERSONAS.map(p => p.group)));
 
   return (
-    <div className="min-h-screen bg-logistics-doodle bg-repeat bg-fixed flex items-center justify-center px-4 py-8">
-      <div className="bg-white shadow-xl rounded-xl w-full max-w-lg p-6 md:p-8">
-        <h2 className="text-2xl font-bold text-center text-[#333333] mb-1">
-          Create Your Shippitin Account
-        </h2>
-        <p className="text-center text-sm text-[#666666] mb-6">
-          Select your role — we'll ask only for the credentials that apply to you.
-        </p>
-
-        <div className="space-y-5">
-          {/* Persona selector */}
-          <div>
-            <label className="block text-sm text-[#666666] mb-1">
-              I am a… <span className="text-red-500">*</span>
-            </label>
-            <select value={role} onChange={handleRoleChange} className={fieldClass}>
-              <option value="">Select your persona</option>
-              {PERSONAS.map(p => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Common fields */}
-          <div>
-            <label className="block text-sm text-[#666666] mb-1">Full Name <span className="text-red-500">*</span></label>
-            <input type="text" name="full_name" value={formData.full_name} onChange={handleChange}
-              className={fieldClass} placeholder="John Doe" />
-          </div>
-
-          <div>
-            <label className="block text-sm text-[#666666] mb-1">Email Address <span className="text-red-500">*</span></label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange}
-              className={fieldClass} placeholder="you@example.com" />
-          </div>
-
-          <div>
-            <label className="block text-sm text-[#666666] mb-1">Phone Number <span className="text-red-500">*</span></label>
-            <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
-              className={fieldClass} placeholder="+91 9876543210" />
-          </div>
-
-          <div>
-            <label className="block text-sm text-[#666666] mb-1">Company Name (Optional)</label>
-            <input type="text" name="company_name" value={formData.company_name} onChange={handleChange}
-              className={fieldClass} placeholder="Your Company Pvt Ltd" />
-          </div>
-
-          {/* Persona-specific credential fields */}
-          {role && roleFields.length > 0 && (
-            <div className="border-t border-[#EEEEEE] pt-4 space-y-4">
-              <p className="text-xs font-semibold text-[#5A7A97] uppercase tracking-wide">
-                {PERSONAS.find(p => p.value === role)?.label} — required credentials
-              </p>
-              {roleFields.map(f => (
-                <div key={f.name}>
-                  <label className="block text-sm text-[#666666] mb-1">
-                    {f.label} {f.required && <span className="text-red-500">*</span>}
-                  </label>
-                  <input
-                    type={f.numeric ? 'number' : 'text'}
-                    value={extras[f.name] || ''}
-                    onChange={e => handleExtraChange(f, e.target.value)}
-                    className={fieldClass}
-                    placeholder={f.placeholder}
-                  />
-                  {f.help && <p className="text-xs text-[#999999] mt-1">{f.help}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm text-[#666666] mb-1">Password <span className="text-red-500">*</span></label>
-            <input type="password" name="password" value={formData.password} onChange={handleChange}
-              className={fieldClass} placeholder="••••••••" />
-          </div>
-
-          <button onClick={handleSignup} disabled={loading}
-            className="w-full bg-[#34495E] text-white py-2 rounded-md hover:bg-[#2C3E50] transition disabled:opacity-50">
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-lg">
+        {/* Brand badge */}
+        <div className="text-center mb-5">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-sm ring-1 ring-blue-100">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+            Join Shippitin
+          </span>
         </div>
 
-        <p className="mt-4 text-center text-sm text-[#666666]">
-          Already have an account?{' '}
-          <span className="text-[#34495E] hover:underline cursor-pointer" onClick={() => navigate('/login')}>
-            Login
-          </span>
-        </p>
+        <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-6 sm:p-8">
+          <h2 className="text-2xl font-bold text-center text-gray-900">
+            Create your account
+          </h2>
+          <p className="text-center text-sm text-gray-500 mt-1 mb-6">
+            Pick your role — we’ll ask only for the credentials that apply to you.
+          </p>
+
+          <div className="space-y-5">
+            {/* Persona selector — grouped pills */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                I am a… <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-3">
+                {groupOrder.map(group => (
+                  <div key={group}>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">{group}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {PERSONAS.filter(p => p.group === group).map(p => {
+                        const active = role === p.value;
+                        return (
+                          <button
+                            key={p.value}
+                            type="button"
+                            onClick={() => chooseRole(p.value)}
+                            className={
+                              'rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ' +
+                              (active
+                                ? 'border-blue-600 bg-blue-50 text-blue-700 font-semibold ring-1 ring-blue-600'
+                                : 'border-gray-200 bg-white text-gray-600 hover:border-blue-300 hover:bg-blue-50')
+                            }
+                          >
+                            {p.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Common fields */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+              <input type="text" name="full_name" value={formData.full_name} onChange={handleChange}
+                className={fieldClass} placeholder="John Doe" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address <span className="text-red-500">*</span></label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange}
+                className={fieldClass} placeholder="you@example.com" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange}
+                className={fieldClass} placeholder="+91 9876543210" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name <span className="text-gray-400 font-normal">(optional)</span></label>
+              <input type="text" name="company_name" value={formData.company_name} onChange={handleChange}
+                className={fieldClass} placeholder="Your Company Pvt Ltd" />
+            </div>
+
+            {/* Persona-specific credential fields */}
+            {role && roleFields.length > 0 && (
+              <div className="animate-fade-in rounded-xl border border-blue-100 bg-blue-50/50 p-4 space-y-4">
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                  {selectedPersona?.label} — required credentials
+                </p>
+                {roleFields.map(f => (
+                  <div key={f.name}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {f.label} {f.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      type={f.numeric ? 'number' : 'text'}
+                      value={extras[f.name] || ''}
+                      onChange={e => handleExtraChange(f, e.target.value)}
+                      className={fieldClass}
+                      placeholder={f.placeholder}
+                    />
+                    {f.help && <p className="text-xs text-gray-400 mt-1">{f.help}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange}
+                className={fieldClass} placeholder="••••••••" />
+            </div>
+
+            <button onClick={handleSignup} disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
+              {loading ? 'Creating account…' : 'Sign Up'}
+            </button>
+          </div>
+
+          <p className="mt-5 text-center text-sm text-gray-500">
+            Already have an account?{' '}
+            <span className="text-blue-600 hover:underline cursor-pointer font-semibold" onClick={() => navigate('/login')}>
+              Login
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   );
