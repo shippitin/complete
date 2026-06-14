@@ -152,15 +152,58 @@ const BookingCard: React.FC<{
     setExpanded(true);
   };
 
-  // "Complete payment" → the real Razorpay page. Pass booking_number as the id
-  // (backend keys payment verify by booking_number), matching the booking-confirm flow.
-  const handleCompletePayment = () => {
-    navigate('/payment', {
+  // Both "Complete booking" and "Complete payment" drop the user into the full
+  // rail booking-confirmation page (Sender → Receiver → Cargo → Add-ons → Payment),
+  // prefilled from whatever we already have. initialStep lets "Complete payment"
+  // jump straight to the Payment step. We pass the existing booking ref so the
+  // page completes THIS booking (no duplicate) instead of minting a new one.
+  const goComplete = (initialStep: number) => {
+    const cb: any = d.charges_breakdown || null;
+    const basePrice = cb?.base ?? booking.estimated_price ?? 0;
+    const formData = {
+      bookingType:        booking.service_type || 'Train Container Booking',
+      containerType:      d.container_type || '20ft Standard',
+      numberOfContainers: d.number_of_containers || 1,
+      serviceType:        d.route_type || 'terminalToTerminal',
+      isDomestic:         d.is_domestic !== false,
+      hazardousCargo:     !!d.hazardous,
+      cargoType:          booking.cargo_type || 'General',
+      totalWeight:        booking.weight || 0,
+    };
+    const selectedTrainResult = {
+      id:                 booking.booking_number,
+      price:              basePrice,
+      originStation:      booking.origin,
+      destinationStation: booking.destination,
+      transitDuration:    d.transit_time || '—',
+      operator:           d.operator || 'CONCOR',
+      serviceName:        booking.service_type,
+    };
+    const prefill = {
+      sender: {
+        name: d.sender_name, phone: d.sender_phone, email: d.sender_email, gstin: d.sender_gstin,
+        address: d.sender_address, city: d.sender_city, state: d.sender_state, pincode: d.sender_pincode, country: d.sender_country,
+      },
+      receiver: {
+        name: d.receiver_name, phone: d.receiver_phone, email: d.receiver_email, gstin: d.receiver_gstin,
+        address: d.receiver_address, city: d.receiver_city, state: d.receiver_state, pincode: d.receiver_pincode, country: d.receiver_country,
+      },
+      cargo: {
+        goodsDescription: d.goods_description, hsnCode: d.hsn_code, natureOfPacking: d.nature_of_packing,
+        weightPerContainer: d.weight_per_container, invoiceNumber: d.invoice_number, invoiceDate: d.invoice_date,
+        invoiceValue: d.invoice_value, numPackages: d.num_packages, packageSize: d.package_size,
+        specialInstructions: d.special_instructions,
+      },
+    };
+    navigate('/rail-booking-confirmation', {
       state: {
-        bookingId: booking.booking_number,
-        amount: booking.estimated_price,
-        bookingNumber: booking.booking_number,
-        serviceType: booking.service_type,
+        formData,
+        selectedTrainResult,
+        initialInsuranceRequired: !!d.insurance_required,
+        shippingLine: d.shipping_line || '',
+        initialStep,
+        existing: { id: booking.id, booking_number: booking.booking_number },
+        prefill,
       },
     });
   };
@@ -218,26 +261,26 @@ const BookingCard: React.FC<{
             • Delivered / Cancelled → View shipment details */}
         <div className="flex items-center justify-end gap-2 flex-wrap pt-4 border-t border-gray-50">
           {stKey === 'pending' ? (
-            <>
-              {paid ? (
-                <span className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-50 text-green-600 text-xs font-semibold">
-                  <FaCheckCircle className="text-xs" /> Payment done
-                </span>
-              ) : (
+            paid ? (
+              <span className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-50 text-green-600 text-xs font-semibold">
+                <FaCheckCircle className="text-xs" /> Payment done
+              </span>
+            ) : (
+              <>
                 <button
-                  onClick={handleCompletePayment}
+                  onClick={() => goComplete(5)}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition"
                 >
                   <FaCreditCard className="text-xs" /> Complete payment
                 </button>
-              )}
-              <button
-                onClick={toggleEdit}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-semibold transition"
-              >
-                <FaPencilAlt className="text-[10px]" /> {editing ? 'Close' : 'Complete booking'}
-              </button>
-            </>
+                <button
+                  onClick={() => goComplete(1)}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-semibold transition"
+                >
+                  <FaPencilAlt className="text-[10px]" /> Complete booking
+                </button>
+              </>
+            )
           ) : (
             <>
               {stKey === 'in_transit' && (

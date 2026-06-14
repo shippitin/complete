@@ -68,6 +68,9 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [shippingLine,  setShippingLine]              = useState('');      // ocean carrier (international) from service-details page
   const [promoCode,     setPromoCode]                 = useState('');      // applied promo from service-details page
   const [promoDiscount, setPromoDiscount]             = useState(0);       // ₹ discount carried from service-details page
+  // When opened from My Bookings to complete an existing booking, this carries the
+  // booking's id/number so we update THAT booking instead of creating a new one.
+  const [existingBooking, setExistingBooking]         = useState<{ id?: string; booking_number?: string } | null>(null);
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -136,6 +139,9 @@ const RailBookingConfirmationPage: React.FC = () => {
       shippingLine?: string;
       promoCode?: string;
       promoDiscount?: number;
+      initialStep?: number;
+      existing?: { id?: string; booking_number?: string };
+      prefill?: { sender?: any; receiver?: any; cargo?: any };
     } | undefined;
     if (state?.formData && state?.selectedTrainResult) {
       setFormData(state.formData);
@@ -146,12 +152,45 @@ const RailBookingConfirmationPage: React.FC = () => {
       setShippingLine(state.shippingLine || '');
       setPromoCode(state.promoCode || '');
       setPromoDiscount(state.promoDiscount || 0);
+      setExistingBooking(state.existing || null);
       // Carry over the add-ons the customer already picked on Recommended
       // Services so those toggles start ON here (domestic + international).
       const fd = state.formData as any;
       setAddFirstMile(!!fd.addFirstMile);
       setAddLastMile(!!fd.addLastMile);
       setAddCustoms(!!fd.addCustoms);
+      // Prefill from an existing booking (completing it from My Bookings).
+      const pf = state.prefill;
+      if (pf?.sender) {
+        const s = pf.sender;
+        if (s.name) setSenderName(s.name); if (s.phone) setSenderPhone(s.phone);
+        if (s.email) setSenderEmail(s.email); if (s.gstin) setSenderGstin(s.gstin);
+        if (s.address) setSenderAddress(s.address); if (s.city) setSenderCity(s.city);
+        if (s.state) setSenderState(s.state); if (s.pincode) setSenderPincode(s.pincode);
+        if (s.country) setSenderCountry(s.country);
+      }
+      if (pf?.receiver) {
+        const r = pf.receiver;
+        if (r.name) setReceiverName(r.name); if (r.phone) setReceiverPhone(r.phone);
+        if (r.email) setReceiverEmail(r.email); if (r.gstin) setReceiverGstin(r.gstin);
+        if (r.address) setReceiverAddress(r.address); if (r.city) setReceiverCity(r.city);
+        if (r.state) setReceiverState(r.state); if (r.pincode) setReceiverPincode(r.pincode);
+        if (r.country) setReceiverCountry(r.country);
+      }
+      if (pf?.cargo) {
+        const c = pf.cargo;
+        if (c.goodsDescription) setGoodsDescription(c.goodsDescription);
+        if (c.hsnCode) setHsnCode(c.hsnCode);
+        if (c.natureOfPacking) setNatureOfPacking(c.natureOfPacking);
+        if (c.weightPerContainer) setWeightPerContainer(String(c.weightPerContainer));
+        if (c.invoiceNumber) setInvoiceNumber(c.invoiceNumber);
+        if (c.invoiceDate) setInvoiceDate(c.invoiceDate);
+        if (c.invoiceValue) setInvoiceValue(String(c.invoiceValue));
+        if (c.numPackages) setNumPackages(String(c.numPackages));
+        if (c.packageSize) setPackageSize(c.packageSize);
+        if (c.specialInstructions) setSpecialInstructions(c.specialInstructions);
+      }
+      if (state.initialStep) setCurrentStep(state.initialStep);
       setLoading(false);
     } else {
       setError('Booking details not found.');
@@ -233,8 +272,39 @@ const RailBookingConfirmationPage: React.FC = () => {
 
   const handleConfirm = () => {
     if (!validateStep(5)) return;
-    const bookingId = `TRN-${Date.now().toString().slice(-6)}`;
+    // Completing an existing booking → reuse its number (no duplicate); otherwise mint a new one.
+    const isExisting = !!existingBooking?.booking_number;
+    const bookingId = existingBooking?.booking_number || `TRN-${Date.now().toString().slice(-6)}`;
+
+    // Reflect the completion on My Bookings. There's no backend update endpoint yet,
+    // so persist the entered details + a "confirmed" status via the same localStorage
+    // overrides the My Bookings page reads (keyed by the booking's id).
+    if (existingBooking?.id) {
+      try {
+        const fdAny = formData as any;
+        const dov = JSON.parse(localStorage.getItem('bookingDetailOverrides') || '{}');
+        dov[existingBooking.id] = {
+          ...(dov[existingBooking.id] || {}),
+          sender_name: senderName, sender_phone: senderPhone, sender_email: senderEmail, sender_gstin: senderGstin,
+          sender_address: senderAddress, sender_city: senderCity, sender_state: senderState, sender_pincode: senderPincode, sender_country: senderCountry,
+          receiver_name: receiverName, receiver_phone: receiverPhone, receiver_email: receiverEmail, receiver_gstin: receiverGstin,
+          receiver_address: receiverAddress, receiver_city: receiverCity, receiver_state: receiverState, receiver_pincode: receiverPincode, receiver_country: receiverCountry,
+          goods_description: goodsDescription, hsn_code: hsnCode, nature_of_packing: natureOfPacking,
+          weight_per_container: weightPerContainer, invoice_number: invoiceNumber, invoice_date: invoiceDate, invoice_value: invoiceValue,
+          num_packages: numPackages, package_size: packageSize, special_instructions: specialInstructions,
+          route_type: fdAny?.serviceType, container_type: fdAny?.containerType, number_of_containers: fdAny?.numberOfContainers,
+          is_domestic: fdAny?.isDomestic !== false, operator: selectedTrainResult?.operator, transit_time: selectedTrainResult?.transitDuration,
+          insurance_required: insuranceRequired, charges_breakdown: bd,
+        };
+        localStorage.setItem('bookingDetailOverrides', JSON.stringify(dov));
+        const sov = JSON.parse(localStorage.getItem('bookingStatusOverrides') || '{}');
+        sov[existingBooking.id] = 'confirmed';
+        localStorage.setItem('bookingStatusOverrides', JSON.stringify(sov));
+      } catch { /* ignore quota/parse */ }
+    }
+
     const finalBooking = {
+      skipPersist: isExisting,   // existing booking → don't re-POST (would duplicate / there's no update endpoint)
       selectedResult: {
         ...selectedTrainResult!,
         // normalise field names so BookingConfirmationPage & TrackPage can read them

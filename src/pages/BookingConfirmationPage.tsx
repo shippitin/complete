@@ -138,7 +138,9 @@ const BookingConfirmationPage: React.FC = () => {
       (async () => {
         try {
           const token = localStorage.getItem('shippitin_token');
-          if (token && details.bookingId) {
+          // skipPersist → this is an existing booking being completed from My Bookings;
+          // re-POSTing would duplicate it (no update endpoint yet), so don't.
+          if (token && details.bookingId && !details.skipPersist) {
             await fetch(`${API_BASE_URL}/api/bookings`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
