@@ -276,6 +276,15 @@ const SignUpPage: React.FC = () => {
 
   // Brand gradient lifted from the floating Voice Assistant button (light → dark blue).
   const brandGradient = { background: 'linear-gradient(to right, #53b2fe, #065af3)' };
+  // Same gradient as a TEXT fill. Must use backgroundImage (not the `background`
+  // shorthand, which resets background-clip and renders a solid bar instead of text).
+  const headingGradient: React.CSSProperties = {
+    backgroundImage: 'linear-gradient(to right, #53b2fe, #065af3)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    color: 'transparent',
+  };
   const ctaClass =
     'w-full text-white py-3 rounded-xl font-semibold shadow-sm transition hover:brightness-105 active:scale-[0.99] disabled:opacity-50';
 
@@ -359,7 +368,7 @@ const SignUpPage: React.FC = () => {
                 <HeaderIcon className="h-5 w-5" />
               </div>
               <div>
-                <h2 style={brandGradient} className="text-lg font-bold tracking-tight leading-tight bg-clip-text text-transparent">
+                <h2 style={headingGradient} className="w-fit text-lg font-bold tracking-tight leading-tight">
                   {isCustomer ? 'Let’s get started' : 'Create your account'}
                 </h2>
                 <p className="text-xs text-gray-500">
