@@ -22,11 +22,13 @@ import { ChevronDown } from 'lucide-react';
 // Partner is CONCOR (which expands into sub-roles below) plus CTO, meaning
 // container train operators OTHER THAN CONCOR.
 const PERSONAS: { value: string; label: string; group: string }[] = [
-  { value: 'exporter',          label: 'Shipper / Exporter',                      group: 'Trade' },
-  { value: 'importer',          label: 'Importer / Consignee',                    group: 'Trade' },
+  { value: 'importer_exporter', label: 'Importer / Exporter',                     group: 'Trade' },
   { value: 'freight_forwarder', label: 'Freight Forwarder',                       group: 'Trade' },
   { value: 'concor',            label: 'CONCOR (Container Corporation of India)',  group: 'Partner' },
-  { value: 'cto',               label: 'Container Train Operator (other than CONCOR)', group: 'Partner' },
+  { value: 'cto',               label: 'Container Train Operator (CTO)',           group: 'Partner' },
+  { value: 'cha',               label: 'Customs Agent / CHA',                     group: 'Partner' },
+  { value: 'shipping_line',     label: 'Shipping Line',                           group: 'Partner' },
+  { value: 'transporter',       label: 'Truck Operator',                          group: 'Partner' },
   { value: 'customer',          label: 'Shippitin Customer',                      group: 'General' },
 ];
 
@@ -53,11 +55,7 @@ type ExtraField = {
 
 // ── Real-world credential fields per persona ──
 const ROLE_FIELDS: Record<string, ExtraField[]> = {
-  exporter: [
-    { name: 'iec',   label: 'IEC (Importer-Exporter Code)', placeholder: 'AAAAA1234A', help: '10-character DGFT code (PAN-based)', required: true, len: 10, upper: true },
-    { name: 'gstin', label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
-  ],
-  importer: [
+  importer_exporter: [
     { name: 'iec',   label: 'IEC (Importer-Exporter Code)', placeholder: 'AAAAA1234A', help: '10-character DGFT code (PAN-based)', required: true, len: 10, upper: true },
     { name: 'gstin', label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
   ],
@@ -69,6 +67,20 @@ const ROLE_FIELDS: Record<string, ExtraField[]> = {
   cto: [
     { name: 'cto_license', label: 'CTO Licence No.', placeholder: 'CTO/IR/0000', help: 'Container Train Operator licence (Indian Railways)', required: true, upper: true },
     { name: 'gstin',       label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
+  ],
+  cha: [
+    { name: 'cb_license', label: 'Customs Broker Licence No.', placeholder: 'CB/00/2024', help: 'CBLR 2018 licence issued by CBIC', required: true, upper: true },
+    { name: 'gstin',      label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
+  ],
+  shipping_line: [
+    { name: 'scac',  label: 'SCAC Code', placeholder: 'MAEU', help: 'Standard Carrier Alpha Code (2–4 letters)', required: true, upper: true },
+    { name: 'imo',   label: 'IMO Company Number', placeholder: '1234567', help: '7-digit IMO identifier (optional)', required: false, len: 7, numeric: true },
+    { name: 'gstin', label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: '15-character GST Identification Number', required: true, len: 15, upper: true },
+  ],
+  transporter: [
+    { name: 'transporter_id', label: 'GST Transporter ID', placeholder: '88AAAAA0000A1Z5', help: '15-character TRANSIN used for e-way bills', required: true, len: 15, upper: true },
+    { name: 'fleet_size',     label: 'Fleet Size', placeholder: '25', help: 'Number of trucks (optional)', required: false, numeric: true },
+    { name: 'gstin',          label: 'GSTIN', placeholder: '22AAAAA0000A1Z5', help: 'Optional', required: false, len: 15, upper: true },
   ],
   customer: [
     { name: 'gstin', label: 'GSTIN (Optional)', placeholder: '22AAAAA0000A1Z5', help: 'For GST-compliant invoices (optional)', required: false, len: 15, upper: true },
