@@ -274,6 +274,11 @@ const SignUpPage: React.FC = () => {
     'focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition ';
   const selectClassFor = (filled: boolean) => selectBase + (filled ? 'text-gray-800' : 'text-gray-400');
 
+  // Brand gradient lifted from the floating Voice Assistant button (light → dark blue).
+  const brandGradient = { background: 'linear-gradient(to right, #53b2fe, #065af3)' };
+  const ctaClass =
+    'w-full text-white py-3 rounded-xl font-semibold shadow-sm transition hover:brightness-105 active:scale-[0.99] disabled:opacity-50';
+
   const groupOrder = Array.from(new Set(PERSONAS.map(p => p.group)));
   const credentialsLabel =
     role === 'concor'
@@ -350,7 +355,7 @@ const SignUpPage: React.FC = () => {
           <div className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100 px-6 sm:px-8 py-5">
             <div className="pointer-events-none absolute -top-8 -right-6 h-24 w-24 rounded-full bg-white/50 blur-2xl" />
             <div className="relative flex items-center gap-3">
-              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-400 ring-1 ring-blue-200 shadow-sm">
+              <div style={brandGradient} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm">
                 <HeaderIcon className="h-5 w-5" />
               </div>
               <div>
@@ -398,8 +403,7 @@ const SignUpPage: React.FC = () => {
                 {phoneField}
                 {passwordField}
 
-                <button onClick={handleSignup} disabled={loading}
-                  className="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
+                <button onClick={handleSignup} disabled={loading} style={brandGradient} className={ctaClass}>
                   {loading ? 'Creating account…' : 'Create your free account'}
                 </button>
 
@@ -478,8 +482,7 @@ const SignUpPage: React.FC = () => {
 
                 {passwordField}
 
-                <button onClick={handleSignup} disabled={loading}
-                  className="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
+                <button onClick={handleSignup} disabled={loading} style={brandGradient} className={ctaClass}>
                   {loading ? 'Creating account…' : 'Create account'}
                 </button>
               </>
