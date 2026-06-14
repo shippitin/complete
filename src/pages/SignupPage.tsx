@@ -18,7 +18,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { ChevronDown, Eye, EyeOff } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, Sparkles, UserPlus } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { FaLinkedin } from 'react-icons/fa';
 
@@ -280,6 +280,7 @@ const SignUpPage: React.FC = () => {
       ? (CONCOR_ROLES.find(c => c.value === concorRole)?.label || 'CONCOR')
       : (PERSONAS.find(p => p.value === role)?.label || '');
   const phoneLocal = formData.phone.replace(/^\+91\s?/, '');
+  const HeaderIcon = isCustomer ? Sparkles : UserPlus;
 
   // ── Reusable field blocks (shared by the full and lite forms) ──
   const emailField = (
@@ -345,14 +346,19 @@ const SignUpPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-start justify-center px-4 pt-6 pb-12">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-6 sm:p-8">
-          <h2 className="text-xl font-bold text-gray-900">
-            {isCustomer ? 'Let’s get started' : 'Create your account'}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1 mb-6">
-            {isCustomer
-              ? 'Shipping. Simplified.'
-              : 'Tell us who you are — we’ll ask only for the credentials that apply.'}
-          </p>
+          <div className="mb-6">
+            <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20">
+              <HeaderIcon className="h-5 w-5" />
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+              {isCustomer ? 'Let’s get started' : 'Create your account'}
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {isCustomer
+                ? 'Shipping. Simplified.'
+                : 'Tell us who you are — we’ll ask only for the credentials that apply.'}
+            </p>
+          </div>
 
           <div className="space-y-4">
             {/* Role dropdown (grouped) — always shown */}
