@@ -345,21 +345,26 @@ const SignUpPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-start justify-center px-4 pt-6 pb-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 p-6 sm:p-8">
-          <div className="mb-6">
-            <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20">
-              <HeaderIcon className="h-5 w-5" />
+        <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 overflow-hidden">
+          {/* Gradient header band */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-sky-500 px-6 sm:px-8 pt-7 pb-6 text-white">
+            <div className="pointer-events-none absolute -top-10 -right-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute -bottom-12 -left-8 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+            <div className="relative">
+              <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 backdrop-blur-sm">
+                <HeaderIcon className="h-5 w-5" />
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight">
+                {isCustomer ? 'Let’s get started' : 'Create your account'}
+              </h2>
+              <p className="text-sm text-blue-50/90 mt-1">
+                {isCustomer ? 'Shipping. Simplified.' : 'India’s rail freight, simplified.'}
+              </p>
             </div>
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-              {isCustomer ? 'Let’s get started' : 'Create your account'}
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {isCustomer
-                ? 'Shipping. Simplified.'
-                : 'Tell us who you are — we’ll ask only for the credentials that apply.'}
-            </p>
           </div>
 
+          {/* Form body */}
+          <div className="p-6 sm:p-8">
           <div className="space-y-4">
             {/* Role dropdown (grouped) — always shown */}
             <div>
@@ -486,6 +491,7 @@ const SignUpPage: React.FC = () => {
               Log in
             </span>
           </p>
+          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-gray-400">
