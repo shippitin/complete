@@ -492,7 +492,7 @@ const SignUpPage: React.FC = () => {
                 {passwordField}
 
                 <button onClick={handleSignup} disabled={loading} style={brandGradient} className={ctaClass}>
-                  {loading ? 'Creating account…' : 'Create account'}
+                  {loading ? 'Signing up…' : 'Sign up'}
                 </button>
               </>
             )}
