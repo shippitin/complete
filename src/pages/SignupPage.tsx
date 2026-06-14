@@ -267,11 +267,11 @@ const SignUpPage: React.FC = () => {
 
   const fieldClass =
     'w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 placeholder-gray-400 ' +
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition';
+    'focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition';
 
   const selectBase =
     'w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-sm ' +
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ';
+    'focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent transition ';
   const selectClassFor = (filled: boolean) => selectBase + (filled ? 'text-gray-800' : 'text-gray-400');
 
   const groupOrder = Array.from(new Set(PERSONAS.map(p => p.group)));
@@ -294,7 +294,7 @@ const SignUpPage: React.FC = () => {
   const phoneField = (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
-      <div className="flex rounded-xl border border-gray-300 overflow-hidden transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+      <div className="flex rounded-xl border border-gray-300 overflow-hidden transition focus-within:ring-2 focus-within:ring-blue-300 focus-within:border-transparent">
         <span className="inline-flex items-center gap-1 px-3 bg-gray-50 border-r border-gray-300 text-sm text-gray-600 select-none">
           🇮🇳 +91
         </span>
@@ -347,10 +347,10 @@ const SignUpPage: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 overflow-hidden">
           {/* Gradient header band */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-sky-100 via-blue-100 to-blue-200 px-6 sm:px-8 py-5">
+          <div className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100 px-6 sm:px-8 py-5">
             <div className="pointer-events-none absolute -top-8 -right-6 h-24 w-24 rounded-full bg-white/50 blur-2xl" />
             <div className="relative flex items-center gap-3">
-              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/30">
+              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-400 ring-1 ring-blue-200 shadow-sm">
                 <HeaderIcon className="h-5 w-5" />
               </div>
               <div>
@@ -399,7 +399,7 @@ const SignUpPage: React.FC = () => {
                 {passwordField}
 
                 <button onClick={handleSignup} disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
+                  className="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
                   {loading ? 'Creating account…' : 'Create your free account'}
                 </button>
 
@@ -455,7 +455,7 @@ const SignUpPage: React.FC = () => {
                 {/* Persona-specific credential fields */}
                 {roleFields.length > 0 && (
                   <div className="animate-fade-in rounded-xl border border-blue-100 bg-blue-50/50 p-4 space-y-4">
-                    <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                    <p className="text-xs font-semibold text-blue-500 uppercase tracking-wide">
                       {credentialsLabel} — required credentials
                     </p>
                     {roleFields.map(f => (
@@ -479,7 +479,7 @@ const SignUpPage: React.FC = () => {
                 {passwordField}
 
                 <button onClick={handleSignup} disabled={loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
+                  className="w-full bg-blue-400 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold shadow-sm transition active:scale-[0.99] disabled:opacity-50">
                   {loading ? 'Creating account…' : 'Create account'}
                 </button>
               </>
@@ -488,7 +488,7 @@ const SignUpPage: React.FC = () => {
 
           <p className="mt-5 text-center text-sm text-gray-500">
             Already have an account?{' '}
-            <span className="text-blue-600 hover:underline cursor-pointer font-semibold" onClick={() => navigate('/login')}>
+            <span className="text-blue-500 hover:underline cursor-pointer font-semibold" onClick={() => navigate('/login')}>
               Log in
             </span>
           </p>
