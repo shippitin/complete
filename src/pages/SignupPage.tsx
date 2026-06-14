@@ -347,19 +347,20 @@ const SignUpPage: React.FC = () => {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 overflow-hidden">
           {/* Gradient header band */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-sky-500 px-6 sm:px-8 pt-7 pb-6 text-white">
-            <div className="pointer-events-none absolute -top-10 -right-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-            <div className="pointer-events-none absolute -bottom-12 -left-8 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-            <div className="relative">
-              <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 backdrop-blur-sm">
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-sky-500 px-6 sm:px-8 py-5 text-white">
+            <div className="pointer-events-none absolute -top-8 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
+            <div className="relative flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/30 backdrop-blur-sm">
                 <HeaderIcon className="h-5 w-5" />
               </div>
-              <h2 className="text-2xl font-bold tracking-tight">
-                {isCustomer ? 'Let’s get started' : 'Create your account'}
-              </h2>
-              <p className="text-sm text-blue-50/90 mt-1">
-                {isCustomer ? 'Shipping. Simplified.' : 'India’s rail freight, simplified.'}
-              </p>
+              <div>
+                <h2 className="text-lg font-bold tracking-tight leading-tight">
+                  {isCustomer ? 'Let’s get started' : 'Create your account'}
+                </h2>
+                <p className="text-xs text-blue-50/90">
+                  {isCustomer ? 'Shipping. Simplified.' : 'India’s rail freight, simplified.'}
+                </p>
+              </div>
             </div>
           </div>
 
