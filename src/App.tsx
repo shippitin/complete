@@ -72,6 +72,7 @@ import AdminPage from './pages/AdminPage';
 import PaymentPage from './pages/PaymentPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import VoiceAssistant from './components/VoiceAssistant';
+import RoleDashboard from './components/RoleDashboard';
 import { ParsedVoiceCommand } from './types/QuoteFormHandle';
 import type { QuoteFormHandle } from './types/QuoteFormHandle';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -206,7 +207,7 @@ const AppContent: React.FC = () => {
       <Header />
       <main className="flex-grow w-full">
         <Routes>
-          <Route path="/" element={<HomeLandingPage prefillData={voicePrefillData} />} />
+          <Route path="/" element={<RoleDashboard prefillData={voicePrefillData} />} />
 
           {/* Public Pages */}
           <Route path="/aboutus" element={<AboutUsPage />} />
