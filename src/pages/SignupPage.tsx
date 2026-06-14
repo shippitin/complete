@@ -359,7 +359,7 @@ const SignUpPage: React.FC = () => {
                 <HeaderIcon className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold tracking-tight leading-tight text-gray-900">
+                <h2 style={brandGradient} className="text-lg font-bold tracking-tight leading-tight bg-clip-text text-transparent">
                   {isCustomer ? 'Let’s get started' : 'Create your account'}
                 </h2>
                 <p className="text-xs text-gray-500">
