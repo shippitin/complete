@@ -207,7 +207,10 @@ const AppContent: React.FC = () => {
       <Header />
       <main className="flex-grow w-full">
         <Routes>
-          <Route path="/" element={<RoleDashboard prefillData={voicePrefillData} />} />
+          <Route path="/" element={<HomeLandingPage prefillData={voicePrefillData} />} />
+          {/* Persona dashboards live on their own route so they never hijack the
+              home page / rail quote flow (which both render at "/"). */}
+          <Route path="/my-dashboard" element={<ProtectedRoute><RoleDashboard prefillData={voicePrefillData} /></ProtectedRoute>} />
 
           {/* Public Pages */}
           <Route path="/aboutus" element={<AboutUsPage />} />
