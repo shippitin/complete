@@ -82,6 +82,16 @@ const PaymentPage: React.FC = () => {
               bookingId,
             });
 
+            // Flag this booking as paid so My Bookings shows "Payment done"
+            // (no backend "paid" field yet). Keyed by booking_number.
+            try {
+              const done = JSON.parse(localStorage.getItem('bookingPaymentDone') || '{}');
+              if (bookingNumber) {
+                done[bookingNumber] = true;
+                localStorage.setItem('bookingPaymentDone', JSON.stringify(done));
+              }
+            } catch { /* ignore parse/quota */ }
+
             toast.success('Payment successful! 🎉');
             navigate('/payment-success', {
               state: {
