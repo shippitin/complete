@@ -351,18 +351,18 @@ const SignUpPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-start justify-center px-4 pt-6 pb-12">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl ring-1 ring-gray-100 overflow-hidden">
-          {/* Gradient header band */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100 px-6 sm:px-8 py-5">
-            <div className="pointer-events-none absolute -top-8 -right-6 h-24 w-24 rounded-full bg-white/50 blur-2xl" />
+          {/* Blue gradient header band (same gradient as the Sign up button) */}
+          <div style={brandGradient} className="relative overflow-hidden px-6 sm:px-8 py-5 text-white">
+            <div className="pointer-events-none absolute -top-8 -right-6 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
             <div className="relative flex items-center gap-3">
-              <div style={brandGradient} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-sm">
-                <HeaderIcon className="h-5 w-5" />
+              <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 ring-1 ring-white/40">
+                <HeaderIcon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 style={brandGradient} className="w-fit rounded-lg px-3 py-1 text-lg font-bold tracking-tight leading-tight text-white shadow-sm">
+                <h2 className="text-lg font-bold tracking-tight leading-tight text-white">
                   {isCustomer ? 'Let’s get started' : 'Create your account'}
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-blue-50/90">
                   {isCustomer ? 'Shipping. Simplified.' : 'India’s rail freight, simplified.'}
                 </p>
               </div>
