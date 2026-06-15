@@ -7,7 +7,7 @@ import {
   FaMapMarkerAlt, FaCalendarAlt, FaWeight, FaRupeeSign,
   FaSearchLocation, FaPlus, FaChevronRight,
   FaBoxes, FaPencilAlt, FaSave, FaCreditCard, FaCheckCircle,
-  FaTimes, FaStream,
+  FaTimes, FaStream, FaTrashAlt,
 } from 'react-icons/fa';
 
 interface Booking {
@@ -113,6 +113,14 @@ const saveDetailOverride = (id: string, patch: any) => {
 const PAYMENT_DONE_KEY = 'bookingPaymentDone';
 const loadPaymentDone = (): Record<string, boolean> => {
   try { return JSON.parse(localStorage.getItem(PAYMENT_DONE_KEY) || '{}'); } catch { return {}; }
+};
+
+// Locally-hidden bookings. The backend has no delete endpoint, so "Clear all"
+// hides bookings from this device's view (and wipes the local demo overrides) to
+// give a clean slate for walking the flow end-to-end. Keyed by booking id.
+const HIDDEN_KEY = 'bookingHidden';
+const loadHidden = (): string[] => {
+  try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'); } catch { return []; }
 };
 
 const formatRoute = (st?: string): string | null => {
@@ -552,7 +560,8 @@ const BookingHistoryPage: React.FC = () => {
     const load = async () => {
       try {
         const response = await bookingAPI.getAll();
-        const list = sortLatestFirst(applyOverrides(response.data.data || []));
+        const hidden = new Set(loadHidden());
+        const list = sortLatestFirst(applyOverrides(response.data.data || [])).filter(b => !hidden.has(b.id));
         setBookings(list);
         setLoading(false);
         // The list is lean (no sender/receiver), so prefetch each full record to
@@ -575,6 +584,24 @@ const BookingHistoryPage: React.FC = () => {
     };
     load();
   }, []);
+
+  // "Clear all" — there's no backend delete, so hide every currently-loaded
+  // booking on this device and wipe the local demo overrides for a clean slate.
+  // New bookings made afterwards still show (they get fresh, un-hidden ids).
+  const clearAll = () => {
+    if (!window.confirm('Clear all shipments from this view?\n\nThis wipes the local demo state (status / details / payment) so you can walk the flow from scratch. New shipments you make will show normally.')) return;
+    try {
+      const hidden = new Set(loadHidden());
+      bookings.forEach(b => hidden.add(b.id));
+      localStorage.setItem(HIDDEN_KEY, JSON.stringify([...hidden]));
+      localStorage.removeItem(STATUS_OVERRIDE_KEY);
+      localStorage.removeItem(DETAILS_OVERRIDE_KEY);
+      localStorage.removeItem(PAYMENT_DONE_KEY);
+    } catch { /* quota */ }
+    setBookings([]);
+    setDetailsById({});
+    setFilter('All');
+  };
 
   // Normalise status variants ("In Transit" / "in-transit" / "intransit") to one key.
   const normStatus = (s?: string) => {
@@ -611,12 +638,23 @@ const BookingHistoryPage: React.FC = () => {
           <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <FaBoxOpen className="text-blue-500" /> My Shipments
           </h1>
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
-          >
-            <FaPlus className="text-xs" /> New Shipment
-          </button>
+          <div className="flex items-center gap-2">
+            {bookings.length > 0 && (
+              <button
+                onClick={clearAll}
+                title="Clear all shipments from this view"
+                className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm font-bold transition"
+              >
+                <FaTrashAlt className="text-xs" /> Clear all
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
+            >
+              <FaPlus className="text-xs" /> New Shipment
+            </button>
+          </div>
         </div>
       </div>
 
