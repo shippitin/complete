@@ -420,8 +420,8 @@ const RailBookingConfirmationPage: React.FC = () => {
               <span className="text-gray-300 hidden sm:inline">·</span>
               <span className="hidden sm:inline">{formatServiceType((cfd?.serviceType as string) || '')}</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* e-Forwarding Note */}
+            <div className={`grid grid-cols-1 ${isDomestic ? 'sm:grid-cols-2' : 'sm:grid-cols-3'} gap-3`}>
+              {/* e-Forwarding Note — domestic + international */}
               <div className="rounded-xl border border-gray-200 p-3">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs font-bold text-gray-700 flex items-center gap-1.5"><FaFileSignature className="text-blue-500" /> e-Forwarding Note</p>
@@ -430,21 +430,23 @@ const RailBookingConfirmationPage: React.FC = () => {
                 <p className="text-[11px] text-gray-400 mb-2">Auto-prepared from this booking (e-FNote).</p>
                 <button type="button" onClick={previewForwardingNote} className="text-xs font-semibold text-blue-600 hover:text-blue-700">Preview →</button>
               </div>
-              {/* e-Way Bill */}
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-bold text-gray-700 flex items-center gap-1.5"><FaFileAlt className="text-blue-500" /> e-Way Bill</p>
-                  <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">GST EWB-01</span>
+              {/* e-Way Bill — international only */}
+              {!isDomestic && (
+                <div className="rounded-xl border border-gray-200 p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs font-bold text-gray-700 flex items-center gap-1.5"><FaFileAlt className="text-blue-500" /> e-Way Bill</p>
+                    <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">GST EWB-01</span>
+                  </div>
+                  <input
+                    type="text" inputMode="numeric" maxLength={12}
+                    value={ewbNumber}
+                    onChange={e => setEwbNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                    placeholder="Enter 12-digit e-Way Bill no."
+                    className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  />
+                  <p className="text-[10px] text-gray-400 mt-1">Optional now · required before dispatch for cargo &gt; ₹50,000.</p>
                 </div>
-                <input
-                  type="text" inputMode="numeric" maxLength={12}
-                  value={ewbNumber}
-                  onChange={e => setEwbNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                  placeholder="Enter 12-digit e-Way Bill no."
-                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-200"
-                />
-                <p className="text-[10px] text-gray-400 mt-1">Optional now · required before dispatch for cargo &gt; ₹50,000.</p>
-              </div>
+              )}
               {/* Railway Receipt */}
               <div className="rounded-xl border border-gray-200 p-3">
                 <div className="flex items-center justify-between mb-1">
