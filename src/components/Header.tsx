@@ -103,7 +103,7 @@ const Header: React.FC = () => {
                       <FaGift /> My Wallet
                     </Link>
                     <Link to="/my-bookings" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-black transition-colors" onClick={closeProfileMenu}>
-                      <FaCogs /> My Bookings
+                      <FaCogs /> My Shipments
                     </Link>
                     <div className="border-t border-gray-100 my-1" />
                     <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors">
@@ -170,7 +170,7 @@ const Header: React.FC = () => {
                     <FaGift className="text-blue-500" /> My Wallet
                   </Link>
                   <Link to="/my-bookings" className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50" onClick={closeMobileMenu}>
-                    <FaCogs className="text-blue-500" /> My Bookings
+                    <FaCogs className="text-blue-500" /> My Shipments
                   </Link>
                   <button onClick={() => { handleLogout(); closeMobileMenu(); }} className="flex items-center gap-3 w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50">
                     <FaSignOutAlt /> Logout

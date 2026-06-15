@@ -7,6 +7,7 @@ import {
   FaMapMarkerAlt, FaCalendarAlt, FaWeight, FaRupeeSign,
   FaSearchLocation, FaPlus, FaChevronRight,
   FaBoxes, FaPencilAlt, FaSave, FaCreditCard, FaCheckCircle,
+  FaTimes, FaStream,
 } from 'react-icons/fa';
 
 interface Booking {
@@ -38,6 +39,25 @@ const getServiceIcon = (type: string) => {
   }
 };
 
+// Shared footer button styles.
+const BTN_BLUE       = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition';
+const BTN_BLUE_SOLID = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition';
+const BTN_AMBER      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-semibold transition';
+const BTN_SLATE      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition';
+
+// Progress timeline shown by the "Shipment status" button.
+const STAGES = ['Booked', 'Paid', 'Confirmed', 'In Transit', 'Delivered'];
+// Map a booking's status (+ paid flag) to the current stage index.
+const stageFor = (stKey: string, paid?: boolean): number => {
+  switch (stKey) {
+    case 'pending':    return paid ? 1 : 0;
+    case 'confirmed':  return 2;
+    case 'in_transit': return 3;
+    case 'delivered':  return 4;
+    default:           return 0;
+  }
+};
+
 const getStatusConfig = (status: string) => {
   switch (status?.toLowerCase()) {
     case 'confirmed': return { label: 'Confirmed', pill: 'bg-green-50 text-green-700 border border-green-200', dot: 'bg-green-500', border: '#22c55e' };
@@ -57,10 +77,6 @@ const getStatusConfig = (status: string) => {
 const STATUS_OVERRIDE_KEY = 'bookingStatusOverrides';
 const loadStatusOverrides = (): Record<string, string> => {
   try { return JSON.parse(localStorage.getItem(STATUS_OVERRIDE_KEY) || '{}'); } catch { return {}; }
-};
-const saveStatusOverride = (id: string, status: string) => {
-  const o = loadStatusOverrides(); o[id] = status;
-  try { localStorage.setItem(STATUS_OVERRIDE_KEY, JSON.stringify(o)); } catch { /* quota */ }
 };
 
 // Local detail overrides — lets a customer complete missing sender/receiver/cargo
@@ -127,25 +143,20 @@ const BookingCard: React.FC<{
   booking: Booking;
   details?: any;
   paid?: boolean;
-  onChangeStatus: (id: string, status: string) => void;
   onSaveDetails: (id: string, patch: any) => void;
-}> = ({ booking, details, paid, onChangeStatus, onSaveDetails }) => {
+}> = ({ booking, details, paid, onSaveDetails }) => {
   const st = (booking.status || '').toLowerCase().replace(/[\s-]+/g, '_');
   const stKey = (st === 'intransit' || st === 'transit') ? 'in_transit' : st;
   const navigate = useNavigate();
   const statusConfig = getStatusConfig(booking.status);
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
+  const stageIndex = stageFor(stKey, paid);
 
   const d: any = { ...booking, ...(details || {}) };
 
   const [form, setForm] = useState<Record<string, string>>(blankDetailForm);
-  const toggleEdit = () => {
-    if (!editing) {
-      setForm(Object.fromEntries(ALL_DETAIL_KEYS.map(k => [k, d[k] != null ? String(d[k]) : ''])) as Record<string, string>);
-    }
-    setEditing(v => !v);
-  };
   const saveEdit = () => {
     onSaveDetails(booking.id, { ...form });
     setEditing(false);
@@ -260,46 +271,34 @@ const BookingCard: React.FC<{
             • In Transit→ Track + View shipment details
             • Delivered / Cancelled → View shipment details */}
         <div className="flex items-center justify-end gap-2 flex-wrap pt-4 border-t border-gray-50">
-          {stKey === 'pending' ? (
-            paid ? (
-              <span className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-50 text-green-600 text-xs font-semibold">
-                <FaCheckCircle className="text-xs" /> Payment done
-              </span>
-            ) : (
-              <>
-                <button
-                  onClick={() => goComplete(5)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition"
-                >
-                  <FaCreditCard className="text-xs" /> Complete payment
-                </button>
-                <button
-                  onClick={() => goComplete(1)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-semibold transition"
-                >
-                  <FaPencilAlt className="text-[10px]" /> Complete booking
-                </button>
-              </>
-            )
-          ) : (
+          {stKey === 'pending' && (
             <>
-              {stKey === 'in_transit' && (
-                <button
-                  onClick={() => navigate(`/track?id=${booking.booking_number}`)}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition"
-                >
-                  <FaSearchLocation className="text-xs" /> Track
-                </button>
-              )}
-              <button
-                onClick={() => setExpanded(v => !v)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition"
-              >
-                {expanded ? 'Hide details' : 'View shipment details'}
-                <FaChevronRight className={`text-[10px] transition-transform ${expanded ? 'rotate-90' : ''}`} />
+              <button onClick={() => goComplete(5)} className={BTN_BLUE_SOLID}>
+                <FaCreditCard className="text-xs" /> Complete payment
+              </button>
+              <button onClick={() => goComplete(1)} className={BTN_AMBER}>
+                <FaPencilAlt className="text-[10px]" /> Complete booking
               </button>
             </>
           )}
+
+          {stKey === 'in_transit' && (
+            <button onClick={() => navigate(`/track?id=${booking.booking_number}`)} className={BTN_BLUE}>
+              <FaSearchLocation className="text-xs" /> Track
+            </button>
+          )}
+
+          {(stKey === 'pending' || stKey === 'confirmed' || stKey === 'in_transit') && (
+            <button onClick={() => setShowStatus(true)} className={BTN_SLATE}>
+              <FaStream className="text-xs" /> Shipment status
+            </button>
+          )}
+
+          {/* View shipment — available on every status */}
+          <button onClick={() => setExpanded(v => !v)} className={BTN_BLUE}>
+            {expanded ? 'Hide' : 'View shipment'}
+            <FaChevronRight className={`text-[10px] transition-transform ${expanded ? 'rotate-90' : ''}`} />
+          </button>
         </div>
 
         {/* Edit form — the same sender / receiver / cargo details as the booking page */}
@@ -420,6 +419,46 @@ const BookingCard: React.FC<{
           </div>
         )}
       </div>
+
+      {/* Shipment status — progress timeline modal */}
+      {showStatus && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowStatus(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between mb-1">
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-gray-800">Shipment status</h3>
+                <p className="text-xs text-gray-400 truncate">{booking.booking_number} · {booking.origin} → {booking.destination}</p>
+              </div>
+              <button onClick={() => setShowStatus(false)} className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0">
+                <FaTimes />
+              </button>
+            </div>
+            <div className="mt-5">
+              {STAGES.map((stage, i) => {
+                const done   = i < stageIndex;
+                const active = i === stageIndex;
+                const last   = i === STAGES.length - 1;
+                return (
+                  <div key={stage} className="flex items-stretch gap-3">
+                    <div className="flex flex-col items-center">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                        done ? 'bg-green-500 text-white' : active ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {done ? <FaCheckCircle className="text-xs" /> : i + 1}
+                      </div>
+                      {!last && <div className={`w-0.5 flex-1 min-h-[28px] ${i < stageIndex ? 'bg-green-400' : 'bg-gray-200'}`} />}
+                    </div>
+                    <div className="pb-5">
+                      <p className={`text-sm font-semibold ${active ? 'text-blue-700' : done ? 'text-gray-700' : 'text-gray-400'}`}>{stage}</p>
+                      <p className="text-xs text-gray-400">{active ? 'Current stage' : done ? 'Completed' : 'Upcoming'}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -448,12 +487,6 @@ const BookingHistoryPage: React.FC = () => {
       const tb = new Date(b.created_at || b.booking_date || 0).getTime() || 0;
       return tb - ta;
     });
-
-  const changeStatus = (id: string, status: string) => {
-    setBookings(prev => prev.map(b => (b.id === id ? { ...b, status } : b)));
-    saveStatusOverride(id, status);
-    if (status === 'cancelled') bookingAPI.cancel(id).catch(() => { /* keep optimistic UI */ });
-  };
 
   // Persist completed details locally (no backend update endpoint yet) and reflect
   // them immediately so the card flips from "Edit details" to "View details".
@@ -516,7 +549,7 @@ const BookingHistoryPage: React.FC = () => {
       <div className="sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <FaBoxOpen className="text-blue-500" /> My Bookings
+            <FaBoxOpen className="text-blue-500" /> My Shipments
           </h1>
           <button
             onClick={() => navigate('/')}
@@ -579,7 +612,7 @@ const BookingHistoryPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {filtered.map(booking => (
-              <BookingCard key={booking.id} booking={booking} details={detailsById[booking.id]} paid={!!paidByNumber[booking.booking_number]} onChangeStatus={changeStatus} onSaveDetails={saveDetails} />
+              <BookingCard key={booking.id} booking={booking} details={detailsById[booking.id]} paid={!!paidByNumber[booking.booking_number]} onSaveDetails={saveDetails} />
             ))}
           </div>
         )}

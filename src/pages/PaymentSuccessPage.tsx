@@ -45,7 +45,7 @@ const PaymentSuccessPage: React.FC = () => {
               onClick={() => navigate('/my-bookings')}
               className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition"
             >
-              View My Bookings
+              View My Shipments
             </button>
             <button
               onClick={() => navigate('/')}

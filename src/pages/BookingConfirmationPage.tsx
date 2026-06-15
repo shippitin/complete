@@ -400,7 +400,7 @@ const BookingConfirmationPage: React.FC = () => {
           </button>
           <button onClick={() => navigate('/my-bookings')}
             className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-xl transition flex items-center justify-center gap-2 text-sm">
-            <FaHistory /> My Bookings
+            <FaHistory /> My Shipments
           </button>
         </div>
 
