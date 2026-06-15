@@ -364,6 +364,13 @@ const RailBookingConfirmationPage: React.FC = () => {
       filingNumber:    filingNumber || undefined,
       efnFiled:        efnFiled || undefined,
     };
+    if (isExisting) {
+      // Completing an existing shipment → it's now confirmed. Send the user back to
+      // My Shipments, where only "Complete payment" remains for this booking.
+      toast.success('Shipment confirmed. Complete the payment to proceed.');
+      navigate('/my-bookings');
+      return;
+    }
     sessionStorage.setItem('lastBookingDetails', JSON.stringify(finalBooking));
     navigate('/booking-confirmation', { state: { bookingDetails: finalBooking } });
   };
