@@ -176,20 +176,12 @@ const BookingCard: React.FC<{
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
   const [showStatus, setShowStatus] = useState(false);
-  const [showDoc, setShowDoc]   = useState(false);
-  // Documentation modal form state.
-  const [docSb, setDocSb]                   = useState('');
-  const [docSbVer, setDocSbVer]             = useState(false);
-  const [docSbVerifying, setDocSbVerifying] = useState(false);
-  const [docDsn, setDocDsn]                 = useState('');
   const isDomesticBooking = booking.is_domestic !== false;
 
   const d: any = { ...booking, ...(details || {}) };
 
   // Documentation filed? Domestic = e-Forwarding Note only; international also needs the Shipping Bill.
   const docsFiled = isDomesticBooking ? !!d.efn_filed : (!!d.filing_number && !!d.efn_filed);
-  // Core sender/receiver present? If missing, the booking details still need completing.
-  const detailsComplete = !!d.sender_name && !!d.receiver_name;
   // A booking becomes a Confirmed shipment only after BOTH documentation and payment are done.
   const stKey = (rawStKey === 'pending' && docsFiled && paid) ? 'confirmed' : rawStKey;
   const statusConfig = getStatusConfig(stKey);
@@ -214,21 +206,6 @@ const BookingCard: React.FC<{
         serviceType: booking.service_type,
       },
     });
-  };
-
-  // Simulated CONCOR/CTO Shipping Bill verification (no live API yet — swap in the real call here).
-  const verifyDocSb = () => {
-    if (docSb.length !== 7 || docSbVerifying || docSbVer) return;
-    setDocSbVerifying(true);
-    setTimeout(() => { setDocSbVerifying(false); setDocSbVer(true); }, 1200);
-  };
-  // File documentation: e-Forwarding Note (+ Shipping Bill for international). Persisted via the
-  // same localStorage overrides My Shipments reads, then reflected on the card immediately.
-  const fileDocs = () => {
-    if (!docDsn.trim()) return;
-    if (!isDomesticBooking && !docSbVer) return;
-    onSaveDetails(booking.id, { filing_number: isDomesticBooking ? undefined : docSb, efn_filed: true });
-    setShowDoc(false);
   };
 
   // "Complete booking" opens the full rail booking-confirmation page
@@ -347,13 +324,8 @@ const BookingCard: React.FC<{
         <div className="flex items-center justify-end gap-2 flex-wrap pt-4 border-t border-gray-50">
           {stKey === 'pending' && (
             <>
-              {!detailsComplete && (
+              {!docsFiled && (
                 <button onClick={() => goComplete(1)} className={BTN_AMBER}>
-                  <FaPencilAlt className="text-[10px]" /> Complete booking
-                </button>
-              )}
-              {detailsComplete && !docsFiled && (
-                <button onClick={() => setShowDoc(true)} className={BTN_AMBER}>
                   <FaFileSignature className="text-[11px]" /> Complete documentation
                 </button>
               )}
@@ -555,62 +527,6 @@ const BookingCard: React.FC<{
         </div>
       )}
 
-      {/* Documentation — file e-Forwarding Note (+ verify Shipping Bill for international).
-          Once documentation AND payment are both done, the shipment becomes Confirmed. */}
-      {showDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowDoc(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-start justify-between mb-1">
-              <div className="min-w-0">
-                <h3 className="text-base font-bold text-gray-800 flex items-center gap-2"><FaFileSignature className="text-blue-500" /> Complete documentation</h3>
-                <p className="text-xs text-gray-400 truncate">{booking.booking_number} · {isDomesticBooking ? 'Domestic' : 'International'}</p>
-              </div>
-              <button onClick={() => setShowDoc(false)} className="text-gray-400 hover:text-gray-600 ml-2 flex-shrink-0"><FaTimes /></button>
-            </div>
-
-            {/* Step 1 — Shipping Bill (international only) */}
-            {!isDomesticBooking && (
-              <div className="mt-4">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Shipping Bill No.</label>
-                <div className="flex gap-2">
-                  <input type="text" inputMode="numeric" maxLength={7} value={docSb} disabled={docSbVer}
-                    onChange={e => setDocSb(e.target.value.replace(/\D/g, '').slice(0, 7))}
-                    placeholder="Enter 7-digit Shipping Bill number"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-500" />
-                  {docSbVer ? (
-                    <span className="px-3 py-2 rounded-xl bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap"><FaCheckCircle /> Verified</span>
-                  ) : (
-                    <button type="button" onClick={verifyDocSb} disabled={docSb.length !== 7 || docSbVerifying}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition disabled:opacity-50 whitespace-nowrap">
-                      {docSbVerifying ? 'Verifying…' : 'Verify'}
-                    </button>
-                  )}
-                </div>
-                <p className={`text-[11px] mt-1 ${docSbVer ? 'text-green-600' : 'text-gray-400'}`}>
-                  {docSbVerifying ? 'Verifying with CONCOR / CTO…' : docSbVer ? 'Successfully verified with CONCOR / CTO.' : 'Enter your 7-digit Shipping Bill number to verify with CONCOR / CTO.'}
-                </p>
-              </div>
-            )}
-
-            {/* Step 2 — e-Forwarding Note (DSN PIN). Domestic: only step; intl: after SB verified. */}
-            {(isDomesticBooking || docSbVer) && (
-              <div className="mt-3">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">e-Forwarding Note — DSN PIN</label>
-                <input type="text" value={docDsn} onChange={e => setDocDsn(e.target.value)}
-                  placeholder="Enter DSN PIN (Digitally Signed Number)"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200" />
-              </div>
-            )}
-
-            <button type="button" onClick={fileDocs}
-              disabled={!docDsn.trim() || (!isDomesticBooking && !docSbVer)}
-              className="mt-5 w-full px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition disabled:opacity-50">
-              File documentation
-            </button>
-            <p className="text-[11px] text-gray-400 mt-2 text-center">Once documentation and payment are both complete, your shipment is confirmed.</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
