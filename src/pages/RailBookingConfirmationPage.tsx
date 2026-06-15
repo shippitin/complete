@@ -9,6 +9,7 @@ import {
   FaFileUpload, FaFileAlt, FaTimes, FaFileSignature,
 } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, TrainContainerFormData } from '../types/QuoteFormHandle';
+import LocationAutocomplete from '../components/LocationAutocomplete';
 
 const DOMESTIC_THC = 3000;
 const INTL_THC: Record<string, number> = {
@@ -590,7 +591,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <input type="text" value={senderCity} onChange={e=>setSenderCity(e.target.value)} placeholder="e.g., Chennai" className={inp(!!errors.senderCity)} />
+                          <LocationAutocomplete value={senderCity} onChange={setSenderCity} locationType="city" global={!isDomestic} placeholder="e.g., Chennai" />
                           {errors.senderCity && <p className="text-xs text-red-500 mt-1">{errors.senderCity}</p>}
                         </div>
                         <div>
@@ -638,7 +639,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <input type="text" value={receiverCity} onChange={e=>setReceiverCity(e.target.value)} placeholder="e.g., Delhi" className={inp(!!errors.receiverCity)} />
+                          <LocationAutocomplete value={receiverCity} onChange={setReceiverCity} locationType="city" global={!isDomestic} placeholder="e.g., Delhi" />
                           {errors.receiverCity && <p className="text-xs text-red-500 mt-1">{errors.receiverCity}</p>}
                         </div>
                         <div>
