@@ -177,8 +177,13 @@ const RailBookingConfirmationPage: React.FC = () => {
       // Carry over the add-ons the customer already picked on Recommended
       // Services so those toggles start ON here (domestic + international).
       const fd = state.formData as any;
-      setAddFirstMile(!!fd.addFirstMile);
-      setAddLastMile(!!fd.addLastMile);
+      const stype = fd.serviceType || '';
+      const doorO = ['doorToDoor', 'doorToTerminal', 'doorToPort'].includes(stype);
+      const doorD = ['doorToDoor', 'terminalToDoor', 'portToDoor'].includes(stype);
+      // Honour the explicit choice from Recommended Services, AND default door
+      // services to first/last mile ON (the price already includes it for those).
+      setAddFirstMile(!!fd.addFirstMile || doorO);
+      setAddLastMile(!!fd.addLastMile || doorD);
       setAddCustoms(!!fd.addCustoms);
       // Auto-fill the last saved sender / receiver so the user doesn't re-enter them.
       // (The existing-booking prefill below overrides any field it actually has.)

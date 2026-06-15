@@ -201,15 +201,20 @@ const BookingCard: React.FC<{
   const goComplete = (initialStep: number) => {
     const cb: any = d.charges_breakdown || null;
     const basePrice = cb?.base ?? booking.estimated_price ?? 0;
+    const st = d.route_type || 'terminalToTerminal';
+    const doorO = ['doorToDoor', 'doorToTerminal', 'doorToPort'].includes(st);
+    const doorD = ['doorToDoor', 'terminalToDoor', 'portToDoor'].includes(st);
     const formData = {
       bookingType:        booking.service_type || 'Train Container Booking',
       containerType:      d.container_type || '20ft Standard',
       numberOfContainers: d.number_of_containers || 1,
-      serviceType:        d.route_type || 'terminalToTerminal',
+      serviceType:        st,
       isDomestic:         d.is_domestic !== false,
       hazardousCargo:     !!d.hazardous,
       cargoType:          booking.cargo_type || 'General',
       totalWeight:        booking.weight || 0,
+      addFirstMile:       (cb?.fm || 0) > 0 || doorO,   // re-select first/last mile as before
+      addLastMile:        (cb?.lm || 0) > 0 || doorD,
     };
     const selectedTrainResult = {
       id:                 booking.booking_number,
