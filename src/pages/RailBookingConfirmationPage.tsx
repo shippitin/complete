@@ -95,6 +95,7 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [sbVerifying,   setSbVerifying]               = useState(false);   // Shipping Bill verifying with CONCOR/CTO
   const [sbVerified,    setSbVerified]                = useState(false);   // Shipping Bill verified
   const [efnFiled,      setEfnFiled]                  = useState(false);   // e-Forwarding Note filed
+  const [showFiling,    setShowFiling]               = useState(false);   // document filing hidden until "Confirm Booking" is clicked
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -373,12 +374,20 @@ const RailBookingConfirmationPage: React.FC = () => {
 
   const handleConfirm = () => {
     if (!validateStep(5)) return;
-    // Filing must be completed before the shipment is confirmed (payment can come later).
+    // Document filing is the FINAL gate. It stays hidden until the customer clicks
+    // "Confirm Booking": the first click reveals it (so it never blocks the form on
+    // arrival); confirming only goes through once filing is complete. Payment is separate.
     const isDom = (formData as any)?.isDomestic !== false;
-    if (!(isDom ? efnFiled : (sbVerified && efnFiled))) {
-      toast.error(isDom
-        ? 'Please file the e-Forwarding Note (enter the DSN PIN) above before confirming.'
-        : 'Please verify the Shipping Bill and file the e-Forwarding Note above before confirming.');
+    const filingDone = isDom ? efnFiled : (sbVerified && efnFiled);
+    if (!filingDone) {
+      if (!showFiling) {
+        setShowFiling(true);
+        toast('One last step — complete the document filing at the top to confirm your shipment.', { icon: '📄' });
+      } else {
+        toast.error(isDom
+          ? 'Please file the e-Forwarding Note (enter the DSN PIN) above before confirming.'
+          : 'Please verify the Shipping Bill and file the e-Forwarding Note above before confirming.');
+      }
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -493,7 +502,9 @@ const RailBookingConfirmationPage: React.FC = () => {
         <div className="flex-grow space-y-3">
 
           {/* Document filing — verify Shipping Bill (intl) then file e-Forwarding Note (DSN PIN).
-              Domestic: e-Forwarding Note only. Must be completed before Confirm Booking. */}
+              Domestic: e-Forwarding Note only. Hidden on arrival; revealed only when the customer
+              clicks "Confirm Booking", as the final gate before the shipment is confirmed. */}
+          {showFiling && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
@@ -561,6 +572,7 @@ const RailBookingConfirmationPage: React.FC = () => {
               </div>
             )}
           </div>
+          )}
 
           {/* Header + stepper — single compact card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
