@@ -236,6 +236,7 @@ const BookingCard: React.FC<{
         specialInstructions: d.special_instructions,
       },
       filing: d.filing_number,
+      efnFiled: d.efn_filed,
     };
     navigate('/rail-booking-confirmation', {
       state: {
@@ -304,13 +305,28 @@ const BookingCard: React.FC<{
         <div className="flex items-center justify-end gap-2 flex-wrap pt-4 border-t border-gray-50">
           {stKey === 'pending' && (
             <>
-              <button onClick={goPayment} className={BTN_BLUE_SOLID}>
-                <FaCreditCard className="text-xs" /> Complete payment
-              </button>
+              {!paid && (
+                <button onClick={goPayment} className={BTN_BLUE_SOLID}>
+                  <FaCreditCard className="text-xs" /> Complete payment
+                </button>
+              )}
               <button onClick={() => goComplete(1)} className={BTN_AMBER}>
                 <FaPencilAlt className="text-[10px]" /> Complete booking
               </button>
             </>
+          )}
+
+          {/* Confirmed but unpaid → still offer payment (filing confirms the shipment; payment is separate). */}
+          {stKey === 'confirmed' && !paid && (
+            <button onClick={goPayment} className={BTN_BLUE_SOLID}>
+              <FaCreditCard className="text-xs" /> Complete payment
+            </button>
+          )}
+
+          {paid && (stKey === 'pending' || stKey === 'confirmed') && (
+            <span className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-50 text-green-600 text-xs font-semibold">
+              <FaCheckCircle className="text-xs" /> Paid
+            </span>
           )}
 
           {stKey === 'in_transit' && (

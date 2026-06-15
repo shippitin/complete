@@ -103,7 +103,7 @@ const buildDocHTML = (kind: string, b: any): string => {
     ${row('Booking No.', b.booking_number)}${row('Service', b.service_type)}${row('Route', formatRoute(b.route_type))}
     ${row('From', b.origin)}${row('To', b.destination)}${row('Operator', b.operator)}${row('Transit', b.transit_time)}
     ${row('Container', b.container_type)}${row('No. of Containers', b.number_of_containers)}
-    ${row('Cargo', b.cargo_type)}${row('Goods', b.goods_description)}${row(b.is_domestic !== false ? 'E-Forwarding Note No.' : 'Shipping Bill / E-FNote No.', b.filing_number)}${row('Status', getStatusLabel(b.status))}
+    ${row('Cargo', b.cargo_type)}${row('Goods', b.goods_description)}${row('Shipping Bill No.', b.filing_number)}${row('e-Forwarding Note', b.efn_filed ? 'Filed' : '')}${row('Status', getStatusLabel(b.status))}
   </table>
   <div class="two">
     <div><h3>Sender / Consignor</h3><table>${row('Name', b.sender_name)}${row('Phone', b.sender_phone)}${row('Email', b.sender_email)}${row('GSTIN', b.sender_gstin)}${row('Address', senderAddr)}</table></div>
@@ -184,7 +184,8 @@ const ShipmentDetailPage: React.FC = () => {
     ['Invoice Number', b.invoice_number],
     ['Invoice Date', b.invoice_date ? new Date(b.invoice_date).toLocaleDateString('en-IN') : null],
     ['Invoice Value', b.invoice_value ? money(b.invoice_value) : null],
-    [b.is_domestic !== false ? 'E-Forwarding Note No.' : 'Shipping Bill / E-Forwarding Note No.', b.filing_number],
+    ['Shipping Bill No.', b.filing_number],
+    ['e-Forwarding Note', b.efn_filed ? 'Filed' : null],
     ['No. of Packages', b.num_packages],
     ['Package Size', b.package_size],
     ['Special Instructions', b.special_instructions],
