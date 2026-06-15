@@ -123,10 +123,19 @@ const loadHidden = (): string[] => {
   try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'); } catch { return []; }
 };
 
+// Treat a booking as international only when is_domestic is an explicit "false"-like
+// value — handles boolean false, 0, "0", "false" from the API. true / 1 / null / unset
+// (and anything else) is domestic. Keeps the tab split correct regardless of how the
+// backend serialises the flag.
+const bookingIsDomestic = (m: any): boolean => {
+  const v = m?.is_domestic;
+  return !(v === false || v === 0 || v === '0' || v === 'false' || v === 'f' || v === 'no' || v === 'No');
+};
+
 // ── Single source of truth for shipment status ──
 // Documentation filed? Domestic = e-Forwarding Note only; international also needs the Shipping Bill.
 const isDocsFiled = (m: any): boolean => {
-  const dom = m.is_domestic !== false;
+  const dom = bookingIsDomestic(m);
   return dom ? !!m.efn_filed : (!!m.filing_number && !!m.efn_filed);
 };
 // A booking becomes a Confirmed shipment only once BOTH documentation AND payment are done.
@@ -188,7 +197,7 @@ const BookingCard: React.FC<{
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
   const [showStatus, setShowStatus] = useState(false);
-  const isDomesticBooking = booking.is_domestic !== false;
+  const isDomesticBooking = bookingIsDomestic(booking);
 
   const d: any = { ...booking, ...(details || {}) };
 
@@ -634,9 +643,8 @@ const BookingHistoryPage: React.FC = () => {
     return effectiveStatusKey(b.status, isDocsFiled(merged), !!paidByNumber[b.booking_number]);
   };
 
-  // International vs Domestic — a booking is international only when explicitly
-  // flagged is_domestic === false; anything else (true / unset) counts as domestic.
-  const isIntl = (b: Booking) => b.is_domestic === false;
+  // International vs Domestic (robust to non-boolean is_domestic from the API).
+  const isIntl = (b: Booking) => !bookingIsDomestic(b);
   const intlTotal = bookings.filter(isIntl).length;
   const domTotal  = bookings.length - intlTotal;
   const scoped = bookings.filter(b => isIntl(b) === (routeTab === 'international'));

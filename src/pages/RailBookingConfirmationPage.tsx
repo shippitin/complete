@@ -452,8 +452,9 @@ const RailBookingConfirmationPage: React.FC = () => {
       efnFiled:        efnFiled || undefined,
     };
     if (isExisting) {
-      // Documentation complete → return to My Shipments. The shipment becomes Confirmed
-      // once payment is also done (only "Complete payment" then remains for this booking).
+      // Documentation complete → return to My Shipments on this booking's own tab
+      // (International / Domestic). The shipment becomes Confirmed once payment is also done.
+      try { localStorage.setItem('myShipmentsTab', ((formData as any)?.isDomestic !== false) ? 'domestic' : 'international'); } catch { /* quota */ }
       toast.success('Documentation completed. Complete the payment to confirm your shipment.');
       navigate('/my-bookings');
       return;

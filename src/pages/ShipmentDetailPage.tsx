@@ -47,10 +47,17 @@ const readJSON = (k: string): Record<string, any> => {
   try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch { return {}; }
 };
 
+// International only when is_domestic is an explicit "false"-like value (boolean false,
+// 0, "0", "false"); true / 1 / null / unset is domestic. Matches My Shipments.
+const bookingIsDomestic = (m: any): boolean => {
+  const v = m?.is_domestic;
+  return !(v === false || v === 0 || v === '0' || v === 'false' || v === 'f' || v === 'no' || v === 'No');
+};
+
 // Same status rule as My Shipments: a shipment is Confirmed only once BOTH
 // documentation and payment are done — so this page never disagrees with the card.
 const isDocsFiled = (m: any): boolean => {
-  const dom = m.is_domestic !== false;
+  const dom = bookingIsDomestic(m);
   return dom ? !!m.efn_filed : (!!m.filing_number && !!m.efn_filed);
 };
 const effectiveStatusKey = (rawStatus: string | undefined, docsFiled: boolean, paid: boolean): string => {
@@ -232,7 +239,7 @@ const ShipmentDetailPage: React.FC = () => {
   ] : [];
 
   // Shipping Bill is a customs / export document — international shipments only.
-  const isDomestic = b.is_domestic !== false;
+  const isDomestic = bookingIsDomestic(b);
   const docs = [
     { kind: 'summary',       label: 'Summary (PDF)',    icon: <FaFilePdf /> },
     { kind: 'invoice',       label: 'Invoice',          icon: <FaFileInvoiceDollar /> },

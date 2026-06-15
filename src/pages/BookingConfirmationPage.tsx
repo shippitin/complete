@@ -135,6 +135,12 @@ const BookingConfirmationPage: React.FC = () => {
     if (details) {
       setBookingDetails(details);
       sessionStorage.setItem('lastBookingDetails', JSON.stringify(details));
+      // Land My Shipments on the tab matching this booking (so an international booking
+      // doesn't open on the last-used Domestic tab, and vice-versa).
+      try {
+        const dom = details.originalFormData?.isDomestic !== false;
+        localStorage.setItem('myShipmentsTab', dom ? 'domestic' : 'international');
+      } catch { /* quota */ }
       (async () => {
         try {
           const token = localStorage.getItem('shippitin_token');
