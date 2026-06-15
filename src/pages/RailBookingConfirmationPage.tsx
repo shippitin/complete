@@ -46,6 +46,20 @@ const inp = (err?: boolean) =>
     err ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'
   }`;
 
+// Remember the last sender / receiver (per logged-in user) so the customer doesn't
+// have to re-enter them on every booking. Stored in localStorage.
+const partyKey = (kind: string) => {
+  let who = 'guest';
+  try { const u = JSON.parse(localStorage.getItem('shippitin_user') || 'null'); who = u?.id || u?.email || 'guest'; } catch { /* ignore */ }
+  return `shippitin_party_${kind}_${who}`;
+};
+const saveParty = (kind: 'sender' | 'receiver', data: Record<string, string>) => {
+  try { localStorage.setItem(partyKey(kind), JSON.stringify(data)); } catch { /* quota */ }
+};
+const loadParty = (kind: 'sender' | 'receiver'): Record<string, string> | null => {
+  try { return JSON.parse(localStorage.getItem(partyKey(kind)) || 'null'); } catch { return null; }
+};
+
 const STEPS = [
   { id: 1, label: 'Sender',   icon: FaUser,        color: 'text-blue-500',   bg: 'bg-blue-50',   border: 'border-blue-200',   activeBg: 'bg-blue-600'   },
   { id: 2, label: 'Receiver', icon: FaMapMarkerAlt, color: 'text-green-500',  bg: 'bg-green-50',  border: 'border-green-200',  activeBg: 'bg-green-600'  },
@@ -166,6 +180,25 @@ const RailBookingConfirmationPage: React.FC = () => {
       setAddFirstMile(!!fd.addFirstMile);
       setAddLastMile(!!fd.addLastMile);
       setAddCustoms(!!fd.addCustoms);
+      // Auto-fill the last saved sender / receiver so the user doesn't re-enter them.
+      // (The existing-booking prefill below overrides any field it actually has.)
+      const savedS = loadParty('sender');
+      if (savedS) {
+        if (savedS.name) setSenderName(savedS.name); if (savedS.phone) setSenderPhone(savedS.phone);
+        if (savedS.email) setSenderEmail(savedS.email); if (savedS.gstin) setSenderGstin(savedS.gstin);
+        if (savedS.address) setSenderAddress(savedS.address); if (savedS.city) setSenderCity(savedS.city);
+        if (savedS.state) setSenderState(savedS.state); if (savedS.pincode) setSenderPincode(savedS.pincode);
+        if (savedS.country) setSenderCountry(savedS.country);
+      }
+      const savedR = loadParty('receiver');
+      if (savedR) {
+        if (savedR.name) setReceiverName(savedR.name); if (savedR.phone) setReceiverPhone(savedR.phone);
+        if (savedR.email) setReceiverEmail(savedR.email); if (savedR.gstin) setReceiverGstin(savedR.gstin);
+        if (savedR.address) setReceiverAddress(savedR.address); if (savedR.city) setReceiverCity(savedR.city);
+        if (savedR.state) setReceiverState(savedR.state); if (savedR.pincode) setReceiverPincode(savedR.pincode);
+        if (savedR.country) setReceiverCountry(savedR.country);
+      }
+
       // Prefill from an existing booking (completing it from My Bookings).
       const pf = state.prefill;
       if (pf?.sender) {
@@ -276,8 +309,22 @@ const RailBookingConfirmationPage: React.FC = () => {
     return Object.keys(e).length === 0;
   };
 
+  const collectSender = () => ({
+    name: senderName, phone: senderPhone, email: senderEmail, gstin: senderGstin,
+    address: senderAddress, city: senderCity, state: senderState, pincode: senderPincode, country: senderCountry,
+  });
+  const collectReceiver = () => ({
+    name: receiverName, phone: receiverPhone, email: receiverEmail, gstin: receiverGstin,
+    address: receiverAddress, city: receiverCity, state: receiverState, pincode: receiverPincode, country: receiverCountry,
+  });
+
   const goToStep  = (step: number) => { setErrors({}); setCurrentStep(step); };
-  const nextStep  = () => { if (validateStep(currentStep)) setCurrentStep(s => Math.min(s+1, 5)); };
+  const nextStep  = () => {
+    if (!validateStep(currentStep)) return;
+    if (currentStep === 1) saveParty('sender', collectSender());     // remember for next time
+    if (currentStep === 2) saveParty('receiver', collectReceiver());
+    setCurrentStep(s => Math.min(s + 1, 5));
+  };
 
   // Simulated CONCOR/CTO Shipping Bill verification (no live API yet — swap in the
   // real call here when credentials are available).
@@ -325,6 +372,9 @@ const RailBookingConfirmationPage: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+    // Remember sender + receiver so the next booking is pre-filled.
+    saveParty('sender', collectSender());
+    saveParty('receiver', collectReceiver());
     // Completing an existing booking → reuse its number (no duplicate); otherwise mint a new one.
     const isExisting = !!existingBooking?.booking_number;
     const bookingId = existingBooking?.booking_number || `TRN-${Date.now().toString().slice(-6)}`;
