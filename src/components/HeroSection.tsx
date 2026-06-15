@@ -44,20 +44,16 @@ const Tab: React.FC<TabProps> = ({ icon: Icon, label, isActive, onClick }) => (
   <div
     onClick={onClick}
     className={`
-      group flex flex-col items-center justify-end px-4 pt-2 pb-2 rounded-2xl cursor-pointer select-none
-      transition-all duration-200 whitespace-nowrap flex-shrink-0
-      ${isActive ? 'bg-blue-50 shadow-sm' : 'hover:bg-gray-50'}
+      flex flex-col items-center justify-center px-5 py-3 cursor-pointer rounded-xl select-none
+      transition-all duration-300 ease-in-out whitespace-nowrap flex-shrink-0
+      ${isActive
+        ? 'bg-blue-100 text-black font-bold shadow-md transform scale-105'
+        : 'text-gray-600 hover:bg-blue-50 hover:text-blue-800'
+      }
     `}
   >
-    <Icon
-      className={`text-3xl mb-1.5 transition-all duration-200
-        ${isActive
-          ? 'text-blue-600 scale-110'
-          : 'text-gray-500 group-hover:text-blue-500 group-hover:scale-105'}`}
-    />
-    <span className={`text-xs text-center transition-colors ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600'}`}>
-      {label}
-    </span>
+    <Icon className={`text-3xl mb-1 ${isActive ? 'text-blue-700' : 'text-gray-500'}`} />
+    <span className="text-xs font-medium text-center">{label}</span>
   </div>
 );
 
@@ -119,7 +115,7 @@ const HeroSection: React.FC = () => {
   const renderQuoteForm = () => {
     switch (activeTab) {
       case 'Door to Door':    return <DoorToDoorQuoteForm   ref={el => { formRefs.current['Door to Door']    = el; }} showButtons={false} />;
-      case 'Rail':            return <RailQuoteForm          ref={el => { formRefs.current['Rail']            = el; }} showButtons={false} embedded />;
+      case 'Rail':            return <RailQuoteForm          ref={el => { formRefs.current['Rail']            = el; }} showButtons={false} />;
       case 'Sea':             return <SeaQuoteForm           ref={el => { formRefs.current['Sea']             = el; }} showButtons={false} />;
       case 'Port Services':   return <PortServicesQuoteForm  ref={el => { formRefs.current['Port Services']   = el; }} showButtons={false} />;
       case 'Air':             return <AirQuoteForm           ref={el => { formRefs.current['Air']             = el; }} showButtons={false} />;
@@ -135,15 +131,15 @@ const HeroSection: React.FC = () => {
 
   return (
     <section
-      className="w-full pt-5 pb-10 px-4"
+      className="w-full py-6 px-4"
       style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%)' }}
     >
       <div className="max-w-6xl mx-auto">
 
-        {/* White tab strip — its own floating rounded box (MakeMyTrip style) */}
+        {/* White tab strip */}
         <div
-          className="relative z-20 mx-4 sm:mx-10 bg-white px-4 pt-3 pb-2 flex flex-wrap justify-center sm:justify-between items-end gap-1"
-          style={{ borderRadius: '16px', boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}
+          className="bg-white px-4 py-3 flex flex-wrap justify-center sm:justify-between items-center gap-1"
+          style={{ borderRadius: '16px 16px 0 0', borderBottom: '1px solid #e0e7ff' }}
         >
           {tabs.map(tab => (
             <Tab
@@ -156,11 +152,11 @@ const HeroSection: React.FC = () => {
           ))}
         </div>
 
-        {/* Form card — wider base, tucked just under the floating tab box */}
+        {/* Form card */}
         <div
-          className="relative z-10 -mt-3 bg-white px-6 pt-8 pb-5"
+          className="bg-white px-5 pt-5 pb-5"
           style={{
-            borderRadius: '16px',
+            borderRadius: '0 0 16px 16px',
             boxShadow: '0 8px 32px rgba(59,130,246,0.10), 0 2px 8px rgba(0,0,0,0.06)',
           }}
         >

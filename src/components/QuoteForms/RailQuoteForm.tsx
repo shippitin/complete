@@ -290,7 +290,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
   };
 
   const inp = (err: boolean) =>
-    `block w-full px-3 py-2.5 text-sm rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition ${
+    `block w-full px-3 py-2 text-sm border-0 border-b focus:ring-0 focus:border-blue-500 bg-transparent ${
       err ? 'border-orange-400' : 'border-gray-300'
     }`;
 
