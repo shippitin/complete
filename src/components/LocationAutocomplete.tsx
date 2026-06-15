@@ -16,6 +16,7 @@ interface Location {
   type: string;
   state: string;
   country: string;
+  pincode?: string;
 }
 
 interface LocationAutocompleteProps {
@@ -170,7 +171,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     }, 300);
   };
 
-  const handleSelect = (location: Location) => {
+  const handleSelect = async (location: Location) => {
     let displayValue = '';
 
     if (location.full_name) {
@@ -189,7 +190,29 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     setSelected(true);
     setShowDropdown(false);
     setSuggestions([]);
-    onSelect?.(location);
+
+    // Google city result → fetch structured address components so the parent can
+    // fill State / Country / Pincode. The prediction text alone can't (e.g. "Delhi,
+    // India" has no separate state). Falls back to the prediction data on any error.
+    let enriched = location;
+    if (locationType === 'city' && location.id && !location.id.startsWith('g-')) {
+      try {
+        const res = await fetch(`https://places.googleapis.com/v1/places/${location.id}`, {
+          headers: { 'X-Goog-Api-Key': GOOGLE_KEY, 'X-Goog-FieldMask': 'addressComponents' },
+        });
+        const data = await res.json();
+        const comps: any[] = data.addressComponents || [];
+        const pick = (t: string) => comps.find((c) => (c.types || []).includes(t));
+        enriched = {
+          ...location,
+          name:    pick('locality')?.longText || pick('administrative_area_level_2')?.longText || location.name,
+          state:   pick('administrative_area_level_1')?.longText || location.state,
+          country: pick('country')?.longText || '',
+          pincode: pick('postal_code')?.longText || '',
+        };
+      } catch { /* keep prediction data */ }
+    }
+    onSelect?.(enriched);
   };
 
   const handleClear = () => {

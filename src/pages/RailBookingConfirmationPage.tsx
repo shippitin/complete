@@ -348,10 +348,11 @@ const RailBookingConfirmationPage: React.FC = () => {
   // A selected city suggestion fills City + State + Country. Google's secondaryText
   // is like "Tamil Nadu, India" (state, country); backend results carry them directly.
   const applyPlace = (
-    loc: { name?: string; state?: string; country?: string },
+    loc: { name?: string; state?: string; country?: string; pincode?: string },
     setCity: (v: string) => void,
     setStateFn: (v: string) => void,
     setCountryFn: (v: string) => void,
+    setPincodeFn?: (v: string) => void,
   ) => {
     const cityName = loc.name || '';
     let stateName = loc.country ? (loc.state || '') : '';
@@ -364,6 +365,7 @@ const RailBookingConfirmationPage: React.FC = () => {
     if (cityName) setCity(cityName);
     if (stateName) setStateFn(stateName);
     if (countryName) setCountryFn(countryName);
+    if (loc.pincode && setPincodeFn) setPincodeFn(loc.pincode);
   };
 
   const handleConfirm = () => {
@@ -667,7 +669,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <LocationAutocomplete value={senderCity} onChange={setSenderCity} onSelect={loc => applyPlace(loc, setSenderCity, setSenderState, setSenderCountry)} locationType="city" global={!isDomestic} placeholder="e.g., Chennai" />
+                          <LocationAutocomplete value={senderCity} onChange={setSenderCity} onSelect={loc => applyPlace(loc, setSenderCity, setSenderState, setSenderCountry, setSenderPincode)} locationType="city" global={!isDomestic} placeholder="e.g., Chennai" />
                           {errors.senderCity && <p className="text-xs text-red-500 mt-1">{errors.senderCity}</p>}
                         </div>
                         <div>
@@ -715,7 +717,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <LocationAutocomplete value={receiverCity} onChange={setReceiverCity} onSelect={loc => applyPlace(loc, setReceiverCity, setReceiverState, setReceiverCountry)} locationType="city" global={!isDomestic} placeholder="e.g., Delhi" />
+                          <LocationAutocomplete value={receiverCity} onChange={setReceiverCity} onSelect={loc => applyPlace(loc, setReceiverCity, setReceiverState, setReceiverCountry, setReceiverPincode)} locationType="city" global={!isDomestic} placeholder="e.g., Delhi" />
                           {errors.receiverCity && <p className="text-xs text-red-500 mt-1">{errors.receiverCity}</p>}
                         </div>
                         <div>
