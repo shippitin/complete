@@ -28,6 +28,7 @@ interface LocationAutocompleteProps {
   className?: string;
   id?: string;
   global?: boolean;
+  onSelect?: (loc: Location) => void;
 }
 
 // Distinct symbol per place type so a port reads as a port, a terminal as a
@@ -74,6 +75,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   className = '',
   id,
   global = false,
+  onSelect,
 }) => {
   const [inputValue, setInputValue]   = useState(value);
   const [suggestions, setSuggestions] = useState<Location[]>([]);
@@ -187,6 +189,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
     setSelected(true);
     setShowDropdown(false);
     setSuggestions([]);
+    onSelect?.(location);
   };
 
   const handleClear = () => {

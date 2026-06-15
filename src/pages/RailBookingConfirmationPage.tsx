@@ -293,6 +293,27 @@ const RailBookingConfirmationPage: React.FC = () => {
     toast.success('e-Forwarding Note filed');
   };
 
+  // A selected city suggestion fills City + State + Country. Google's secondaryText
+  // is like "Tamil Nadu, India" (state, country); backend results carry them directly.
+  const applyPlace = (
+    loc: { name?: string; state?: string; country?: string },
+    setCity: (v: string) => void,
+    setStateFn: (v: string) => void,
+    setCountryFn: (v: string) => void,
+  ) => {
+    const cityName = loc.name || '';
+    let stateName = loc.country ? (loc.state || '') : '';
+    let countryName = loc.country || '';
+    if (!loc.country && loc.state) {
+      const parts = loc.state.split(',').map(s => s.trim()).filter(Boolean);
+      if (parts.length >= 2) { countryName = parts[parts.length - 1]; stateName = parts.slice(0, -1).join(', '); }
+      else if (parts.length === 1) { countryName = parts[0]; }
+    }
+    if (cityName) setCity(cityName);
+    if (stateName) setStateFn(stateName);
+    if (countryName) setCountryFn(countryName);
+  };
+
   const handleConfirm = () => {
     if (!validateStep(5)) return;
     // Filing must be completed before the shipment is confirmed (payment can come later).
@@ -591,7 +612,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <LocationAutocomplete value={senderCity} onChange={setSenderCity} locationType="city" global={!isDomestic} placeholder="e.g., Chennai" />
+                          <LocationAutocomplete value={senderCity} onChange={setSenderCity} onSelect={loc => applyPlace(loc, setSenderCity, setSenderState, setSenderCountry)} locationType="city" global={!isDomestic} placeholder="e.g., Chennai" />
                           {errors.senderCity && <p className="text-xs text-red-500 mt-1">{errors.senderCity}</p>}
                         </div>
                         <div>
@@ -639,7 +660,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <LocationAutocomplete value={receiverCity} onChange={setReceiverCity} locationType="city" global={!isDomestic} placeholder="e.g., Delhi" />
+                          <LocationAutocomplete value={receiverCity} onChange={setReceiverCity} onSelect={loc => applyPlace(loc, setReceiverCity, setReceiverState, setReceiverCountry)} locationType="city" global={!isDomestic} placeholder="e.g., Delhi" />
                           {errors.receiverCity && <p className="text-xs text-red-500 mt-1">{errors.receiverCity}</p>}
                         </div>
                         <div>
