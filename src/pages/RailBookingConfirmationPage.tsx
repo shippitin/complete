@@ -5,7 +5,7 @@ import {
   FaArrowLeft, FaArrowRight, FaCheckCircle,
   FaTrain, FaCube, FaBoxOpen, FaCreditCard, FaUser,
   FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp, FaTag, FaTruck,
-  FaFileUpload, FaFileAlt, FaTimes, FaFileSignature, FaReceipt,
+  FaFileUpload, FaFileAlt, FaTimes,
 } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, TrainContainerFormData } from '../types/QuoteFormHandle';
 
@@ -71,7 +71,6 @@ const RailBookingConfirmationPage: React.FC = () => {
   // When opened from My Bookings to complete an existing booking, this carries the
   // booking's id/number so we update THAT booking instead of creating a new one.
   const [existingBooking, setExistingBooking]         = useState<{ id?: string; booking_number?: string } | null>(null);
-  const [ewbNumber, setEwbNumber]                     = useState('');      // GST e-Way Bill no. (EWB-01), optional
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -191,7 +190,6 @@ const RailBookingConfirmationPage: React.FC = () => {
         if (c.packageSize) setPackageSize(c.packageSize);
         if (c.specialInstructions) setSpecialInstructions(c.specialInstructions);
       }
-      if (pf?.ewb) setEwbNumber(String(pf.ewb));
       if (state.initialStep) setCurrentStep(state.initialStep);
       setLoading(false);
     } else {
@@ -272,42 +270,6 @@ const RailBookingConfirmationPage: React.FC = () => {
   const goToStep  = (step: number) => { setErrors({}); setCurrentStep(step); };
   const nextStep  = () => { if (validateStep(currentStep)) setCurrentStep(s => Math.min(s+1, 5)); };
 
-  // e-Forwarding Note (e-FNote) preview — a branded, print-ready draft built from
-  // whatever's filled so far. Real RR/e-FNote numbers are issued by the carrier.
-  const previewForwardingNote = () => {
-    const w = window.open('', '_blank');
-    if (!w) return;
-    const cfdAny = formData as any;
-    const esc = (v: any) => (v == null ? '' : String(v).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] as string)));
-    const row = (l: string, v: any) => (v !== null && v !== undefined && v !== '') ? `<tr><td class="l">${l}</td><td class="v">${esc(v)}</td></tr>` : '';
-    const senderAddr = [senderAddress, senderCity, senderState, senderPincode].filter(Boolean).join(', ');
-    const receiverAddr = [receiverAddress, receiverCity, receiverState, receiverPincode].filter(Boolean).join(', ');
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>e-Forwarding Note ${esc(existingBooking?.booking_number || '')}</title>
-    <style>*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#1f2937;margin:0;padding:32px;max-width:820px}
-    .top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #065af3;padding-bottom:12px;margin-bottom:6px}
-    .brand{font-size:26px;font-weight:800;letter-spacing:1px;color:#0b1324}.doc{font-size:18px;font-weight:700;color:#065af3;text-transform:uppercase}
-    .muted{color:#6b7280;font-size:12px}h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;margin:18px 0 6px}
-    table{width:100%;border-collapse:collapse;font-size:13px}td{padding:5px 4px;border-bottom:1px solid #eef1f5;vertical-align:top}
-    td.l{color:#6b7280;width:42%}td.v{font-weight:600}.two{display:flex;gap:24px}.two>div{flex:1}
-    .foot{margin-top:28px;font-size:11px;color:#9ca3af;text-align:center;border-top:1px solid #eee;padding-top:10px}
-    .btn{display:inline-block;margin:14px 0;padding:10px 18px;background:#065af3;color:#fff;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;border:none}
-    @media print{.noprint{display:none}}</style></head><body>
-    <div class="top"><div><div class="brand">SHIPPITIN</div><div class="muted">Shippitin Logistics &middot; shippitin.co</div></div>
-      <div style="text-align:right"><div class="doc">e-Forwarding Note</div><div class="muted">e-FNote &middot; Draft</div><div class="muted">Date: ${new Date().toLocaleDateString('en-IN')}</div></div></div>
-    <button class="btn noprint" onclick="window.print()">Save as PDF / Print</button>
-    <h3>Consignment</h3><table>
-      ${row('Booking Ref', existingBooking?.booking_number)}${row('Route', `${esc(selectedTrainResult?.originStation)} → ${esc(selectedTrainResult?.destinationStation)}`)}
-      ${row('Operator', selectedTrainResult?.operator)}${row('Service', formatServiceType((cfdAny?.serviceType as string) || ''))}
-      ${row('Container', cfdAny?.containerType)}${row('No. of Containers', cfdAny?.numberOfContainers)}
-      ${row('e-Way Bill No.', ewbNumber)}</table>
-    <div class="two"><div><h3>Consignor (Sender)</h3><table>${row('Name', senderName)}${row('Phone', senderPhone)}${row('GSTIN', senderGstin)}${row('Address', senderAddr)}</table></div>
-      <div><h3>Consignee (Receiver)</h3><table>${row('Name', receiverName)}${row('Phone', receiverPhone)}${row('GSTIN', receiverGstin)}${row('Address', receiverAddr)}</table></div></div>
-    <h3>Cargo</h3><table>${row('Goods', goodsDescription)}${row('HSN Code', hsnCode)}${row('Gross Weight / Container', weightPerContainer ? weightPerContainer + ' MT' : '')}${row('Invoice No.', invoiceNumber)}${row('Invoice Value', invoiceValue ? '₹' + Number(invoiceValue).toLocaleString('en-IN') : '')}</table>
-    <div class="foot">Draft e-Forwarding Note &middot; Railway Receipt (RR) issued on booking confirmation &middot; &copy; Shippitin Logistics</div>
-    </body></html>`);
-    w.document.close();
-  };
-
   const handleConfirm = () => {
     if (!validateStep(5)) return;
     // Completing an existing booking → reuse its number (no duplicate); otherwise mint a new one.
@@ -332,7 +294,7 @@ const RailBookingConfirmationPage: React.FC = () => {
           num_packages: numPackages, package_size: packageSize, special_instructions: specialInstructions,
           route_type: fdAny?.serviceType, container_type: fdAny?.containerType, number_of_containers: fdAny?.numberOfContainers,
           is_domestic: fdAny?.isDomestic !== false, operator: selectedTrainResult?.operator, transit_time: selectedTrainResult?.transitDuration,
-          insurance_required: insuranceRequired, charges_breakdown: bd, ewb_number: ewbNumber || undefined,
+          insurance_required: insuranceRequired, charges_breakdown: bd,
         };
         localStorage.setItem('bookingDetailOverrides', JSON.stringify(dov));
         const sov = JSON.parse(localStorage.getItem('bookingStatusOverrides') || '{}');
@@ -367,7 +329,6 @@ const RailBookingConfirmationPage: React.FC = () => {
       promoCode:       promoCode || undefined,
       promoDiscount:   bd?.discount || 0,
       charges:         bd,   // full charge breakdown (base, THC, mile, insurance, discount, GST, grand)
-      ewbNumber:       ewbNumber || undefined,
     };
     sessionStorage.setItem('lastBookingDetails', JSON.stringify(finalBooking));
     navigate('/booking-confirmation', { state: { bookingDetails: finalBooking } });
@@ -407,54 +368,6 @@ const RailBookingConfirmationPage: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4">
 
         <div className="flex-grow space-y-3">
-
-          {/* Shipment documents strip — e-Forwarding Note · e-Way Bill · Railway Receipt */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 mb-3">
-              <FaTrain className="text-blue-500" />
-              <span className="font-semibold text-gray-700">Rail Consignment</span>
-              <span className="text-gray-300">·</span>
-              <span>{selectedTrainResult.originStation} → {selectedTrainResult.destinationStation}</span>
-              <span className="text-gray-300">·</span>
-              <span>{selectedTrainResult.operator}</span>
-              <span className="text-gray-300 hidden sm:inline">·</span>
-              <span className="hidden sm:inline">{formatServiceType((cfd?.serviceType as string) || '')}</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* e-Forwarding Note */}
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-bold text-gray-700 flex items-center gap-1.5"><FaFileSignature className="text-blue-500" /> e-Forwarding Note</p>
-                  <span className="text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">Ready</span>
-                </div>
-                <p className="text-[11px] text-gray-400 mb-2">Auto-prepared from this booking (e-FNote).</p>
-                <button type="button" onClick={previewForwardingNote} className="text-xs font-semibold text-blue-600 hover:text-blue-700">Preview →</button>
-              </div>
-              {/* e-Way Bill */}
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-bold text-gray-700 flex items-center gap-1.5"><FaFileAlt className="text-blue-500" /> e-Way Bill</p>
-                  <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">GST EWB-01</span>
-                </div>
-                <input
-                  type="text" inputMode="numeric" maxLength={12}
-                  value={ewbNumber}
-                  onChange={e => setEwbNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                  placeholder="Enter 12-digit e-Way Bill no."
-                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-200"
-                />
-                <p className="text-[10px] text-gray-400 mt-1">Optional now · required before dispatch for cargo &gt; ₹50,000.</p>
-              </div>
-              {/* Railway Receipt */}
-              <div className="rounded-xl border border-gray-200 p-3">
-                <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-bold text-gray-700 flex items-center gap-1.5"><FaReceipt className="text-blue-500" /> Railway Receipt</p>
-                  <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Pending</span>
-                </div>
-                <p className="text-[11px] text-gray-400">RR (rail consignment note) is issued on booking confirmation.</p>
-              </div>
-            </div>
-          </div>
 
           {/* Header + stepper — single compact card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
