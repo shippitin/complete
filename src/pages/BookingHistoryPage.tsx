@@ -24,6 +24,7 @@ interface Booking {
   weight: number;
   container_type?: string;
   number_of_containers?: number;
+  is_domestic?: boolean;
 }
 
 const getServiceIcon = (type: string) => {
@@ -471,6 +472,8 @@ const BookingHistoryPage: React.FC = () => {
   const [detailsById, setDetailsById] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
+  // Top-level split: International first, then Domestic.
+  const [routeTab, setRouteTab] = useState<'international' | 'domestic'>('international');
   // Read once per mount; the payment page (a separate route) sets these, so a
   // return to this page remounts and picks up the fresh "paid" flags.
   const [paidByNumber] = useState<Record<string, boolean>>(loadPaymentDone);
@@ -531,18 +534,25 @@ const BookingHistoryPage: React.FC = () => {
     return (x === 'intransit' || x === 'transit') ? 'in_transit' : x;
   };
 
+  // International vs Domestic — a booking is international only when explicitly
+  // flagged is_domestic === false; anything else (true / unset) counts as domestic.
+  const isIntl = (b: Booking) => b.is_domestic === false;
+  const intlTotal = bookings.filter(isIntl).length;
+  const domTotal  = bookings.length - intlTotal;
+  const scoped = bookings.filter(b => isIntl(b) === (routeTab === 'international'));
+
   const filters = ['All', 'pending', 'confirmed', 'in_transit', 'delivered', 'cancelled'];
   const filtered = filter === 'All'
-    ? bookings
-    : bookings.filter(b => normStatus(b.status) === filter);
+    ? scoped
+    : scoped.filter(b => normStatus(b.status) === filter);
 
   const counts = {
-    All: bookings.length,
-    pending:    bookings.filter(b => normStatus(b.status) === 'pending').length,
-    confirmed:  bookings.filter(b => normStatus(b.status) === 'confirmed').length,
-    in_transit: bookings.filter(b => normStatus(b.status) === 'in_transit').length,
-    delivered:  bookings.filter(b => normStatus(b.status) === 'delivered').length,
-    cancelled:  bookings.filter(b => normStatus(b.status) === 'cancelled').length,
+    All: scoped.length,
+    pending:    scoped.filter(b => normStatus(b.status) === 'pending').length,
+    confirmed:  scoped.filter(b => normStatus(b.status) === 'confirmed').length,
+    in_transit: scoped.filter(b => normStatus(b.status) === 'in_transit').length,
+    delivered:  scoped.filter(b => normStatus(b.status) === 'delivered').length,
+    cancelled:  scoped.filter(b => normStatus(b.status) === 'cancelled').length,
   };
 
   return (
@@ -563,7 +573,32 @@ const BookingHistoryPage: React.FC = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 pt-4 pb-8">
-        {/* Filter tabs */}
+        {/* International / Domestic split — International first */}
+        <div className="mb-5">
+          <div className="inline-flex rounded-xl bg-gray-100 p-1">
+            {([
+              { key: 'international' as const, label: 'International', icon: '🌐', count: intlTotal },
+              { key: 'domestic'      as const, label: 'Domestic',      icon: '🇮🇳', count: domTotal },
+            ]).map(t => (
+              <button
+                key={t.key}
+                onClick={() => { setRouteTab(t.key); setFilter('All'); }}
+                className={`px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
+                  routeTab === t.key ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span>{t.icon}</span> {t.label}
+                <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                  routeTab === t.key ? 'bg-blue-50 text-blue-600' : 'bg-gray-200 text-gray-500'
+                }`}>
+                  {t.count}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Status filter tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {filters.map(status => (
             <button
@@ -598,9 +633,9 @@ const BookingHistoryPage: React.FC = () => {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
             <FaBoxOpen className="text-gray-200 text-6xl mx-auto mb-4" />
-            <p className="text-gray-400 text-lg font-medium mb-2">No shipments found</p>
+            <p className="text-gray-400 text-lg font-medium mb-2">No {routeTab} shipments found</p>
             <p className="text-gray-300 text-sm mb-6">
-              {filter === 'All' ? 'Create your first shipment to get started' : `No ${filter} shipments`}
+              {filter === 'All' ? `You have no ${routeTab} shipments yet` : `No ${filter} ${routeTab} shipments`}
             </p>
             {filter === 'All' && (
               <button
