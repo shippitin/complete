@@ -549,8 +549,11 @@ const BookingHistoryPage: React.FC = () => {
   const [detailsById, setDetailsById] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('All');
-  // Top-level split: International first, then Domestic.
-  const [routeTab, setRouteTab] = useState<'international' | 'domestic'>('international');
+  // Top-level split: International first, then Domestic. Remember the last-selected
+  // tab so a refresh stays where the user was (instead of snapping back to International).
+  const [routeTab, setRouteTab] = useState<'international' | 'domestic'>(
+    () => (localStorage.getItem('myShipmentsTab') === 'domestic' ? 'domestic' : 'international')
+  );
   // Read once per mount; the payment page (a separate route) sets these, so a
   // return to this page remounts and picks up the fresh "paid" flags.
   const [paidByNumber] = useState<Record<string, boolean>>(loadPaymentDone);
@@ -690,7 +693,7 @@ const BookingHistoryPage: React.FC = () => {
             ]).map(t => (
               <button
                 key={t.key}
-                onClick={() => { setRouteTab(t.key); setFilter('All'); }}
+                onClick={() => { setRouteTab(t.key); setFilter('All'); try { localStorage.setItem('myShipmentsTab', t.key); } catch { /* quota */ } }}
                 className={`px-5 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 ${
                   routeTab === t.key ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
