@@ -582,10 +582,14 @@ const RailBookingConfirmationPage: React.FC = () => {
                   <p className="text-gray-400 text-xs">Click any section to fill in details</p>
                 </div>
               </div>
-              <button onClick={()=>navigate('/train-service-details',{state:{formData,selectedTrainResult}})}
-                className="flex items-center text-blue-500 hover:text-blue-600 text-xs font-medium transition flex-shrink-0 ml-2">
-                <FaArrowLeft className="mr-1.5 text-[10px]" /> Back
-              </button>
+              {/* Back to the service-details page only during a fresh booking. When opened from
+                  My Shipments (completing documentation) there's no prior page, so hide it. */}
+              {!isCompletingDocs && (
+                <button onClick={()=>navigate('/train-service-details',{state:{formData,selectedTrainResult}})}
+                  className="flex items-center text-blue-500 hover:text-blue-600 text-xs font-medium transition flex-shrink-0 ml-2">
+                  <FaArrowLeft className="mr-1.5 text-[10px]" /> Back
+                </button>
+              )}
             </div>
             <div className="flex items-center justify-between border-t border-gray-50 pt-3">
               {STEPS.map((step, idx) => {
