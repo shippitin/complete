@@ -123,6 +123,20 @@ const loadHidden = (): string[] => {
   try { return JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]'); } catch { return []; }
 };
 
+// ── Single source of truth for shipment status ──
+// Documentation filed? Domestic = e-Forwarding Note only; international also needs the Shipping Bill.
+const isDocsFiled = (m: any): boolean => {
+  const dom = m.is_domestic !== false;
+  return dom ? !!m.efn_filed : (!!m.filing_number && !!m.efn_filed);
+};
+// A booking becomes a Confirmed shipment only once BOTH documentation AND payment are done.
+// Used by the card, the filter-tab counts and the shipment detail page so they never disagree.
+const effectiveStatusKey = (rawStatus: string | undefined, docsFiled: boolean, paid: boolean): string => {
+  const x = (rawStatus || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+  const norm = (x === 'intransit' || x === 'transit') ? 'in_transit' : x;
+  return (norm === 'pending' && docsFiled && paid) ? 'confirmed' : norm;
+};
+
 const formatRoute = (st?: string): string | null => {
   if (!st) return null;
   const map: Record<string, string> = {
@@ -170,8 +184,6 @@ const BookingCard: React.FC<{
   paid?: boolean;
   onSaveDetails: (id: string, patch: any) => void;
 }> = ({ booking, details, paid, onSaveDetails }) => {
-  const rawSt = (booking.status || '').toLowerCase().replace(/[\s-]+/g, '_');
-  const rawStKey = (rawSt === 'intransit' || rawSt === 'transit') ? 'in_transit' : rawSt;
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
@@ -180,10 +192,9 @@ const BookingCard: React.FC<{
 
   const d: any = { ...booking, ...(details || {}) };
 
-  // Documentation filed? Domestic = e-Forwarding Note only; international also needs the Shipping Bill.
-  const docsFiled = isDomesticBooking ? !!d.efn_filed : (!!d.filing_number && !!d.efn_filed);
-  // A booking becomes a Confirmed shipment only after BOTH documentation and payment are done.
-  const stKey = (rawStKey === 'pending' && docsFiled && paid) ? 'confirmed' : rawStKey;
+  const docsFiled = isDocsFiled(d);
+  // Confirmed only once BOTH documentation and payment are done (shared rule).
+  const stKey = effectiveStatusKey(booking.status, docsFiled, !!paid);
   const statusConfig = getStatusConfig(stKey);
   const stages = stagesFor(isDomesticBooking);
   const stageIndex = stageFor(stKey, paid, isDomesticBooking);
@@ -613,10 +624,11 @@ const BookingHistoryPage: React.FC = () => {
     setFilter('All');
   };
 
-  // Normalise status variants ("In Transit" / "in-transit" / "intransit") to one key.
-  const normStatus = (s?: string) => {
-    const x = (s || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
-    return (x === 'intransit' || x === 'transit') ? 'in_transit' : x;
+  // Effective status for a booking — the SAME rule the card uses (docs + payment → Confirmed),
+  // so the filter tabs and counts always match the badge shown on each card.
+  const effOf = (b: Booking) => {
+    const merged = { ...b, ...(detailsById[b.id] || {}) };
+    return effectiveStatusKey(b.status, isDocsFiled(merged), !!paidByNumber[b.booking_number]);
   };
 
   // International vs Domestic — a booking is international only when explicitly
@@ -629,15 +641,15 @@ const BookingHistoryPage: React.FC = () => {
   const filters = ['All', 'pending', 'confirmed', 'in_transit', 'delivered', 'cancelled'];
   const filtered = filter === 'All'
     ? scoped
-    : scoped.filter(b => normStatus(b.status) === filter);
+    : scoped.filter(b => effOf(b) === filter);
 
   const counts = {
     All: scoped.length,
-    pending:    scoped.filter(b => normStatus(b.status) === 'pending').length,
-    confirmed:  scoped.filter(b => normStatus(b.status) === 'confirmed').length,
-    in_transit: scoped.filter(b => normStatus(b.status) === 'in_transit').length,
-    delivered:  scoped.filter(b => normStatus(b.status) === 'delivered').length,
-    cancelled:  scoped.filter(b => normStatus(b.status) === 'cancelled').length,
+    pending:    scoped.filter(b => effOf(b) === 'pending').length,
+    confirmed:  scoped.filter(b => effOf(b) === 'confirmed').length,
+    in_transit: scoped.filter(b => effOf(b) === 'in_transit').length,
+    delivered:  scoped.filter(b => effOf(b) === 'delivered').length,
+    cancelled:  scoped.filter(b => effOf(b) === 'cancelled').length,
   };
 
   return (

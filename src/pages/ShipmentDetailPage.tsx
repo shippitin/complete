@@ -42,9 +42,23 @@ const money = (n: any) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
 const DETAILS_OVERRIDE_KEY = 'bookingDetailOverrides';
 const STATUS_OVERRIDE_KEY  = 'bookingStatusOverrides';
+const PAYMENT_DONE_KEY     = 'bookingPaymentDone';
 const readJSON = (k: string): Record<string, any> => {
   try { return JSON.parse(localStorage.getItem(k) || '{}'); } catch { return {}; }
 };
+
+// Same status rule as My Shipments: a shipment is Confirmed only once BOTH
+// documentation and payment are done — so this page never disagrees with the card.
+const isDocsFiled = (m: any): boolean => {
+  const dom = m.is_domestic !== false;
+  return dom ? !!m.efn_filed : (!!m.filing_number && !!m.efn_filed);
+};
+const effectiveStatusKey = (rawStatus: string | undefined, docsFiled: boolean, paid: boolean): string => {
+  const x = (rawStatus || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+  const norm = (x === 'intransit' || x === 'transit') ? 'in_transit' : x;
+  return (norm === 'pending' && docsFiled && paid) ? 'confirmed' : norm;
+};
+const isPaid = (bookingNumber?: string): boolean => !!(bookingNumber && readJSON(PAYMENT_DONE_KEY)[bookingNumber]);
 
 // ── Printable document builder — opens a branded, print-ready page ──
 const DOC_TITLES: Record<string, string> = {
@@ -163,6 +177,10 @@ const ShipmentDetailPage: React.FC = () => {
 
   const cb = b.charges_breakdown || null;
 
+  // Effective status (docs + payment → Confirmed) — matches the My Shipments card exactly.
+  const statusKey = effectiveStatusKey(b.status, isDocsFiled(b), isPaid(b.booking_number));
+  const effB = { ...b, status: statusKey };   // so printed documents show the same status
+
   const detailRows: [string, any][] = [
     ['Service Type', formatRoute(b.route_type)],
     ['Booking Type', b.service_type],
@@ -235,7 +253,7 @@ const ShipmentDetailPage: React.FC = () => {
             <h1 className="text-xl font-bold">{b.booking_number}</h1>
             <p className="text-sm text-blue-50/90">{b.origin} → {b.destination} · {b.service_type}</p>
           </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/15 ring-1 ring-white/30">{getStatusLabel(b.status)}</span>
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/15 ring-1 ring-white/30">{getStatusLabel(statusKey)}</span>
         </div>
       </div>
 
@@ -244,7 +262,7 @@ const ShipmentDetailPage: React.FC = () => {
         <h2 className="text-sm font-bold text-gray-800 mb-3">Documents</h2>
         <div className="flex flex-wrap gap-2">
           {docs.map(doc => (
-            <button key={doc.kind} onClick={() => openDocument(doc.kind, b)}
+            <button key={doc.kind} onClick={() => openDocument(doc.kind, effB)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 bg-gray-50 hover:bg-blue-50 hover:border-blue-200 text-gray-700 hover:text-blue-700 text-sm font-semibold transition">
               {doc.icon} {doc.label}
             </button>

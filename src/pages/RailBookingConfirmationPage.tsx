@@ -396,9 +396,10 @@ const RailBookingConfirmationPage: React.FC = () => {
     // Completing an existing booking → reuse its number (no duplicate); otherwise mint a new one.
     const bookingId = existingBooking?.booking_number || `TRN-${Date.now().toString().slice(-6)}`;
 
-    // Reflect the completion on My Bookings. There's no backend update endpoint yet,
-    // so persist the entered details + a "confirmed" status via the same localStorage
-    // overrides the My Bookings page reads (keyed by the booking's id).
+    // Reflect the completed documentation + details on My Bookings via localStorage
+    // overrides (no backend update endpoint yet). We do NOT set a "confirmed" status here —
+    // the shipment is Confirmed only once BOTH documentation and payment are done, which
+    // My Shipments derives from the saved efn_filed/filing_number + the paid flag.
     if (existingBooking?.id) {
       try {
         const fdAny = formData as any;
@@ -418,9 +419,6 @@ const RailBookingConfirmationPage: React.FC = () => {
           filing_number: filingNumber || undefined, efn_filed: efnFiled || undefined,
         };
         localStorage.setItem('bookingDetailOverrides', JSON.stringify(dov));
-        const sov = JSON.parse(localStorage.getItem('bookingStatusOverrides') || '{}');
-        sov[existingBooking.id] = 'confirmed';
-        localStorage.setItem('bookingStatusOverrides', JSON.stringify(sov));
       } catch { /* ignore quota/parse */ }
     }
 
