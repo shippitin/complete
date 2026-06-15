@@ -46,14 +46,17 @@ const BTN_AMBER      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-
 const BTN_SLATE      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition';
 
 // Progress timeline shown by the "Shipment status" button.
-const STAGES = ['Booked', 'Paid', 'Confirmed', 'In Transit', 'Delivered'];
-// Map a booking's status (+ paid flag) to the current stage index.
+const STAGES = ['Shipment Booked', 'Customs done', 'Payment done', 'Shipping Bill', 'e-Forwarding Note', 'Ready for pickup', 'In transit', 'Delivered'];
+// Map a booking's status (+ paid flag) to the current milestone. The backend
+// doesn't track these granular milestones yet, so this is an approximation:
+//   pending(unpaid)→Shipment Booked · pending(paid)→Payment done
+//   confirmed→Ready for pickup · in transit→In transit · delivered→Delivered
 const stageFor = (stKey: string, paid?: boolean): number => {
   switch (stKey) {
-    case 'pending':    return paid ? 1 : 0;
-    case 'confirmed':  return 2;
-    case 'in_transit': return 3;
-    case 'delivered':  return 4;
+    case 'pending':    return paid ? 2 : 0;
+    case 'confirmed':  return 5;
+    case 'in_transit': return 6;
+    case 'delivered':  return 7;
     default:           return 0;
   }
 };
@@ -294,10 +297,9 @@ const BookingCard: React.FC<{
             </button>
           )}
 
-          {/* View shipment — available on every status */}
-          <button onClick={() => setExpanded(v => !v)} className={BTN_BLUE}>
-            {expanded ? 'Hide' : 'View shipment'}
-            <FaChevronRight className={`text-[10px] transition-transform ${expanded ? 'rotate-90' : ''}`} />
+          {/* View shipment — opens the full shipment page (all details + documents) */}
+          <button onClick={() => navigate(`/shipment/${booking.id}`, { state: { booking: d } })} className={BTN_BLUE}>
+            View shipment <FaChevronRight className="text-[10px]" />
           </button>
         </div>
 
@@ -555,7 +557,7 @@ const BookingHistoryPage: React.FC = () => {
             onClick={() => navigate('/')}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
           >
-            <FaPlus className="text-xs" /> New Booking
+            <FaPlus className="text-xs" /> New Shipment
           </button>
         </div>
       </div>
@@ -596,16 +598,16 @@ const BookingHistoryPage: React.FC = () => {
         ) : filtered.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
             <FaBoxOpen className="text-gray-200 text-6xl mx-auto mb-4" />
-            <p className="text-gray-400 text-lg font-medium mb-2">No bookings found</p>
+            <p className="text-gray-400 text-lg font-medium mb-2">No shipments found</p>
             <p className="text-gray-300 text-sm mb-6">
-              {filter === 'All' ? 'Create your first booking to get started' : `No ${filter} bookings`}
+              {filter === 'All' ? 'Create your first shipment to get started' : `No ${filter} shipments`}
             </p>
             {filter === 'All' && (
               <button
                 onClick={() => navigate('/')}
                 className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition text-sm"
               >
-                Create First Booking
+                Create First Shipment
               </button>
             )}
           </div>
