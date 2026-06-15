@@ -182,11 +182,22 @@ const BookingCard: React.FC<{
     setExpanded(true);
   };
 
-  // Both "Complete booking" and "Complete payment" drop the user into the full
-  // rail booking-confirmation page (Sender → Receiver → Cargo → Add-ons → Payment),
-  // prefilled from whatever we already have. initialStep lets "Complete payment"
-  // jump straight to the Payment step. We pass the existing booking ref so the
-  // page completes THIS booking (no duplicate) instead of minting a new one.
+  // "Complete payment" → straight to the Razorpay payment page. Pass booking_number
+  // as the id (backend keys payment verify by booking_number).
+  const goPayment = () => {
+    navigate('/payment', {
+      state: {
+        bookingId: booking.booking_number,
+        amount: booking.estimated_price,
+        bookingNumber: booking.booking_number,
+        serviceType: booking.service_type,
+      },
+    });
+  };
+
+  // "Complete booking" opens the full rail booking-confirmation page
+  // (Sender → Receiver → Cargo → Add-ons → Payment), prefilled. We pass the
+  // existing booking ref so the page completes THIS booking (no duplicate).
   const goComplete = (initialStep: number) => {
     const cb: any = d.charges_breakdown || null;
     const basePrice = cb?.base ?? booking.estimated_price ?? 0;
@@ -292,7 +303,7 @@ const BookingCard: React.FC<{
         <div className="flex items-center justify-end gap-2 flex-wrap pt-4 border-t border-gray-50">
           {stKey === 'pending' && (
             <>
-              <button onClick={() => goComplete(5)} className={BTN_BLUE_SOLID}>
+              <button onClick={goPayment} className={BTN_BLUE_SOLID}>
                 <FaCreditCard className="text-xs" /> Complete payment
               </button>
               <button onClick={() => goComplete(1)} className={BTN_AMBER}>
