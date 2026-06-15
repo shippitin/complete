@@ -211,10 +211,12 @@ const ShipmentDetailPage: React.FC = () => {
     ['Total GST', cb.totalGST],
   ] : [];
 
+  // Shipping Bill is a customs / export document — international shipments only.
+  const isDomestic = b.is_domestic !== false;
   const docs = [
     { kind: 'summary',       label: 'Summary (PDF)',    icon: <FaFilePdf /> },
     { kind: 'invoice',       label: 'Invoice',          icon: <FaFileInvoiceDollar /> },
-    { kind: 'shipping_bill', label: 'Shipping Bill',    icon: <FaFileAlt /> },
+    ...(!isDomestic ? [{ kind: 'shipping_bill', label: 'Shipping Bill', icon: <FaFileAlt /> }] : []),
     { kind: 'challan',       label: 'e-Forwarding Note', icon: <FaFileSignature /> },
     { kind: 'bill',          label: 'Freight Bill',     icon: <FaReceipt /> },
   ];

@@ -47,12 +47,25 @@ const BTN_AMBER      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-
 const BTN_SLATE      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition';
 
 // Progress timeline shown by the "Shipment status" button.
-const STAGES = ['Shipment Booked', 'Customs done', 'Payment done', 'Shipping Bill', 'e-Forwarding Note', 'Ready for pickup', 'In transit', 'Delivered'];
-// Map a booking's status (+ paid flag) to the current milestone. The backend
-// doesn't track these granular milestones yet, so this is an approximation:
-//   pending(unpaid)→Shipment Booked · pending(paid)→Payment done
-//   confirmed→Ready for pickup · in transit→In transit · delivered→Delivered
-const stageFor = (stKey: string, paid?: boolean): number => {
+// Shipment status milestones. "Customs done" and "Shipping Bill" are customs /
+// export steps, so they only apply to INTERNATIONAL shipments. Domestic skips them.
+const STAGES_INTL = ['Shipment Booked', 'Customs done', 'Payment done', 'Shipping Bill', 'e-Forwarding Note', 'Ready for pickup', 'In transit', 'Delivered'];
+const STAGES_DOM  = ['Shipment Booked', 'Payment done', 'e-Forwarding Note', 'Ready for pickup', 'In transit', 'Delivered'];
+const stagesFor = (isDomestic: boolean) => (isDomestic ? STAGES_DOM : STAGES_INTL);
+// Map a booking's status (+ paid flag) to the current milestone index in its list.
+// Backend doesn't track granular milestones yet, so this is an approximation.
+const stageFor = (stKey: string, paid: boolean | undefined, isDomestic: boolean): number => {
+  if (isDomestic) {
+    // Booked(0) · Payment done(1) · e-FNote(2) · Ready(3) · In transit(4) · Delivered(5)
+    switch (stKey) {
+      case 'pending':    return paid ? 1 : 0;
+      case 'confirmed':  return 3;
+      case 'in_transit': return 4;
+      case 'delivered':  return 5;
+      default:           return 0;
+    }
+  }
+  // Booked(0) · Customs(1) · Payment(2) · Shipping Bill(3) · e-FNote(4) · Ready(5) · In transit(6) · Delivered(7)
   switch (stKey) {
     case 'pending':    return paid ? 2 : 0;
     case 'confirmed':  return 5;
@@ -156,7 +169,9 @@ const BookingCard: React.FC<{
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing]   = useState(false);
   const [showStatus, setShowStatus] = useState(false);
-  const stageIndex = stageFor(stKey, paid);
+  const isDomesticBooking = booking.is_domestic !== false;
+  const stages = stagesFor(isDomesticBooking);
+  const stageIndex = stageFor(stKey, paid, isDomesticBooking);
 
   const d: any = { ...booking, ...(details || {}) };
 
@@ -437,10 +452,10 @@ const BookingCard: React.FC<{
               </button>
             </div>
             <div className="mt-5">
-              {STAGES.map((stage, i) => {
+              {stages.map((stage, i) => {
                 const done   = i < stageIndex;
                 const active = i === stageIndex;
-                const last   = i === STAGES.length - 1;
+                const last   = i === stages.length - 1;
                 return (
                   <div key={stage} className="flex items-stretch gap-3">
                     <div className="flex flex-col items-center">
