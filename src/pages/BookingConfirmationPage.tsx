@@ -153,10 +153,9 @@ const BookingConfirmationPage: React.FC = () => {
                 weight:               details.originalFormData?.totalWeight  || 0,
                 booking_date:         new Date().toISOString().split('T')[0],
                 estimated_price:      details.finalAmount || 0,
-                // Document filing (e-Forwarding Note, + Shipping Bill for international) is
-                // required to reach this page in the rail flow, so a filed booking is already
-                // Confirmed — only payment remains. Other flows (no filing) stay Pending.
-                status:               details.efnFiled ? 'confirmed' : 'pending',
+                // A new booking is created as Pending. Documentation + payment are completed
+                // afterwards from My Shipments; it turns Confirmed only once BOTH are done.
+                status:               'pending',
                 container_type:       details.originalFormData?.containerType || null,
                 number_of_containers: details.originalFormData?.numberOfContainers || 1,
                 // ── Extended details so the full booking shows in My Bookings ──
@@ -177,8 +176,6 @@ const BookingConfirmationPage: React.FC = () => {
                 receiver_email:       details.receiverDetails?.receiverEmail    || null,
                 receiver_address:     details.receiverDetails?.receiverAddress  || null,
                 charges_breakdown:    details.charges || null,   // JSON: base, THC, mile, insurance, GST, grand
-                filing_number:        details.filingNumber || null,  // Shipping Bill no. (international)
-                efn_filed:            !!details.efnFiled,            // e-Forwarding Note filed
               }),
             });
           }

@@ -6,7 +6,7 @@ import {
   FaArrowLeft, FaArrowRight, FaCheckCircle,
   FaTrain, FaCube, FaBoxOpen, FaCreditCard, FaUser,
   FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp, FaTag, FaTruck,
-  FaFileUpload, FaFileAlt, FaTimes, FaFileSignature,
+  FaFileUpload, FaFileAlt, FaTimes,
 } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, TrainContainerFormData } from '../types/QuoteFormHandle';
 import LocationAutocomplete from '../components/LocationAutocomplete';
@@ -90,12 +90,10 @@ const RailBookingConfirmationPage: React.FC = () => {
   // When opened from My Bookings to complete an existing booking, this carries the
   // booking's id/number so we update THAT booking instead of creating a new one.
   const [existingBooking, setExistingBooking]         = useState<{ id?: string; booking_number?: string } | null>(null);
+  // Carried over only so completing an existing booking's details preserves any
+  // documentation already filed in My Shipments (filing itself now happens there).
   const [filingNumber, setFilingNumber]               = useState('');      // 7-digit Shipping Bill no. (international)
-  const [dsnPin,        setDsnPin]                    = useState('');      // e-Forwarding Note DSN PIN (Digitally Signed Number)
-  const [sbVerifying,   setSbVerifying]               = useState(false);   // Shipping Bill verifying with CONCOR/CTO
-  const [sbVerified,    setSbVerified]                = useState(false);   // Shipping Bill verified
   const [efnFiled,      setEfnFiled]                  = useState(false);   // e-Forwarding Note filed
-  const [showFiling,    setShowFiling]               = useState(false);   // document filing hidden until "Confirm Booking" is clicked
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -239,7 +237,7 @@ const RailBookingConfirmationPage: React.FC = () => {
         if (c.packageSize) setPackageSize(c.packageSize);
         if (c.specialInstructions) setSpecialInstructions(c.specialInstructions);
       }
-      if (pf?.filing) { setFilingNumber(String(pf.filing)); setSbVerified(true); }
+      if (pf?.filing) setFilingNumber(String(pf.filing));
       if (pf?.efnFiled) setEfnFiled(true);
       if (state.initialStep) setCurrentStep(state.initialStep);
       setLoading(false);
@@ -335,19 +333,6 @@ const RailBookingConfirmationPage: React.FC = () => {
     setCurrentStep(s => Math.min(s + 1, 5));
   };
 
-  // Simulated CONCOR/CTO Shipping Bill verification (no live API yet — swap in the
-  // real call here when credentials are available).
-  const verifyShippingBill = () => {
-    if (filingNumber.length !== 7 || sbVerifying || sbVerified) return;
-    setSbVerifying(true);
-    setTimeout(() => { setSbVerifying(false); setSbVerified(true); toast.success('Shipping Bill verified with CONCOR / CTO'); }, 1200);
-  };
-  // File the e-Forwarding Note with the DSN PIN (Digitally Signed Number).
-  const fileEForwardingNote = () => {
-    if (!dsnPin.trim() || efnFiled) return;
-    setEfnFiled(true);
-    toast.success('e-Forwarding Note filed');
-  };
 
   // A selected city suggestion fills City + State + Country. Google's secondaryText
   // is like "Tamil Nadu, India" (state, country); backend results carry them directly.
@@ -374,23 +359,9 @@ const RailBookingConfirmationPage: React.FC = () => {
 
   const handleConfirm = () => {
     if (!validateStep(5)) return;
-    // Document filing is the FINAL gate. It stays hidden until the customer clicks
-    // "Confirm Booking": the first click reveals it (so it never blocks the form on
-    // arrival); confirming only goes through once filing is complete. Payment is separate.
-    const isDom = (formData as any)?.isDomestic !== false;
-    const filingDone = isDom ? efnFiled : (sbVerified && efnFiled);
-    if (!filingDone) {
-      if (!showFiling) {
-        setShowFiling(true);
-        toast('One last step — complete the document filing at the top to confirm your shipment.', { icon: '📄' });
-      } else {
-        toast.error(isDom
-          ? 'Please file the e-Forwarding Note (enter the DSN PIN) above before confirming.'
-          : 'Please verify the Shipping Bill and file the e-Forwarding Note above before confirming.');
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
+    // The booking is created here WITHOUT document filing — that's how freight booking
+    // works: documentation and payment are completed afterwards (from My Shipments), and
+    // the shipment is marked Confirmed only once BOTH are done.
     // Remember sender + receiver so the next booking is pre-filled.
     saveParty('sender', collectSender());
     saveParty('receiver', collectReceiver());
@@ -500,79 +471,6 @@ const RailBookingConfirmationPage: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4">
 
         <div className="flex-grow space-y-3">
-
-          {/* Document filing — verify Shipping Bill (intl) then file e-Forwarding Note (DSN PIN).
-              Domestic: e-Forwarding Note only. Hidden on arrival; revealed only when the customer
-              clicks "Confirm Booking", as the final gate before the shipment is confirmed. */}
-          {showFiling && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
-                <FaFileSignature className="text-blue-500" /> Document filing
-              </p>
-              <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                {isDomestic ? 'Domestic' : 'International'}
-              </span>
-            </div>
-
-            {/* Step 1 — Shipping Bill (international only) */}
-            {!isDomestic && (
-              <div className="mb-3">
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Shipping Bill No.</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text" inputMode="numeric" maxLength={7}
-                    value={filingNumber}
-                    disabled={sbVerified}
-                    onChange={e => setFilingNumber(e.target.value.replace(/\D/g, '').slice(0, 7))}
-                    placeholder="Enter 7-digit Shipping Bill number"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-500"
-                  />
-                  {sbVerified ? (
-                    <span className="px-3 py-2 rounded-xl bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap"><FaCheckCircle /> Verified</span>
-                  ) : (
-                    <button type="button" onClick={verifyShippingBill} disabled={filingNumber.length !== 7 || sbVerifying}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition disabled:opacity-50 whitespace-nowrap">
-                      {sbVerifying ? 'Verifying…' : 'Verify'}
-                    </button>
-                  )}
-                </div>
-                <p className={`text-[11px] mt-1 ${sbVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                  {sbVerifying ? 'Verifying with CONCOR / CTO…' : sbVerified ? 'Successfully verified with CONCOR / CTO.' : 'Enter your 7-digit Shipping Bill number to verify with CONCOR / CTO.'}
-                </p>
-              </div>
-            )}
-
-            {/* Step 2 — e-Forwarding Note (DSN PIN). Domestic: only step.
-                International: unlocks after the Shipping Bill is verified. */}
-            {(isDomestic || sbVerified) && (
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">e-Forwarding Note — DSN PIN</label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={dsnPin}
-                    disabled={efnFiled}
-                    onChange={e => setDsnPin(e.target.value)}
-                    placeholder="Enter DSN PIN (Digitally Signed Number)"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:bg-gray-50 disabled:text-gray-500"
-                  />
-                  {efnFiled ? (
-                    <span className="px-3 py-2 rounded-xl bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap"><FaCheckCircle /> Filed</span>
-                  ) : (
-                    <button type="button" onClick={fileEForwardingNote} disabled={!dsnPin.trim()}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition disabled:opacity-50 whitespace-nowrap">
-                      File
-                    </button>
-                  )}
-                </div>
-                <p className={`text-[11px] mt-1 ${efnFiled ? 'text-green-600' : 'text-gray-400'}`}>
-                  {efnFiled ? 'e-Forwarding Note filed.' : 'Enter the DSN PIN to file the e-Forwarding Note.'}
-                </p>
-              </div>
-            )}
-          </div>
-          )}
 
           {/* Header + stepper — single compact card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
