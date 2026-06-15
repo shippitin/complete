@@ -208,6 +208,7 @@ const BookingCard: React.FC<{
         invoiceValue: d.invoice_value, numPackages: d.num_packages, packageSize: d.package_size,
         specialInstructions: d.special_instructions,
       },
+      ewb: d.ewb_number,
     };
     navigate('/rail-booking-confirmation', {
       state: {
