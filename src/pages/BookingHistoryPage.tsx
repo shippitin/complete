@@ -318,7 +318,7 @@ const BookingCard: React.FC<{
         {/* Footer: status-driven actions, right-aligned. A Pending booking turns Confirmed only
             once BOTH documentation and payment are done.
             • Pending   → Complete booking (if details missing) · Complete documentation (if unfiled) · Complete payment (if unpaid)
-            • Confirmed → Complete payment (if still unpaid) · Shipment status · View shipment
+            • Confirmed → Complete payment (if still unpaid) · Track · Shipment status · View shipment
             • In Transit→ Track + View shipment + Shipment status
             • Delivered / Cancelled → View shipment */}
         <div className="flex items-center justify-end gap-2 flex-wrap pt-4 border-t border-gray-50">
@@ -350,7 +350,8 @@ const BookingCard: React.FC<{
             </span>
           )}
 
-          {stKey === 'in_transit' && (
+          {/* Track available once the shipment is Confirmed (and while In Transit). */}
+          {(stKey === 'confirmed' || stKey === 'in_transit') && (
             <button onClick={() => navigate(`/track?id=${booking.booking_number}`)} className={BTN_BLUE}>
               <FaSearchLocation className="text-xs" /> Track
             </button>
