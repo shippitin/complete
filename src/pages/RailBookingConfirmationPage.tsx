@@ -5,7 +5,7 @@ import {
   FaArrowLeft, FaArrowRight, FaCheckCircle,
   FaTrain, FaCube, FaBoxOpen, FaCreditCard, FaUser,
   FaMapMarkerAlt, FaBox, FaChevronDown, FaChevronUp, FaTag, FaTruck,
-  FaFileUpload, FaFileAlt, FaTimes,
+  FaFileUpload, FaFileAlt, FaTimes, FaFileSignature,
 } from 'react-icons/fa';
 import type { AllFormData, FreightTrainResult, TrainContainerFormData } from '../types/QuoteFormHandle';
 
@@ -71,6 +71,7 @@ const RailBookingConfirmationPage: React.FC = () => {
   // When opened from My Bookings to complete an existing booking, this carries the
   // booking's id/number so we update THAT booking instead of creating a new one.
   const [existingBooking, setExistingBooking]         = useState<{ id?: string; booking_number?: string } | null>(null);
+  const [filingNumber, setFilingNumber]               = useState('');      // 7-digit Shipping Bill / e-Forwarding Note no.
 
   // Sender
   const [senderName,    setSenderName]    = useState('');
@@ -190,6 +191,7 @@ const RailBookingConfirmationPage: React.FC = () => {
         if (c.packageSize) setPackageSize(c.packageSize);
         if (c.specialInstructions) setSpecialInstructions(c.specialInstructions);
       }
+      if (pf?.filing) setFilingNumber(String(pf.filing));
       if (state.initialStep) setCurrentStep(state.initialStep);
       setLoading(false);
     } else {
@@ -294,7 +296,7 @@ const RailBookingConfirmationPage: React.FC = () => {
           num_packages: numPackages, package_size: packageSize, special_instructions: specialInstructions,
           route_type: fdAny?.serviceType, container_type: fdAny?.containerType, number_of_containers: fdAny?.numberOfContainers,
           is_domestic: fdAny?.isDomestic !== false, operator: selectedTrainResult?.operator, transit_time: selectedTrainResult?.transitDuration,
-          insurance_required: insuranceRequired, charges_breakdown: bd,
+          insurance_required: insuranceRequired, charges_breakdown: bd, filing_number: filingNumber || undefined,
         };
         localStorage.setItem('bookingDetailOverrides', JSON.stringify(dov));
         const sov = JSON.parse(localStorage.getItem('bookingStatusOverrides') || '{}');
@@ -329,6 +331,7 @@ const RailBookingConfirmationPage: React.FC = () => {
       promoCode:       promoCode || undefined,
       promoDiscount:   bd?.discount || 0,
       charges:         bd,   // full charge breakdown (base, THC, mile, insurance, discount, GST, grand)
+      filingNumber:    filingNumber || undefined,
     };
     sessionStorage.setItem('lastBookingDetails', JSON.stringify(finalBooking));
     navigate('/booking-confirmation', { state: { bookingDetails: finalBooking } });
@@ -368,6 +371,30 @@ const RailBookingConfirmationPage: React.FC = () => {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-4">
 
         <div className="flex-grow space-y-3">
+
+          {/* File the rail / customs document. International: Shipping Bill / e-FNote.
+              Domestic: e-Forwarding Note only. User enters their existing 7-digit no. */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold text-gray-800 flex items-center gap-1.5">
+                <FaFileSignature className="text-blue-500" />
+                File {isDomestic ? 'E-Forwarding Note' : 'Shipping Bill / E-Forwarding Note'}
+              </p>
+              <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                {isDomestic ? 'Domestic' : 'International'}
+              </span>
+            </div>
+            <input
+              type="text" inputMode="numeric" maxLength={7}
+              value={filingNumber}
+              onChange={e => setFilingNumber(e.target.value.replace(/\D/g, '').slice(0, 7))}
+              placeholder="Enter 7-digit number"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">
+              Enter the 7-digit {isDomestic ? 'E-Forwarding Note' : 'Shipping Bill / E-Forwarding Note'} number.
+            </p>
+          </div>
 
           {/* Header + stepper — single compact card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-3">
