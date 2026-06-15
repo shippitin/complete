@@ -41,9 +41,12 @@ const formatServiceType = (st: string) => {
   return m[st] || st;
 };
 
-const inp = (err?: boolean) =>
+// err  → failed validation (stronger red). empty → required but not yet filled
+// (soft red, so the customer can see at a glance what's still missing). Once a
+// field is filled the soft red clears to the normal white box.
+const inp = (err?: boolean, empty?: boolean) =>
   `w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition ${
-    err ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white'
+    err ? 'border-red-400 bg-red-50' : empty ? 'border-red-200 bg-red-50/60' : 'border-gray-200 bg-white'
   }`;
 
 // Remember the last sender / receiver (per logged-in user) so the customer doesn't
@@ -643,38 +646,38 @@ const RailBookingConfirmationPage: React.FC = () => {
                     {step.id === 1 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Full Name / Company <span className="text-red-400">*</span></label>
-                          <input type="text" value={senderName} onChange={e=>setSenderName(e.target.value)} placeholder="e.g., Raj Textiles Pvt Ltd" className={inp(!!errors.senderName)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Full Name / Company <span className="text-sky-400">*</span></label>
+                          <input type="text" value={senderName} onChange={e=>setSenderName(e.target.value)} placeholder="e.g., Raj Textiles Pvt Ltd" className={inp(!!errors.senderName, !senderName)} />
                           {errors.senderName && <p className="text-xs text-red-500 mt-1">{errors.senderName}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Mobile Number <span className="text-red-400">*</span></label>
-                          <input type="tel" value={senderPhone} onChange={e=>setSenderPhone(e.target.value)} placeholder="e.g., 9876543210" className={inp(!!errors.senderPhone)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Mobile Number <span className="text-sky-400">*</span></label>
+                          <input type="tel" value={senderPhone} onChange={e=>setSenderPhone(e.target.value)} placeholder="e.g., 9876543210" className={inp(!!errors.senderPhone, !senderPhone)} />
                           {errors.senderPhone && <p className="text-xs text-red-500 mt-1">{errors.senderPhone}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email ID <span className="text-red-400">*</span></label>
-                          <input type="email" value={senderEmail} onChange={e=>setSenderEmail(e.target.value)} placeholder="e.g., sender@company.com" className={inp(!!errors.senderEmail)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email ID <span className="text-sky-400">*</span></label>
+                          <input type="email" value={senderEmail} onChange={e=>setSenderEmail(e.target.value)} placeholder="e.g., sender@company.com" className={inp(!!errors.senderEmail, !senderEmail)} />
                           {errors.senderEmail && <p className="text-xs text-red-500 mt-1">{errors.senderEmail}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">GSTIN {claimGstInput ? <span className="text-red-400">*</span> : '(optional)'}</label>
-                          <input type="text" value={senderGstin} onChange={e=>setSenderGstin(e.target.value.toUpperCase())} placeholder="e.g., 33AAAAA0000A1Z5" className={inp(!!errors.senderGstin)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">GSTIN {claimGstInput ? <span className="text-sky-400">*</span> : '(optional)'}</label>
+                          <input type="text" value={senderGstin} onChange={e=>setSenderGstin(e.target.value.toUpperCase())} placeholder="e.g., 33AAAAA0000A1Z5" className={inp(!!errors.senderGstin, claimGstInput && !senderGstin)} />
                           {errors.senderGstin && <p className="text-xs text-red-500 mt-1">{errors.senderGstin}</p>}
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Address <span className="text-red-400">*</span></label>
-                          <input type="text" value={senderAddress} onChange={e=>setSenderAddress(e.target.value)} placeholder="Street address, locality" className={inp(!!errors.senderAddress)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Address <span className="text-sky-400">*</span></label>
+                          <input type="text" value={senderAddress} onChange={e=>setSenderAddress(e.target.value)} placeholder="Street address, locality" className={inp(!!errors.senderAddress, !senderAddress)} />
                           {errors.senderAddress && <p className="text-xs text-red-500 mt-1">{errors.senderAddress}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <LocationAutocomplete value={senderCity} onChange={setSenderCity} onSelect={loc => applyPlace(loc, setSenderCity, setSenderState, setSenderCountry, setSenderPincode)} locationType="city" global={!isDomestic} placeholder="e.g., Chennai" />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-sky-400">*</span></label>
+                          <LocationAutocomplete value={senderCity} onChange={setSenderCity} onSelect={loc => applyPlace(loc, setSenderCity, setSenderState, setSenderCountry, setSenderPincode)} locationType="city" global={!isDomestic} placeholder="e.g., Chennai" invalid={!senderCity} />
                           {errors.senderCity && <p className="text-xs text-red-500 mt-1">{errors.senderCity}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State <span className="text-red-400">*</span></label>
-                          <input type="text" value={senderState} onChange={e=>setSenderState(e.target.value)} placeholder="e.g., Tamil Nadu" className={inp(!!errors.senderState)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State <span className="text-sky-400">*</span></label>
+                          <input type="text" value={senderState} onChange={e=>setSenderState(e.target.value)} placeholder="e.g., Tamil Nadu" className={inp(!!errors.senderState, !senderState)} />
                           {errors.senderState && <p className="text-xs text-red-500 mt-1">{errors.senderState}</p>}
                         </div>
                         <div>
@@ -692,18 +695,18 @@ const RailBookingConfirmationPage: React.FC = () => {
                     {step.id === 2 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Full Name / Company <span className="text-red-400">*</span></label>
-                          <input type="text" value={receiverName} onChange={e=>setReceiverName(e.target.value)} placeholder="e.g., Delhi Exports Ltd" className={inp(!!errors.receiverName)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Full Name / Company <span className="text-sky-400">*</span></label>
+                          <input type="text" value={receiverName} onChange={e=>setReceiverName(e.target.value)} placeholder="e.g., Delhi Exports Ltd" className={inp(!!errors.receiverName, !receiverName)} />
                           {errors.receiverName && <p className="text-xs text-red-500 mt-1">{errors.receiverName}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Mobile Number <span className="text-red-400">*</span></label>
-                          <input type="tel" value={receiverPhone} onChange={e=>setReceiverPhone(e.target.value)} placeholder="e.g., 9876543210" className={inp(!!errors.receiverPhone)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Mobile Number <span className="text-sky-400">*</span></label>
+                          <input type="tel" value={receiverPhone} onChange={e=>setReceiverPhone(e.target.value)} placeholder="e.g., 9876543210" className={inp(!!errors.receiverPhone, !receiverPhone)} />
                           {errors.receiverPhone && <p className="text-xs text-red-500 mt-1">{errors.receiverPhone}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email ID <span className="text-red-400">*</span></label>
-                          <input type="email" value={receiverEmail} onChange={e=>setReceiverEmail(e.target.value)} placeholder="e.g., receiver@company.com" className={inp(!!errors.receiverEmail)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email ID <span className="text-sky-400">*</span></label>
+                          <input type="email" value={receiverEmail} onChange={e=>setReceiverEmail(e.target.value)} placeholder="e.g., receiver@company.com" className={inp(!!errors.receiverEmail, !receiverEmail)} />
                           {errors.receiverEmail && <p className="text-xs text-red-500 mt-1">{errors.receiverEmail}</p>}
                         </div>
                         <div>
@@ -711,18 +714,18 @@ const RailBookingConfirmationPage: React.FC = () => {
                           <input type="text" value={receiverGstin} onChange={e=>setReceiverGstin(e.target.value)} placeholder="e.g., 07BBBBB0000B1Z3" className={inp()} />
                         </div>
                         <div className="sm:col-span-2">
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Address <span className="text-red-400">*</span></label>
-                          <input type="text" value={receiverAddress} onChange={e=>setReceiverAddress(e.target.value)} placeholder="Street address, locality" className={inp(!!errors.receiverAddress)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Address <span className="text-sky-400">*</span></label>
+                          <input type="text" value={receiverAddress} onChange={e=>setReceiverAddress(e.target.value)} placeholder="Street address, locality" className={inp(!!errors.receiverAddress, !receiverAddress)} />
                           {errors.receiverAddress && <p className="text-xs text-red-500 mt-1">{errors.receiverAddress}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-red-400">*</span></label>
-                          <LocationAutocomplete value={receiverCity} onChange={setReceiverCity} onSelect={loc => applyPlace(loc, setReceiverCity, setReceiverState, setReceiverCountry, setReceiverPincode)} locationType="city" global={!isDomestic} placeholder="e.g., Delhi" />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">City <span className="text-sky-400">*</span></label>
+                          <LocationAutocomplete value={receiverCity} onChange={setReceiverCity} onSelect={loc => applyPlace(loc, setReceiverCity, setReceiverState, setReceiverCountry, setReceiverPincode)} locationType="city" global={!isDomestic} placeholder="e.g., Delhi" invalid={!receiverCity} />
                           {errors.receiverCity && <p className="text-xs text-red-500 mt-1">{errors.receiverCity}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State <span className="text-red-400">*</span></label>
-                          <input type="text" value={receiverState} onChange={e=>setReceiverState(e.target.value)} placeholder="e.g., Delhi" className={inp(!!errors.receiverState)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">State <span className="text-sky-400">*</span></label>
+                          <input type="text" value={receiverState} onChange={e=>setReceiverState(e.target.value)} placeholder="e.g., Delhi" className={inp(!!errors.receiverState, !receiverState)} />
                           {errors.receiverState && <p className="text-xs text-red-500 mt-1">{errors.receiverState}</p>}
                         </div>
                         <div>
@@ -740,8 +743,8 @@ const RailBookingConfirmationPage: React.FC = () => {
                     {step.id === 3 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                         <div className="sm:col-span-2">
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description of Goods <span className="text-red-400">*</span></label>
-                          <input type="text" value={goodsDescription} onChange={e=>setGoodsDescription(e.target.value)} placeholder="e.g., Cotton fabric rolls, automotive spare parts" className={inp(!!errors.goodsDescription)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Description of Goods <span className="text-sky-400">*</span></label>
+                          <input type="text" value={goodsDescription} onChange={e=>setGoodsDescription(e.target.value)} placeholder="e.g., Cotton fabric rolls, automotive spare parts" className={inp(!!errors.goodsDescription, !goodsDescription)} />
                           {errors.goodsDescription && <p className="text-xs text-red-500 mt-1">{errors.goodsDescription}</p>}
                         </div>
                         <div>
@@ -765,13 +768,13 @@ const RailBookingConfirmationPage: React.FC = () => {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Gross Weight / Container (MT) <span className="text-red-400">*</span></label>
-                          <input type="number" value={weightPerContainer} onChange={e=>setWeightPerContainer(e.target.value)} placeholder="e.g., 22" className={inp(!!errors.weightPerContainer)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Gross Weight / Container (MT) <span className="text-sky-400">*</span></label>
+                          <input type="number" value={weightPerContainer} onChange={e=>setWeightPerContainer(e.target.value)} placeholder="e.g., 22" className={inp(!!errors.weightPerContainer, !weightPerContainer)} />
                           {errors.weightPerContainer && <p className="text-xs text-red-500 mt-1">{errors.weightPerContainer}</p>}
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Invoice Number <span className="text-red-400">*</span></label>
-                          <input type="text" value={invoiceNumber} onChange={e=>setInvoiceNumber(e.target.value)} placeholder="e.g., INV-2026-001" className={inp(!!errors.invoiceNumber)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Invoice Number <span className="text-sky-400">*</span></label>
+                          <input type="text" value={invoiceNumber} onChange={e=>setInvoiceNumber(e.target.value)} placeholder="e.g., INV-2026-001" className={inp(!!errors.invoiceNumber, !invoiceNumber)} />
                           {errors.invoiceNumber && <p className="text-xs text-red-500 mt-1">{errors.invoiceNumber}</p>}
                         </div>
                         <div>
@@ -779,8 +782,8 @@ const RailBookingConfirmationPage: React.FC = () => {
                           <input type="date" value={invoiceDate} onChange={e=>setInvoiceDate(e.target.value)} className={inp()} />
                         </div>
                         <div>
-                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Invoice Value (₹) <span className="text-red-400">*</span></label>
-                          <input type="number" value={invoiceValue} onChange={e=>setInvoiceValue(e.target.value)} placeholder="e.g., 500000" className={inp(!!errors.invoiceValue)} />
+                          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Invoice Value (₹) <span className="text-sky-400">*</span></label>
+                          <input type="number" value={invoiceValue} onChange={e=>setInvoiceValue(e.target.value)} placeholder="e.g., 500000" className={inp(!!errors.invoiceValue, !invoiceValue)} />
                           {errors.invoiceValue && <p className="text-xs text-red-500 mt-1">{errors.invoiceValue}</p>}
                         </div>
                         {isHazardous && <>
@@ -963,7 +966,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                   <div className="px-6 pb-4">
                     <div className="flex flex-wrap gap-2">
                       {previewFields[step.id].map((f, i) => (
-                        <span key={i} className={`text-xs px-2.5 py-1 rounded-full border ${f.endsWith('*') ? 'bg-red-50 text-red-400 border-red-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>{f}</span>
+                        <span key={i} className={`text-xs px-2.5 py-1 rounded-full border ${f.endsWith('*') ? 'bg-sky-50 text-sky-500 border-sky-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>{f}</span>
                       ))}
                     </div>
                   </div>

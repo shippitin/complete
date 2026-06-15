@@ -30,6 +30,7 @@ interface LocationAutocompleteProps {
   id?: string;
   global?: boolean;
   onSelect?: (loc: Location) => void;
+  invalid?: boolean;   // required-but-empty → soft red box (matches the booking form)
 }
 
 // Distinct symbol per place type so a port reads as a port, a terminal as a
@@ -77,6 +78,7 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
   id,
   global = false,
   onSelect,
+  invalid = false,
 }) => {
   const [inputValue, setInputValue]   = useState(value);
   const [suggestions, setSuggestions] = useState<Location[]>([]);
@@ -260,7 +262,9 @@ const LocationAutocomplete: React.FC<LocationAutocompleteProps> = ({
           placeholder={placeholder}
           required={required}
           autoComplete="off"
-          className="w-full pl-9 pr-8 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition bg-white"
+          className={`w-full pl-9 pr-8 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition ${
+            invalid ? 'border-red-200 bg-red-50/60' : 'border-gray-300 bg-white'
+          }`}
         />
         {inputValue && (
           <button
