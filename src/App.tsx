@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocat
 import { signInWithCustomToken } from 'firebase/auth';
 import { auth } from './firebase/firebaseConfig';
 import Header from './components/Header';
+import RouteSeo from './components/RouteSeo';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomeLandingPage from './pages/HomeLandingPage';
@@ -205,6 +206,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="App flex flex-col min-h-screen">
+      <RouteSeo />
       <Header />
       <main className="flex-grow w-full">
         <Routes>

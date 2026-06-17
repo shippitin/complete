@@ -1,0 +1,22 @@
+# Shippitin — https://www.shippitin.co
+User-agent: *
+Allow: /
+
+# Private / transactional routes (require login or are part of a booking session)
+Disallow: /login
+Disallow: /signup
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /my-dashboard
+Disallow: /my-bookings
+Disallow: /payment
+Disallow: /payment-success
+Disallow: /booking-confirmation
+Disallow: /rail-booking-confirmation
+Disallow: /train-recommended-services
+Disallow: /train-results
+Disallow: /train-service-details
+Disallow: /sea-recommended-services
+Disallow: /sea-results
+
+Sitemap: https://www.shippitin.co/sitemap.xml
