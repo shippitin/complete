@@ -12,8 +12,8 @@ import { useSeo } from '../hooks/useSeo';
 interface Meta { title: string; description: string; }
 
 const DEFAULT: Meta = {
-  title: 'Shippitin — Rail Freight Booking & Logistics',
-  description: 'Book rail container freight across India and worldwide with Shippitin — instant CONCOR quotes, door-to-door service, documentation, and live shipment tracking.',
+  title: 'Shippitin — Rail Freight Booking & Multimodal Logistics',
+  description: 'Book CONCOR rail container freight across India and worldwide with Shippitin — plus sea, air, road, door-to-door, customs and cargo insurance. Instant quotes, documentation and live shipment tracking.',
 };
 
 const META: Record<string, Meta> = {
