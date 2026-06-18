@@ -872,11 +872,11 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
 
       {activeTab === 'container' && (
         <div>
-          <div className="flex gap-1 mb-4 p-1 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="flex gap-2 mb-4">
             {([['domestic','Domestic'],['international','International']] as const).map(([mode,label]) => (
               <button key={mode} type="button" onClick={() => { setContainerMode(mode); resetDomLoc(); resetIntlLoc(); setErrors({}); }}
-                className={`px-8 py-2 rounded-lg text-sm font-medium transition-all ${
-                  containerMode === mode ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-white'
+                className={`px-6 py-2 rounded-lg text-sm font-medium border transition-all focus:outline-none ${
+                  containerMode === mode ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50'
                 }`}>
                 {label}
               </button>
