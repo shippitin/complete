@@ -855,7 +855,6 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
 
   return (
     <div className={embedded ? '' : 'p-4 bg-white shadow-md rounded-xl border border-gray-200'}>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Rail Freight</h2>
       <div className="flex justify-center gap-2 mb-4 p-1 bg-gray-50 rounded-xl border border-gray-200 w-fit mx-auto">
         {([['container','Container Train'],['parcel','Parcel Train'],['goods','Goods Train']] as const).map(([tab,label]) => (
           <button key={tab} type="button"
