@@ -131,15 +131,13 @@ const HeroSection: React.FC = () => {
 
   return (
     <section
-      className="w-full py-6"
+      className="w-full py-6 px-4"
       style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%)' }}
     >
-      {/* Same container as the header so the box aligns to the logo */}
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Box left edge anchored under the 2nd "P" of the SHIPPITIN logo
-            (~88px in from the logo's left). Compact width (5xl) keeps the
-            right/left margins balanced. Full width on mobile. */}
-        <div className="max-w-5xl lg:ml-[88px]">
+      {/* Centered (even left/right gaps at any width). Width is tuned to ~1072px
+          so the centered left edge lands under the logo's 2nd "P" — this stays
+          true at any screen width because the box and logo center together. */}
+      <div className="max-w-[1072px] mx-auto">
 
         {/* White tab strip */}
         <div
@@ -178,7 +176,6 @@ const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        </div>
       </div>
     </section>
   );
