@@ -270,7 +270,7 @@ const TrainResultsPage: React.FC = () => {
       <div className="sticky top-16 z-30 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-5 text-sm">
-            <button onClick={() => navigate('/train-recommended-services', { state: { formData } })}
+            <button onClick={() => navigate(-1)}
               className="flex items-center gap-1.5 text-gray-400 hover:text-blue-600 transition font-medium">
               <FaArrowLeft className="text-xs" /> Back
             </button>

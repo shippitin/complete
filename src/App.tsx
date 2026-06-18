@@ -47,7 +47,6 @@ import DoorToDoorResultsPage from './pages/DoorToDoorResultsPage';
 import SeaResultsPage from './pages/SeaResultsPage';
 import SeaRecommendedServicesPage from './pages/SeaRecommendedServicesPage';
 import SeaShipmentDetailPage from './pages/SeaShipmentDetailPage';
-import TrainRecommendedServicesPage from './pages/TrainRecommendedServicesPage';
 import AirResultsPage from './pages/AirResultsPage';
 import TruckResultsPage from './pages/TruckResultsPage';
 import LCLResultsPage from './pages/LCLResultsPage';
@@ -257,7 +256,6 @@ const AppContent: React.FC = () => {
 
           {/* Rail Flow — Protected */}
           <Route path="/train-booking" element={<ProtectedRoute><Navigate to="/" replace /></ProtectedRoute>} />
-          <Route path="/train-recommended-services" element={<ProtectedRoute><TrainRecommendedServicesPage /></ProtectedRoute>} />
           <Route path="/train-results" element={<ProtectedRoute><TrainResultsPage /></ProtectedRoute>} />
           <Route path="/train-service-details" element={<ProtectedRoute><RailServiceDetailsPage /></ProtectedRoute>} />
           <Route path="/rail-booking-confirmation" element={<ProtectedRoute><RailBookingConfirmationPage /></ProtectedRoute>} />

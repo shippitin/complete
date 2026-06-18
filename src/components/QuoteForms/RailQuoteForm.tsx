@@ -1,5 +1,6 @@
 // src/components/QuoteForms/RailQuoteForm.tsx
-// CHANGE: navigate to /train-recommended-services instead of /train-results
+// Submitting goes straight to /train-results (the Recommended Services step was
+// removed); add-on defaults are derived from the service type before navigating.
 import React, { useState, forwardRef, useImperativeHandle, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LocationAutocomplete from '../LocationAutocomplete';
@@ -455,9 +456,21 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     setErrors(e);
     if (Object.keys(e).length > 0) { setShowValMsg(true); return null; }
 
-    // ── KEY CHANGE: go to recommended services first ──
+    // The Recommended Services step was removed — its add-on defaults are derived
+    // here from the service type (door origin → first mile, door dest → last mile)
+    // and carried into pricing. Customs off, insurance on by default; all of these
+    // stay fully editable on the Booking page.
+    if (fd) {
+      const st2 = (fd as any).serviceType as string;
+      (fd as any).addFirstMile = ['doorToDoor', 'doorToTerminal', 'doorToPort'].includes(st2);
+      (fd as any).addLastMile  = ['doorToDoor', 'terminalToDoor', 'portToDoor'].includes(st2);
+      (fd as any).addCustoms   = false;
+      (fd as any).addInsurance = true;
+    }
+
+    // Go straight to results (no Recommended Services interstitial).
     if (showButtons && fd) {
-      navigate('/train-recommended-services', { state: { formData: fd } });
+      navigate('/train-results', { state: { formData: fd } });
     }
     return fd;
   };

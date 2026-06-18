@@ -84,8 +84,9 @@ const HeroSection: React.FC = () => {
           case 'Train Container Booking':
           case 'Train Goods Booking':
           case 'Train Parcel Booking':
-            // ← KEY CHANGE: goes to recommended services first
-            navigationPath = '/train-recommended-services';
+            // Recommended Services step removed — go straight to results.
+            // (RailQuoteForm has already set the add-on defaults on formData.)
+            navigationPath = '/train-results';
             if (formData.bookingType === 'Train Container Booking') {
               displayComponent = (formData as TrainContainerFormData).isDomestic
                 ? 'DomesticContainerResults' : 'InternationalContainerResults';
