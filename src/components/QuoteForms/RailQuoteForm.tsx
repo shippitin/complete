@@ -69,19 +69,10 @@ interface RailQuoteFormProps {
   embedded?: boolean;   // when true, drop the card chrome so it flows inside the hero card
 }
 
-const toggleBtn = (active: boolean) =>
-  `w-36 text-center px-4 py-2 rounded-lg text-sm font-medium outline-none transition-all border ${
-    active
-      ? 'bg-blue-100 text-blue-800 border-blue-200'
-      : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50'
-  }`;
-
-const radioBtn = (active: boolean) =>
-  `flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm font-medium transition-all border ${
-    active
-      ? 'bg-blue-50 text-blue-700 border-blue-300'
-      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-  }`;
+// Service-type / mode options render as plain radio rows — the original Shippitin
+// look (native radio dot + label), not bordered pills.
+const radioBtn = (_active: boolean) =>
+  'flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer';
 
 // True once RailQuoteForm has mounted in this document/session. Lets us tell a
 // manual page refresh (first mount of a freshly loaded document → start blank)
@@ -289,9 +280,11 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
     return intlDestICD;
   };
 
+  // Boxed field — full rounded border (matches LocationAutocomplete so every
+  // field in the form reads as one consistent boxed style, the original look).
   const inp = (err: boolean) =>
-    `block w-full px-3 py-2 text-sm border-0 border-b focus:ring-0 focus:border-blue-500 bg-transparent ${
-      err ? 'border-orange-400' : 'border-gray-300'
+    `block w-full px-3 py-2.5 text-sm bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition ${
+      err ? 'border-red-400 bg-red-50' : 'border-gray-300'
     }`;
 
   const resetAll = () => {
@@ -485,7 +478,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
                 <input type="radio" name="domST" value={opt.value}
                   checked={domServiceType === opt.value}
                   onChange={() => { setDomServiceType(opt.value); resetDomLoc(); setErrors(p => ({ ...p, serviceType: undefined as any })); }}
-                  className="h-3.5 w-3.5 text-blue-600" />
+                  className="h-4 w-4 text-blue-600" />
                 {opt.label}
               </label>
             ))}
@@ -608,11 +601,11 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Mode</p>
           <div className="flex flex-wrap gap-2">
             {([['export','Export'],['import','Import']] as const).map(([val, label]) => (
-              <label key={val} className={`${radioBtn(movement === val)} w-36`}>
+              <label key={val} className={radioBtn(movement === val)}>
                 <input type="radio" name="intlMovement" value={val}
                   checked={movement === val}
                   onChange={() => { setMovement(val); resetIntlLoc(); setErrors({}); }}
-                  className="h-3.5 w-3.5 text-blue-600" />
+                  className="h-4 w-4 text-blue-600" />
                 {label}
               </label>
             ))}
@@ -630,7 +623,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
                     resetIntlLoc();
                     setErrors(p => ({ ...p, intlOrigin: undefined as any, intlDest: undefined as any }));
                   }}
-                  className="h-3.5 w-3.5 text-blue-600" />
+                  className="h-4 w-4 text-blue-600" />
                 {opt.label}
               </label>
             ))}
@@ -715,7 +708,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           {DOMESTIC_SERVICE_TYPES.map(opt => (
             <label key={opt.value} className={radioBtn(goodsServiceType === opt.value)}>
               <input type="radio" name="gdST" value={opt.value} checked={goodsServiceType === opt.value}
-                onChange={() => { setGoodsServiceType(opt.value); resetGoodsLoc(); }} className="h-3.5 w-3.5 text-blue-600" />
+                onChange={() => { setGoodsServiceType(opt.value); resetGoodsLoc(); }} className="h-4 w-4 text-blue-600" />
               {opt.label}
             </label>
           ))}
@@ -794,7 +787,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           {DOMESTIC_SERVICE_TYPES.map(opt => (
             <label key={opt.value} className={radioBtn(parcelServiceType === opt.value)}>
               <input type="radio" name="pcST" value={opt.value} checked={parcelServiceType === opt.value}
-                onChange={() => { setParcelServiceType(opt.value); resetParcelLoc(); }} className="h-3.5 w-3.5 text-blue-600" />
+                onChange={() => { setParcelServiceType(opt.value); resetParcelLoc(); }} className="h-4 w-4 text-blue-600" />
               {opt.label}
             </label>
           ))}
@@ -862,6 +855,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
 
   return (
     <div className={embedded ? '' : 'p-4 bg-white shadow-md rounded-xl border border-gray-200'}>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Rail Freight</h2>
       <div className="flex justify-center gap-2 mb-4 p-1 bg-gray-50 rounded-xl border border-gray-200 w-fit mx-auto">
         {([['container','Container Train'],['parcel','Parcel Train'],['goods','Goods Train']] as const).map(([tab,label]) => (
           <button key={tab} type="button"
@@ -878,10 +872,12 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
 
       {activeTab === 'container' && (
         <div>
-          <div className="flex gap-3 mb-3">
+          <div className="flex gap-1 mb-4 p-1 bg-gray-50 rounded-xl border border-gray-200">
             {([['domestic','Domestic'],['international','International']] as const).map(([mode,label]) => (
               <button key={mode} type="button" onClick={() => { setContainerMode(mode); resetDomLoc(); resetIntlLoc(); setErrors({}); }}
-                className={toggleBtn(containerMode === mode)}>
+                className={`px-8 py-2 rounded-lg text-sm font-medium transition-all ${
+                  containerMode === mode ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:bg-white'
+                }`}>
                 {label}
               </button>
             ))}
