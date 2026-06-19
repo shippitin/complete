@@ -24,7 +24,7 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     case 'delivered': classes += ' bg-gray-100 text-gray-700'; break;
     case 'cancelled': classes += ' bg-red-50 text-red-500'; break;
     case 'delayed': classes += ' bg-red-100 text-red-700'; break;
-    case 'admin': classes += ' bg-blue-600 text-white'; break;
+    case 'admin': classes += ' bg-brand-gradient text-white'; break;
     default: classes += ' bg-gray-100 text-gray-600';
   }
   return <span className={classes}>{status}</span>;
@@ -198,7 +198,7 @@ const AdminPage: React.FC = () => {
             <button key={tab.id} onClick={() => handleTabChange(tab.id)}
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all
                 ${activeTab === tab.id
-                  ? tab.id === 'alerts' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
+                  ? tab.id === 'alerts' ? 'bg-red-600 text-white' : 'bg-brand-gradient text-white'
                   : 'text-gray-500 hover:bg-gray-50'
                 }`}>
               {tab.icon} {tab.label}
@@ -330,7 +330,7 @@ const AdminPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-3 mt-6">
-                    <button onClick={handleRateFormSubmit} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">{editingRate ? 'Update Rate Card' : 'Add Rate Card'}</button>
+                    <button onClick={handleRateFormSubmit} className="flex-1 bg-brand-gradient text-white py-3 rounded-xl font-bold hover:opacity-90 transition">{editingRate ? 'Update Rate Card' : 'Add Rate Card'}</button>
                     <button onClick={() => { setShowRateForm(false); setEditingRate(null); setRateForm(emptyRateCard); }} className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition">Cancel</button>
                   </div>
                 </div>
@@ -345,7 +345,7 @@ const AdminPage: React.FC = () => {
                     {SERVICE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                   <div className="relative"><FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs" /><input type="text" placeholder="Search origin, dest, carrier..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-8 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 w-56" /></div>
-                  <button onClick={() => { setShowRateForm(true); setEditingRate(null); setRateForm(emptyRateCard); }} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition"><FaPlus /> Add Rate</button>
+                  <button onClick={() => { setShowRateForm(true); setEditingRate(null); setRateForm(emptyRateCard); }} className="flex items-center gap-2 bg-brand-gradient text-white px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition"><FaPlus /> Add Rate</button>
                 </div>
               </div>
               {loading ? <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div></div> : (

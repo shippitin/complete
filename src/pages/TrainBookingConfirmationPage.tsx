@@ -79,7 +79,7 @@ const BookingConfirmationPage: React.FC = () => {
           <p className="text-gray-600 mb-6">It seems like you've navigated directly or refreshed the page. Please go back to the booking process to view your confirmation.</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300 flex items-center justify-center mx-auto"
+            className="bg-brand-gradient hover:opacity-90 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300 flex items-center justify-center mx-auto"
           >
             <FaHome className="inline-block mr-2" /> Go to Home
           </button>
@@ -209,7 +209,7 @@ const BookingConfirmationPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-center gap-6 mt-10"> {/* Increased gap and margin-top */}
             <button
               onClick={() => navigate('/')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center text-xl"
+              className="bg-brand-gradient hover:opacity-90 text-white font-bold py-4 px-10 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center text-xl"
             >
               <FaHome className="mr-3 text-2xl" /> Go to Home
             </button>

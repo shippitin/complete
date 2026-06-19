@@ -108,7 +108,7 @@ const CustomsBookingDetailsPage: React.FC = () => {
           <FaInfoCircle className="text-red-500 text-6xl mb-4 mx-auto" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Booking details missing.</h2>
           <p className="text-gray-600 mb-6">Please go back to search results and select a service.</p>
-          <button onClick={() => navigate('/customs-results')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300">
+          <button onClick={() => navigate('/customs-results')} className="bg-brand-gradient hover:opacity-90 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300">
             <FaArrowLeft className="inline-block mr-2" /> Back to Results
           </button>
         </div>
@@ -119,9 +119,9 @@ const CustomsBookingDetailsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full max-w-7xl bg-white rounded-2xl shadow-xl">
-        <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+        <div className="bg-brand-gradient text-white p-6 rounded-t-2xl flex items-center justify-between">
           <h1 className="text-3xl font-bold">Complete Your Customs Booking</h1>
-          <button onClick={() => navigate(-1)} className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-full text-sm font-semibold transition duration-200">
+          <button onClick={() => navigate(-1)} className="flex items-center px-4 py-2 bg-brand-gradient hover:opacity-90 rounded-full text-sm font-semibold transition duration-200">
             <FaArrowLeft className="mr-2" /> Back to Results
           </button>
         </div>

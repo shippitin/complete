@@ -64,7 +64,7 @@ const loadParty = (kind: 'sender' | 'receiver'): Record<string, string> | null =
 };
 
 const STEPS = [
-  { id: 1, label: 'Sender',   icon: FaUser,        color: 'text-blue-500',   bg: 'bg-blue-50',   border: 'border-blue-200',   activeBg: 'bg-blue-600'   },
+  { id: 1, label: 'Sender',   icon: FaUser,        color: 'text-blue-500',   bg: 'bg-blue-50',   border: 'border-blue-200',   activeBg: 'bg-brand-gradient'   },
   { id: 2, label: 'Receiver', icon: FaMapMarkerAlt, color: 'text-green-500',  bg: 'bg-green-50',  border: 'border-green-200',  activeBg: 'bg-green-600'  },
   { id: 3, label: 'Cargo',    icon: FaBox,          color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-200', activeBg: 'bg-orange-500' },
   { id: 4, label: 'Add-ons',  icon: FaTag,          color: 'text-teal-500',   bg: 'bg-teal-50',   border: 'border-teal-200',   activeBg: 'bg-teal-600'   },
@@ -480,7 +480,7 @@ const RailBookingConfirmationPage: React.FC = () => {
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
       <div className="text-center p-10 bg-white rounded-2xl shadow">
         <p className="text-red-600 mb-4">{error||'Details not found.'}</p>
-        <button onClick={()=>navigate(-1)} className="bg-blue-600 text-white px-6 py-2 rounded-lg">Go Back</button>
+        <button onClick={()=>navigate(-1)} className="bg-brand-gradient text-white px-6 py-2 rounded-lg">Go Back</button>
       </div>
     </div>
   );
@@ -530,7 +530,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                     <span className="px-3 py-2 rounded-xl bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap"><FaCheckCircle /> Verified</span>
                   ) : (
                     <button type="button" onClick={verifyShippingBill} disabled={filingNumber.length !== 7 || sbVerifying}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition disabled:opacity-50 whitespace-nowrap">
+                      className="px-4 py-2 rounded-xl bg-brand-gradient hover:opacity-90 text-white text-sm font-semibold transition disabled:opacity-50 whitespace-nowrap">
                       {sbVerifying ? 'Verifying…' : 'Verify'}
                     </button>
                   )}
@@ -559,7 +559,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                     <span className="px-3 py-2 rounded-xl bg-green-50 text-green-700 text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap"><FaCheckCircle /> Filed</span>
                   ) : (
                     <button type="button" onClick={fileEForwardingNote} disabled={!dsnPin.trim()}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition disabled:opacity-50 whitespace-nowrap">
+                      className="px-4 py-2 rounded-xl bg-brand-gradient hover:opacity-90 text-white text-sm font-semibold transition disabled:opacity-50 whitespace-nowrap">
                       File
                     </button>
                   )}
@@ -957,12 +957,12 @@ const RailBookingConfirmationPage: React.FC = () => {
                       </button>
                       {currentStep < 5 ? (
                         <button type="button" onClick={nextStep}
-                          className="flex items-center gap-2 px-7 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl transition text-sm">
+                          className="flex items-center gap-2 px-7 py-2.5 bg-brand-gradient hover:opacity-90 text-white font-bold rounded-xl transition text-sm">
                           Next <FaArrowRight className="text-xs" />
                         </button>
                       ) : (
                         <button type="button" onClick={handleConfirm}
-                          className="flex items-center gap-2 px-7 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl transition text-sm">
+                          className="flex items-center gap-2 px-7 py-2.5 bg-brand-gradient hover:opacity-90 text-white font-bold rounded-xl transition text-sm">
                           Confirm Booking <FaCheckCircle />
                         </button>
                       )}

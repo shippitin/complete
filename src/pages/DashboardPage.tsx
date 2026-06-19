@@ -100,7 +100,7 @@ const DashboardPage: React.FC = () => {
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
 
-        <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+        <div className="bg-brand-gradient text-white p-6 rounded-t-2xl flex items-center justify-between">
           <h1 className="text-3xl font-bold flex items-center">
             <FaTachometerAlt className="mr-3 text-4xl" /> My Dashboard
           </h1>
@@ -216,7 +216,7 @@ const DashboardPage: React.FC = () => {
               <div className="mt-6 text-center">
                 <button
                   onClick={() => navigate('/my-bookings')}
-                  className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:bg-blue-600 transition duration-300"
+                  className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-full shadow-md hover:opacity-90 transition duration-300"
                 >
                   View All Bookings
                 </button>

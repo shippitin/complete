@@ -138,7 +138,7 @@ const PaymentPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
           <p className="text-gray-600 mb-4">No booking details found.</p>
-          <button onClick={() => navigate('/')} className="bg-blue-600 text-white px-6 py-2 rounded-lg">
+          <button onClick={() => navigate('/')} className="bg-brand-gradient text-white px-6 py-2 rounded-lg">
             Go Home
           </button>
         </div>
@@ -151,7 +151,7 @@ const PaymentPage: React.FC = () => {
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg overflow-hidden">
 
         {/* Header */}
-        <div className="bg-blue-600 p-6 text-white text-center">
+        <div className="bg-brand-gradient p-6 text-white text-center">
           <h1 className="text-2xl font-bold">Complete Payment</h1>
           <p className="text-blue-100 text-sm mt-1">Secure payment powered by Razorpay</p>
         </div>
@@ -200,7 +200,7 @@ const PaymentPage: React.FC = () => {
           <button
             onClick={handlePayment}
             disabled={loading || !scriptLoaded}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-brand-gradient hover:opacity-90 text-white font-bold py-4 rounded-xl shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? (
               <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>

@@ -88,7 +88,7 @@ const MyDashboard: React.FC<DashboardProps> = ({ shipments, pendingPayments, doc
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 bg-gray-50">
 
       {/* Blue Header Section */}
-      <div className="bg-blue-600 text-white p-6 rounded-xl shadow-xl">
+      <div className="bg-brand-gradient text-white p-6 rounded-xl shadow-xl">
         <h2 className="text-3xl font-bold flex items-center space-x-3">
           <BarChart3 className="w-7 h-7" />
           <span>My Dashboard</span>

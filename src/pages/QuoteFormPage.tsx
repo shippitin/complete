@@ -100,7 +100,7 @@ const QuoteFormPage: React.FC<QuoteFormPageProps> = ({ activeService, prefillDat
           {renderForm()}
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
-            <button onClick={handleSubmit} className="px-10 py-4 bg-blue-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center">
+            <button onClick={handleSubmit} className="px-10 py-4 bg-brand-gradient text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl hover:opacity-90 transition-all active:scale-95 flex items-center justify-center">
               <FaSearch className="mr-2" /> Search Quotes
             </button>
             <button onClick={handleReset} className="px-10 py-4 bg-slate-100 text-slate-500 font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-slate-200 transition-all">

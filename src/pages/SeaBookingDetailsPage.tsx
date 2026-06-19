@@ -31,7 +31,7 @@ const inp = (err?: boolean) =>
 const fmt = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 
 const STEPS = [
-  { id: 1, label: 'Shipper',   icon: FaUser,        color: 'text-blue-500',   activeBg: 'bg-blue-600'   },
+  { id: 1, label: 'Shipper',   icon: FaUser,        color: 'text-blue-500',   activeBg: 'bg-brand-gradient'   },
   { id: 2, label: 'Consignee', icon: FaMapMarkerAlt, color: 'text-green-500',  activeBg: 'bg-green-600'  },
   { id: 3, label: 'Cargo',     icon: FaBox,          color: 'text-orange-500', activeBg: 'bg-orange-500' },
   { id: 4, label: 'Payment',   icon: FaCreditCard,   color: 'text-purple-500', activeBg: 'bg-purple-600' },
@@ -172,7 +172,7 @@ const SeaBookingDetailsPage: React.FC = () => {
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="text-center p-10 bg-white rounded-2xl shadow">
           <p className="text-red-600 mb-4">Booking details missing. Please go back to search results.</p>
-          <button onClick={() => navigate('/sea-results')} className="bg-blue-600 text-white px-6 py-2 rounded-lg">Go Back</button>
+          <button onClick={() => navigate('/sea-results')} className="bg-brand-gradient text-white px-6 py-2 rounded-lg">Go Back</button>
         </div>
       </div>
     );
@@ -429,12 +429,12 @@ const SeaBookingDetailsPage: React.FC = () => {
                       </button>
                       {currentStep < 4 ? (
                         <button type="button" onClick={nextStep}
-                          className="flex items-center gap-2 px-7 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl transition text-sm">
+                          className="flex items-center gap-2 px-7 py-2.5 bg-brand-gradient hover:opacity-90 text-white font-bold rounded-xl transition text-sm">
                           Next →
                         </button>
                       ) : (
                         <button type="button" onClick={handleSubmit} disabled={loading}
-                          className="flex items-center gap-2 px-7 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl transition text-sm disabled:opacity-50">
+                          className="flex items-center gap-2 px-7 py-2.5 bg-brand-gradient hover:opacity-90 text-white font-bold rounded-xl transition text-sm disabled:opacity-50">
                           {loading ? <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"/> : <FaCheckCircle />}
                           {loading ? 'Saving...' : 'Confirm Booking'}
                         </button>

@@ -71,7 +71,7 @@ const TruckBookingConfirmationModal: React.FC<Props> = ({ isOpen, onClose, data 
           <div>Additional Info:</div><div>{data.additionalInfo || 'N/A'}</div>
         </div>
         <div className="flex justify-end space-x-3">
-          <button onClick={handleDownloadPDF} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+          <button onClick={handleDownloadPDF} className="bg-brand-gradient text-white px-4 py-2 rounded hover:opacity-90">
             Download PDF
           </button>
           <button onClick={handleSave} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">

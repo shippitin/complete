@@ -43,7 +43,7 @@ const PaymentSuccessPage: React.FC = () => {
           <div className="space-y-3">
             <button
               onClick={() => navigate('/my-bookings')}
-              className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition"
+              className="w-full bg-brand-gradient text-white font-bold py-3 rounded-xl hover:opacity-90 transition"
             >
               View My Shipments
             </button>

@@ -94,7 +94,7 @@ const RailServiceDetailsPage: React.FC = () => {
       <div className="max-w-md mx-auto p-10 bg-white rounded-2xl shadow-xl text-center">
         <p className="text-red-600 font-semibold mb-4">{error}</p>
         <button onClick={() => navigate('/train-results')}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+          className="bg-brand-gradient text-white px-6 py-2 rounded-lg hover:opacity-90 transition">
           <FaArrowLeft className="inline mr-2" /> Back to Results
         </button>
       </div>
@@ -360,7 +360,7 @@ const RailServiceDetailsPage: React.FC = () => {
             disabled={!termsConfirmed || (!isDomestic && !effectiveShippingLine)}
             className={`w-full py-3.5 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
               termsConfirmed && (isDomestic || effectiveShippingLine)
-                ? 'bg-blue-700 hover:bg-blue-800 text-white cursor-pointer'
+                ? 'bg-brand-gradient hover:opacity-90 text-white cursor-pointer'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >

@@ -159,7 +159,7 @@ const ServicesPage: React.FC = () => {
         {/* 5. FINAL CTA (Corrected Text) */}
         <div className="text-center py-16 px-6 bg-slate-50 rounded-[3rem] border border-slate-100">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">Ready to Ship?</h2>
-            <Link to="/support" className="inline-block bg-blue-500 text-white px-12 py-4 rounded-full font-bold shadow-lg shadow-blue-100 hover:bg-blue-600 transition-all transform hover:-translate-y-1">
+            <Link to="/support" className="inline-block bg-blue-500 text-white px-12 py-4 rounded-full font-bold shadow-lg shadow-blue-100 hover:opacity-90 transition-all transform hover:-translate-y-1">
                 Get a Quote
             </Link>
         </div>

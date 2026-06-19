@@ -308,7 +308,7 @@ const BookingConfirmationPage: React.FC = () => {
               <p className="text-xs text-slate-500">Pay now to confirm your booking — it stays pending until paid.</p>
             </div>
             <button onClick={handlePayNow}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-black px-6 py-3 rounded-xl shadow-lg shadow-blue-200 transition text-base flex items-center gap-2 whitespace-nowrap">
+              className="bg-brand-gradient hover:opacity-90 text-white font-black px-6 py-3 rounded-xl shadow-lg shadow-blue-200 transition text-base flex items-center gap-2 whitespace-nowrap">
               <FaCreditCard /> Pay {fmt(finalAmount)} Now
             </button>
           </div>
@@ -359,7 +359,7 @@ const BookingConfirmationPage: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button onClick={handleDownload}
               className="flex items-center gap-3 p-3 border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-2xl transition">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-brand-gradient rounded-xl flex items-center justify-center flex-shrink-0">
                 <FaDownload className="text-white text-sm" />
               </div>
               <div className="text-left">
@@ -407,7 +407,7 @@ const BookingConfirmationPage: React.FC = () => {
             <FaHome /> Back to Home
           </button>
           <button onClick={() => navigate('/my-bookings')}
-            className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold shadow-xl transition flex items-center justify-center gap-2 text-sm">
+            className="flex-1 py-3 bg-brand-gradient hover:bg-blue-500 text-white rounded-xl font-bold shadow-xl transition flex items-center justify-center gap-2 text-sm">
             <FaHistory /> My Shipments
           </button>
         </div>

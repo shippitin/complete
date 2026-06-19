@@ -53,8 +53,8 @@ const SupportPage: React.FC = () => {
             <p className="text-sm text-gray-600 mb-4">Speak with a support agent directly for immediate assistance.</p>
             <a
               href="tel:+919876543210"
-              className="inline-block bg-blue-600 text-white font-semibold py-2 px-6 rounded-full
-                         shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+              className="inline-block bg-brand-gradient text-white font-semibold py-2 px-6 rounded-full
+                         shadow-md hover:opacity-90 transition duration-300 transform hover:scale-105"
             >
               +91 98765 43210
             </a>
@@ -136,8 +136,8 @@ const SupportPage: React.FC = () => {
             <div className="md:col-span-2 text-center">
               <button
                 type="submit"
-                className="inline-block bg-blue-600 text-white font-semibold py-3 px-8 rounded-full
-                           shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+                className="inline-block bg-brand-gradient text-white font-semibold py-3 px-8 rounded-full
+                           shadow-lg hover:opacity-90 transition duration-300 transform hover:scale-105"
               >
                 Send Message
               </button>

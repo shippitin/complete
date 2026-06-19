@@ -332,7 +332,7 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
 
       {showButtons && (
         <div className="flex justify-center space-x-4 mt-6">
-          <button type="button" onClick={handleSubmitLogic} className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition">Search Quotes</button>
+          <button type="button" onClick={handleSubmitLogic} className="px-8 py-3 bg-brand-gradient text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">Search Quotes</button>
           <button type="button" onClick={resetAll} className="px-8 py-3 bg-gray-200 text-gray-800 font-bold rounded-xl hover:bg-gray-300 transition">Reset</button>
         </div>
       )}
@@ -341,7 +341,7 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
             <p className="text-gray-700 mb-4">{validationMessage}</p>
-            <button onClick={() => setShowValidationMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
+            <button onClick={() => setShowValidationMessage(false)} className="bg-brand-gradient text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
           </div>
         </div>
       )}
@@ -351,7 +351,7 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full text-center">
             <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
             <p className="text-gray-700 mb-4">{successMessage}</p>
-            <button onClick={() => setShowSuccessMessage(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>
+            <button onClick={() => setShowSuccessMessage(false)} className="bg-brand-gradient text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>
           </div>
         </div>
       )}

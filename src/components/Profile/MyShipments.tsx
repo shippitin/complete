@@ -59,7 +59,7 @@ const MyShipments: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-800">My Shipments</h1>
         <button
           onClick={() => navigate('/train-booking')}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-semibold hover:bg-blue-700 transition"
+          className="bg-brand-gradient text-white px-4 py-2 rounded-md text-sm font-semibold hover:opacity-90 transition"
         >
           + New Booking
         </button>
@@ -70,7 +70,7 @@ const MyShipments: React.FC = () => {
           <p className="text-gray-500 text-lg mb-4">No shipments found yet.</p>
           <button
             onClick={() => navigate('/train-booking')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700 transition"
+            className="bg-brand-gradient text-white px-6 py-2 rounded-md font-semibold hover:opacity-90 transition"
           >
             Book Your First Shipment
           </button>

@@ -239,7 +239,7 @@ const ParcelQuoteForm = forwardRef<QuoteFormHandle, ParcelQuoteFormProps>(({ pre
       {showButtons && (
         <div className="flex justify-center mt-4">
           <button type="button" onClick={handleSubmitLogic}
-            className="px-10 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition">
+            className="px-10 py-3 bg-brand-gradient text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">
             Get Quote
           </button>
         </div>
@@ -250,7 +250,7 @@ const ParcelQuoteForm = forwardRef<QuoteFormHandle, ParcelQuoteFormProps>(({ pre
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
             <p className="text-gray-700 mb-4">{validationMessage}</p>
             <button onClick={() => setShowValidationMessage(false)}
-              className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
+              className="bg-brand-gradient text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
           </div>
         </div>
       )}
@@ -261,7 +261,7 @@ const ParcelQuoteForm = forwardRef<QuoteFormHandle, ParcelQuoteFormProps>(({ pre
             <FaCheckCircle className="text-green-500 text-4xl mx-auto mb-3" />
             <p className="text-gray-700 mb-4">Quote request submitted successfully.</p>
             <button onClick={() => setShowSuccessMessage(false)}
-              className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>
+              className="bg-brand-gradient text-white font-bold py-2 px-4 rounded-lg w-full">OK</button>
           </div>
         </div>
       )}

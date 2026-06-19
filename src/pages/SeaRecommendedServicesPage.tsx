@@ -68,7 +68,7 @@ const SeaRecommendedServicesPage: React.FC = () => {
                       isDone
                         ? 'bg-blue-500 text-white'
                         : isActive
-                        ? 'bg-blue-600 text-white ring-4 ring-blue-100'
+                        ? 'bg-brand-gradient text-white ring-4 ring-blue-100'
                         : 'bg-gray-200 text-gray-400'
                     }`}>
                       {stepNum}
@@ -155,7 +155,7 @@ const SeaRecommendedServicesPage: React.FC = () => {
                     role="switch"
                     aria-checked={originPortCharges}
                     onClick={() => setOriginPortCharges(!originPortCharges)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${originPortCharges ? 'bg-blue-600' : 'bg-gray-300'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${originPortCharges ? 'bg-brand-gradient' : 'bg-gray-300'}`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${originPortCharges ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -171,7 +171,7 @@ const SeaRecommendedServicesPage: React.FC = () => {
                     role="switch"
                     aria-checked={destinationPortCharges}
                     onClick={() => setDestinationPortCharges(!destinationPortCharges)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${destinationPortCharges ? 'bg-blue-600' : 'bg-gray-300'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${destinationPortCharges ? 'bg-brand-gradient' : 'bg-gray-300'}`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${destinationPortCharges ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -196,7 +196,7 @@ const SeaRecommendedServicesPage: React.FC = () => {
                   role="switch"
                   aria-checked={customsBrokerage}
                   onClick={() => setCustomsBrokerage(!customsBrokerage)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${customsBrokerage ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${customsBrokerage ? 'bg-brand-gradient' : 'bg-gray-300'}`}
                 >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${customsBrokerage ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
@@ -223,7 +223,7 @@ const SeaRecommendedServicesPage: React.FC = () => {
                   role="switch"
                   aria-checked={insurance}
                   onClick={() => setInsurance(!insurance)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${insurance ? 'bg-blue-600' : 'bg-gray-300'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${insurance ? 'bg-brand-gradient' : 'bg-gray-300'}`}
                 >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${insurance ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>

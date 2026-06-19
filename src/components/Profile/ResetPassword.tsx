@@ -58,7 +58,7 @@ const ResetPassword: React.FC = () => {
           <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className={inputClass} placeholder="Confirm new password" required />
         </div>
         <button type="submit" disabled={loading}
-          className="bg-blue-600 text-white py-2 px-6 rounded-md font-semibold hover:bg-blue-700 transition-colors shadow disabled:opacity-50">
+          className="bg-brand-gradient text-white py-2 px-6 rounded-md font-semibold hover:opacity-90 transition-colors shadow disabled:opacity-50">
           {loading ? 'Changing...' : 'Change Password'}
         </button>
       </form>

@@ -64,7 +64,7 @@ localStorage.setItem('shippitin_user', JSON.stringify(user));
           />
 
           <button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold disabled:opacity-50 transition"
+            className="w-full bg-brand-gradient hover:opacity-90 text-white py-3 rounded-xl font-semibold disabled:opacity-50 transition"
             onClick={handleLogin}
             disabled={loading}
           >

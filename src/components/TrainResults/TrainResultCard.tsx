@@ -97,7 +97,7 @@ const TrainResultCard: React.FC<TrainResultCardProps> = ({ result, originalFormD
         <button
           onClick={handleBookNow}
           className={`w-full py-3 px-6 rounded-full text-white font-bold text-lg shadow-lg transition duration-300 ease-in-out
-                      ${result.status === 'Full' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-700 hover:bg-blue-800 transform hover:scale-105'}`}
+                      ${result.status === 'Full' ? 'bg-gray-400 cursor-not-allowed' : 'bg-brand-gradient hover:opacity-90 transform hover:scale-105'}`}
           disabled={result.status === 'Full'}
         >
           {result.status === 'Full' ? 'Fully Booked' : 'Book Now'}

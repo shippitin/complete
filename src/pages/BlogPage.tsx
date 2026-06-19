@@ -70,8 +70,8 @@ const BlogPage: React.FC = () => {
         <div className="mt-16 text-center">
           <Link
             to="/blog-archive" // Link to a hypothetical blog archive page
-            className="inline-block bg-blue-600 text-white font-semibold py-3 px-8 rounded-full
-                       shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+            className="inline-block bg-brand-gradient text-white font-semibold py-3 px-8 rounded-full
+                       shadow-lg hover:opacity-90 transition duration-300 transform hover:scale-105"
           >
             View All Posts
           </Link>

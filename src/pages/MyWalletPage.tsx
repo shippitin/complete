@@ -142,7 +142,7 @@ const MyWalletPage: React.FC = () => {
                 <button
                   key={tab}
                   className={`px-4 py-2 rounded-full font-semibold transition-colors duration-200 ${
-                    activeTab === tab ? 'bg-blue-600 text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    activeTab === tab ? 'bg-brand-gradient text-white shadow-md' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveTab(tab)}
                 >

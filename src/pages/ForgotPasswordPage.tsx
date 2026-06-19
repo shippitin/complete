@@ -97,7 +97,7 @@ const ForgotPasswordPage: React.FC = () => {
               <button
                 onClick={handleSendOTP}
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                className="w-full bg-brand-gradient text-white py-2 rounded-md font-semibold hover:opacity-90 transition disabled:opacity-50"
               >
                 {loading ? 'Sending OTP...' : 'Send OTP'}
               </button>
@@ -131,7 +131,7 @@ const ForgotPasswordPage: React.FC = () => {
               </div>
               <button
                 onClick={handleVerifyOTP}
-                className="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
+                className="w-full bg-brand-gradient text-white py-2 rounded-md font-semibold hover:opacity-90 transition"
               >
                 Verify OTP
               </button>
@@ -182,7 +182,7 @@ const ForgotPasswordPage: React.FC = () => {
               <button
                 onClick={handleResetPassword}
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                className="w-full bg-brand-gradient text-white py-2 rounded-md font-semibold hover:opacity-90 transition disabled:opacity-50"
               >
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>
@@ -198,7 +198,7 @@ const ForgotPasswordPage: React.FC = () => {
             <p className="text-gray-500 text-sm mb-6">Your password has been reset successfully. You can now log in with your new password.</p>
             <button
               onClick={() => navigate('/login')}
-              className="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition"
+              className="w-full bg-brand-gradient text-white py-2 rounded-md font-semibold hover:opacity-90 transition"
             >
               Go to Login
             </button>
@@ -212,7 +212,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div
                 key={s}
                 className={`h-1.5 rounded-full transition-all ${
-                  step === s ? 'w-8 bg-blue-600' : 
+                  step === s ? 'w-8 bg-brand-gradient' : 
                   (['email', 'otp', 'newpassword'] as Step[]).indexOf(step) > i ? 'w-4 bg-blue-300' : 'w-4 bg-gray-200'
                 }`}
               />

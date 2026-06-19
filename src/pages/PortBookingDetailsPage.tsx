@@ -126,7 +126,7 @@ const PortBookingDetailsPage: React.FC = () => {
           <FaInfoCircle className="text-red-500 text-6xl mb-4 mx-auto" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Booking details missing.</h2>
           <p className="text-gray-600 mb-6">Please go back to search results and select a service.</p>
-          <button onClick={() => navigate('/port-results')} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300">
+          <button onClick={() => navigate('/port-results')} className="bg-brand-gradient hover:opacity-90 text-white font-bold py-3 px-8 rounded-full shadow-md transition duration-300">
             <FaArrowLeft className="inline-block mr-2" /> Back to Results
           </button>
         </div>
@@ -139,9 +139,9 @@ const PortBookingDetailsPage: React.FC = () => {
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
 
         {/* Header */}
-        <div className="bg-blue-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+        <div className="bg-brand-gradient text-white p-6 rounded-t-2xl flex items-center justify-between">
           <h1 className="text-3xl font-bold">Port Booking Details</h1>
-          <button onClick={() => navigate(-1)} className="flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-full text-sm font-semibold transition duration-200">
+          <button onClick={() => navigate(-1)} className="flex items-center px-4 py-2 bg-brand-gradient hover:opacity-90 rounded-full text-sm font-semibold transition duration-200">
             <FaArrowLeft className="mr-2" /> Back
           </button>
         </div>
@@ -261,7 +261,7 @@ const PortBookingDetailsPage: React.FC = () => {
           </div>
 
           <div className="text-center mt-6">
-            <button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 flex items-center justify-center mx-auto disabled:opacity-50">
+            <button type="submit" disabled={loading} className="bg-brand-gradient hover:opacity-90 text-white font-bold py-3 px-10 rounded-full shadow-lg transition duration-300 flex items-center justify-center mx-auto disabled:opacity-50">
               {loading
                 ? <><span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></span>Saving...</>
                 : <><FaSave className="mr-2" />Confirm & Proceed</>

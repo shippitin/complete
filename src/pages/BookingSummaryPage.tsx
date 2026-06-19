@@ -45,7 +45,7 @@ const BookingSummaryPage: React.FC = () => {
         <h2 className="text-xl font-semibold mb-2">No booking data found.</h2>
         <button
           onClick={() => navigate("/booking")}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-brand-gradient text-white px-4 py-2 rounded"
         >
           Go to Booking
         </button>

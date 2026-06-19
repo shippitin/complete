@@ -96,7 +96,7 @@ const MyDocuments: React.FC = () => {
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+          className="bg-brand-gradient text-white text-sm font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition">
           + Add Document
         </button>
       </div>
@@ -135,7 +135,7 @@ const MyDocuments: React.FC = () => {
           </div>
           <div className="flex gap-2 pt-1">
             <button onClick={handleAdd} disabled={saving}
-              className="bg-blue-600 text-white text-sm font-semibold px-5 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+              className="bg-brand-gradient text-white text-sm font-semibold px-5 py-2 rounded-lg hover:opacity-90 transition disabled:opacity-50">
               {saving ? 'Saving...' : 'Save Document'}
             </button>
             <button onClick={() => setShowForm(false)}

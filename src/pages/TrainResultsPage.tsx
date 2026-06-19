@@ -258,7 +258,7 @@ const TrainResultsPage: React.FC = () => {
       <div className="max-w-md mx-auto px-6 py-12 bg-white shadow-sm rounded-2xl border border-gray-100 text-center">
         <h3 className="text-2xl font-bold text-red-500 mb-4">Error</h3>
         <p className="text-gray-600 mb-6">{error}</p>
-        <button onClick={() => navigate(-1)} className="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 transition">Go Back</button>
+        <button onClick={() => navigate(-1)} className="bg-brand-gradient text-white font-bold py-3 px-8 rounded-xl hover:opacity-90 transition">Go Back</button>
       </div>
     </div>
   );
@@ -315,7 +315,7 @@ const TrainResultsPage: React.FC = () => {
               { key: 'mostPopular', label: 'Most Popular' },
             ].map(s => (
               <button key={s.key} onClick={() => setSortBy(s.key as any)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${sortBy === s.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${sortBy === s.key ? 'bg-brand-gradient text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 {s.label}
               </button>
             ))}
@@ -386,7 +386,7 @@ const TrainResultsPage: React.FC = () => {
                           <p className="text-xs text-gray-400">Indicative total · excl. GST</p>
                         </div>
                         <button onClick={() => handleViewDetails(result)}
-                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap">
+                          className="flex items-center gap-2 bg-brand-gradient hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap">
                           View Details <FaArrowRight className="text-xs" />
                         </button>
                       </div>

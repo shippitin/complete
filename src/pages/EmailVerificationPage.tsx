@@ -134,7 +134,7 @@ const EmailVerificationPage: React.FC = () => {
           <button
             onClick={handleVerify}
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full bg-brand-gradient text-white py-3 rounded-xl font-bold hover:opacity-90 transition disabled:opacity-50"
           >
             {loading ? 'Verifying...' : 'Verify Email'}
           </button>
@@ -168,7 +168,7 @@ const EmailVerificationPage: React.FC = () => {
         {/* Progress dots */}
         <div className="flex justify-center gap-2 mt-8">
           <div className="h-1.5 w-4 rounded-full bg-blue-300"></div>
-          <div className="h-1.5 w-8 rounded-full bg-blue-600"></div>
+          <div className="h-1.5 w-8 rounded-full bg-brand-gradient"></div>
           <div className="h-1.5 w-4 rounded-full bg-gray-200"></div>
         </div>
       </div>

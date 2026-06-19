@@ -27,7 +27,7 @@ const SeaBookingForm: React.FC = () => {
 
   const formFieldClass = "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500";
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
-  const buttonClass = "px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out";
+  const buttonClass = "px-6 py-2 bg-brand-gradient text-white font-semibold rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 ease-in-out";
 
   return (
     <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl mx-auto my-10 md:my-20">

@@ -141,7 +141,7 @@ const PortServicesQuoteFormPageWrapper: React.FC = () => {
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Get Your Port Services Quote</h2>
       <div className="bg-white rounded-xl shadow-md p-6"><PortServicesQuoteForm ref={portFormRef} /></div>
       <div className="flex justify-center mt-8">
-        <button onClick={handleSubmitPort} className="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105">Search Port Services</button>
+        <button onClick={handleSubmitPort} className="px-8 py-4 bg-brand-gradient text-white font-bold text-xl rounded-xl shadow-lg hover:opacity-90 transition duration-300 transform hover:scale-105">Search Port Services</button>
       </div>
     </div>
   );

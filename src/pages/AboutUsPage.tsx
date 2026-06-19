@@ -147,7 +147,7 @@ const AboutUsPage: React.FC = () => {
 
 
         {/* Call to Action */}
-        <section className="mt-16 text-center bg-blue-600 text-white p-10 rounded-xl shadow-lg animate-fade-in" style={{ animationDelay: "1200ms" }}>
+        <section className="mt-16 text-center bg-brand-gradient text-white p-10 rounded-xl shadow-lg animate-fade-in" style={{ animationDelay: "1200ms" }}>
           <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Logistics?</h3>
           <p className="text-lg mb-8">
             Partner with SHIPPITIN for efficient, reliable, and sustainable freight solutions.

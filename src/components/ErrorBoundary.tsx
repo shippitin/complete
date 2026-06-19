@@ -51,7 +51,7 @@ class ErrorBoundary extends Component<Props, State> {
             )}
             <button
               onClick={this.handleReset}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-8 rounded-xl transition text-sm"
+              className="bg-brand-gradient hover:opacity-90 text-white font-bold py-2.5 px-8 rounded-xl transition text-sm"
             >
               Back to Home
             </button>

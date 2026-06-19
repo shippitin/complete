@@ -25,14 +25,14 @@ const MediaPage: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-800">SHIPPITIN Announces Expansion into Southeast Asia</h3>
                 <p className="text-gray-600 text-sm">Date: July 15, 2025</p>
               </div>
-              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">Read More</a>
+              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-brand-gradient text-white rounded-full hover:opacity-90 transition">Read More</a>
             </div>
             <div className="border border-gray-300 rounded-lg p-4 flex flex-col md:flex-row justify-between items-center bg-gray-50 hover:bg-gray-100 transition">
               <div>
                 <h3 className="text-xl font-semibold text-gray-800">New AI-Powered Tracking System Launched by SHIPPITIN</h3>
                 <p className="text-gray-600 text-sm">Date: June 20, 2025</p>
               </div>
-              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">Read More</a>
+              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-brand-gradient text-white rounded-full hover:opacity-90 transition">Read More</a>
             </div>
           </div>
         </section>

@@ -11,7 +11,7 @@ const InvestorLandingPage = () => {
           A smarter way to get freight quotes across Road, Air, Sea, Rail and more — all in one place.
         </p>
         <div className="mt-6 flex justify-center gap-4">
-          <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors duration-300">
+          <button className="bg-brand-gradient text-white px-6 py-2 rounded hover:opacity-90 transition-colors duration-300">
             View Pitch Deck
           </button>
           <button className="border border-blue-600 text-blue-600 px-6 py-2 rounded hover:bg-blue-50 transition-colors duration-300">
@@ -153,7 +153,7 @@ const InvestorLandingPage = () => {
           We are currently raising to expand our operations and enhance our platform.
         </p>
         <div className="flex justify-center gap-4 flex-wrap">
-          <button className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-300 text-lg shadow-md">
+          <button className="bg-brand-gradient text-white px-8 py-3 rounded-lg hover:opacity-90 transition-colors duration-300 text-lg shadow-md">
             Book a Demo
           </button>
           <a href="mailto:investor@shippitin.com" className="bg-gray-200 text-gray-800 px-8 py-3 rounded-lg hover:bg-gray-300 transition-colors duration-300 text-lg shadow-md flex items-center justify-center">

@@ -73,7 +73,7 @@ const InsuranceBookingForm: React.FC = () => {
           </button>
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+            className="bg-brand-gradient hover:opacity-90 text-white font-bold py-2 px-4 rounded transition duration-300"
           >
             {t('next_button')}
           </button>

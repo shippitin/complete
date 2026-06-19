@@ -52,21 +52,21 @@ const CareersPage: React.FC = () => {
                 <h3 className="text-xl font-semibold text-gray-800">Logistics Operations Manager</h3>
                 <p className="text-gray-600 text-sm">Location: Mumbai, India | Full-time</p>
               </div>
-              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">Apply Now</a>
+              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-brand-gradient text-white rounded-full hover:opacity-90 transition">Apply Now</a>
             </div>
             <div className="border border-gray-300 rounded-lg p-4 flex flex-col md:flex-row justify-between items-center bg-gray-50 hover:bg-gray-100 transition">
               <div>
                 <h3 className="text-xl font-semibold text-gray-800">Software Engineer (Frontend)</h3>
                 <p className="text-gray-600 text-sm">Location: Bengaluru, India | Full-time</p>
               </div>
-              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">Apply Now</a>
+              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-brand-gradient text-white rounded-full hover:opacity-90 transition">Apply Now</a>
             </div>
             <div className="border border-gray-300 rounded-lg p-4 flex flex-col md:flex-row justify-between items-center bg-gray-50 hover:bg-gray-100 transition">
               <div>
                 <h3 className="text-xl font-semibold text-gray-800">Customer Support Executive</h3>
                 <p className="text-gray-600 text-sm">Location: Remote | Full-time</p>
               </div>
-              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition">Apply Now</a>
+              <a href="#" className="mt-3 md:mt-0 px-6 py-2 bg-brand-gradient text-white rounded-full hover:opacity-90 transition">Apply Now</a>
             </div>
           </div>
           <p className="text-center text-gray-600 mt-8">

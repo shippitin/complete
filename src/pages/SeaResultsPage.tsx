@@ -380,7 +380,7 @@ const SeaResultsPage: React.FC = () => {
                 <React.Fragment key={step}>
                   <div className="flex flex-col items-center gap-1">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      isDone ? 'bg-blue-500 text-white' : isActive ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-200 text-gray-400'
+                      isDone ? 'bg-blue-500 text-white' : isActive ? 'bg-brand-gradient text-white ring-4 ring-blue-100' : 'bg-gray-200 text-gray-400'
                     }`}>{stepNum}</div>
                     <span className={`text-xs font-semibold whitespace-nowrap hidden sm:block ${isActive ? 'text-gray-800' : isDone ? 'text-blue-500' : 'text-gray-400'}`}>{step}</span>
                   </div>

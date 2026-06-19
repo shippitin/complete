@@ -148,7 +148,7 @@ const ShipmentAlertPanel: React.FC = () => {
           🚨 Active Alerts {unresolvedCount > 0 && <span className="ml-1 bg-white text-red-600 px-1.5 py-0.5 rounded-full text-xs">{unresolvedCount}</span>}
         </button>
         <button onClick={() => setActiveTab('bookings')}
-          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'bookings' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${activeTab === 'bookings' ? 'bg-brand-gradient text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
           📦 All Bookings ({bookings.length})
         </button>
       </div>
@@ -213,7 +213,7 @@ const ShipmentAlertPanel: React.FC = () => {
                 <div className="flex gap-2 ml-4 flex-shrink-0">
                   <button
                     onClick={() => { setStatusBooking(booking); setShowStatusForm(true); }}
-                    className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition">
+                    className="text-xs bg-brand-gradient text-white px-3 py-1.5 rounded-lg hover:opacity-90 transition">
                     Update Status
                   </button>
                   <button
@@ -304,7 +304,7 @@ const ShipmentAlertPanel: React.FC = () => {
             </div>
             <div className="flex gap-2 mt-4">
               <button onClick={handleUpdateStatus} disabled={submitting || !newStatus}
-                className="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
+                className="flex-1 bg-brand-gradient text-white font-semibold py-2.5 rounded-lg hover:opacity-90 transition disabled:opacity-50">
                 {submitting ? 'Updating...' : '✅ Update & Notify Customer'}
               </button>
               <button onClick={() => setShowStatusForm(false)}

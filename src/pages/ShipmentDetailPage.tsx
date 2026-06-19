@@ -177,7 +177,7 @@ const ShipmentDetailPage: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center bg-white p-10 rounded-2xl shadow">
         <p className="text-gray-500 mb-4">Shipment not found.</p>
-        <button onClick={() => navigate('/my-bookings')} className="bg-blue-600 text-white px-6 py-2 rounded-lg">Back to My Shipments</button>
+        <button onClick={() => navigate('/my-bookings')} className="bg-brand-gradient text-white px-6 py-2 rounded-lg">Back to My Shipments</button>
       </div>
     </div>
   );

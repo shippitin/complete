@@ -42,7 +42,7 @@ const getServiceIcon = (type: string) => {
 
 // Shared footer button styles.
 const BTN_BLUE       = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition';
-const BTN_BLUE_SOLID = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition';
+const BTN_BLUE_SOLID = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-gradient hover:opacity-90 text-white text-xs font-semibold transition';
 const BTN_AMBER      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 text-xs font-semibold transition';
 const BTN_SLATE      = 'flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition';
 
@@ -413,7 +413,7 @@ const BookingCard: React.FC<{
             <div className="flex justify-end gap-2">
               <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 transition">Cancel</button>
               <button onClick={saveEdit} disabled={!form.sender_name?.trim() || !form.receiver_name?.trim()}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brand-gradient hover:opacity-90 text-white text-xs font-bold transition disabled:opacity-40 disabled:cursor-not-allowed">
                 <FaSave className="text-xs" /> Save details
               </button>
             </div>
@@ -530,7 +530,7 @@ const BookingCard: React.FC<{
                   <div key={stage} className="flex items-stretch gap-3">
                     <div className="flex flex-col items-center">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                        done ? 'bg-green-500 text-white' : active ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400'
+                        done ? 'bg-green-500 text-white' : active ? 'bg-brand-gradient text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400'
                       }`}>
                         {done ? <FaCheckCircle className="text-xs" /> : i + 1}
                       </div>
@@ -683,7 +683,7 @@ const BookingHistoryPage: React.FC = () => {
             )}
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
+              className="flex items-center gap-2 bg-brand-gradient hover:opacity-90 text-white px-4 py-2 rounded-xl text-sm font-bold transition"
             >
               <FaPlus className="text-xs" /> New Shipment
             </button>
@@ -725,7 +725,7 @@ const BookingHistoryPage: React.FC = () => {
               onClick={() => setFilter(status)}
               className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-1.5 ${
                 filter === status
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-brand-gradient text-white shadow-sm'
                   : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
@@ -759,7 +759,7 @@ const BookingHistoryPage: React.FC = () => {
             {filter === 'All' && (
               <button
                 onClick={() => navigate('/')}
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition text-sm"
+                className="bg-brand-gradient text-white px-6 py-2.5 rounded-xl font-bold hover:opacity-90 transition text-sm"
               >
                 Create First Shipment
               </button>

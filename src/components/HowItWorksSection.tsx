@@ -27,7 +27,7 @@ const HowItWorksSection: React.FC = () => {
             style={{ animationDelay: '200ms' }}
           >
             {/* Step Number Circle */}
-            <div className="absolute -top-4 -left-4 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-md group-hover:bg-blue-700 transition-colors">
+            <div className="absolute -top-4 -left-4 w-12 h-12 bg-brand-gradient text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-md group-hover:opacity-90 transition-colors">
               1
             </div>
             <div className="mb-4 p-4 rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">

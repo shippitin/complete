@@ -448,7 +448,7 @@ const TrackPage: React.FC = () => {
             <button
               onClick={() => handleTrack()}
               disabled={loading}
-              className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all flex items-center justify-center disabled:opacity-50"
+              className="bg-brand-gradient text-white px-10 py-4 rounded-2xl font-bold hover:opacity-90 transition-all flex items-center justify-center disabled:opacity-50"
             >
               {loading ? (
                 <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></span>
@@ -542,7 +542,7 @@ const TrackPage: React.FC = () => {
                 <a href={`https://wa.me/?text=Track my shipment here: ${getShareLink()}`} target="_blank" rel="noreferrer" className="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all">
                   <FaWhatsapp />
                 </a>
-                <a href={`mailto:?subject=Shipment Update: ${shipment.id}&body=Track live at: ${getShareLink()}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                <a href={`mailto:?subject=Shipment Update: ${shipment.id}&body=Track live at: ${getShareLink()}`} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:opacity-90 hover:text-white transition-all">
                   <FaEnvelope />
                 </a>
               </div>
@@ -634,7 +634,7 @@ const TrackPage: React.FC = () => {
                       const finalDone   = isDelivered && i === lastIdx;
                       const dotClass    = finalDone ? 'bg-green-600'
                                         : pending   ? 'bg-gray-200'
-                                        :             'bg-blue-600';
+                                        :             'bg-brand-gradient';
                       return (
                         <div key={i} className={`relative pl-8 ${pending ? 'opacity-60' : ''}`}>
                           <div className={`absolute -left-[17px] top-0 w-8 h-8 rounded-full flex items-center justify-center shadow-lg ${dotClass} ${current ? 'ring-4 ring-blue-100' : ''}`}>

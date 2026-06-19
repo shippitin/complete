@@ -359,7 +359,7 @@ const RailCompleteBooking: React.FC<RailCompleteBookingProps> = ({ formData, sel
             <p className="text-gray-700 mb-6">{validationMessage}</p>
             <button
               onClick={() => setShowValidationMessage(false)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md w-full"
+              className="bg-brand-gradient hover:opacity-90 text-white font-bold py-2 px-4 rounded-md w-full"
             >
               Got It
             </button>

@@ -85,7 +85,7 @@ const ParcelResultsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">Sort:</span>
             {[{ key: 'price', label: 'Price' }, { key: 'transit', label: 'Transit' }, { key: 'carbon', label: '🌿 Carbon' }].map(s => (
-              <button key={s.key} onClick={() => setSortBy(s.key as any)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${sortBy === s.key ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{s.label}</button>
+              <button key={s.key} onClick={() => setSortBy(s.key as any)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${sortBy === s.key ? 'bg-brand-gradient text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{s.label}</button>
             ))}
           </div>
         </div>
@@ -128,7 +128,7 @@ const ParcelResultsPage: React.FC = () => {
                       <div>{offer.surgeReason && <p className="text-xs text-orange-500 flex items-center gap-1"><FaFire className="text-xs" />{offer.surgeReason}</p>}</div>
                       <div className="flex items-center gap-4">
                         <p className="text-2xl font-black text-gray-900 flex items-center gap-1"><FaRupeeSign className="text-lg text-blue-500" />{offer.price.toLocaleString('en-IN')}</p>
-                        <button onClick={() => navigate('/parcel-booking-details', { state: { selectedResult: offer, originalFormData: formData } })} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap">
+                        <button onClick={() => navigate('/parcel-booking-details', { state: { selectedResult: offer, originalFormData: formData } })} className="flex items-center gap-2 bg-brand-gradient hover:opacity-90 text-white font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap">
                           Book Now <FaChevronRight className="text-xs" />
                         </button>
                       </div>

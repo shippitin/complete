@@ -155,7 +155,7 @@ const TruckQuoteForm = forwardRef<QuoteFormHandle, { prefillData?: ParsedVoiceCo
       {showButtons && (
         <div className="flex justify-center mt-4">
           <button type="button" onClick={() => setShowSuccessMessage(true)}
-            className="px-10 py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition">
+            className="px-10 py-3 bg-brand-gradient text-white font-bold rounded-xl shadow-lg hover:opacity-90 transition">
             Get Quote
           </button>
         </div>
@@ -166,7 +166,7 @@ const TruckQuoteForm = forwardRef<QuoteFormHandle, { prefillData?: ParsedVoiceCo
           <div className="bg-white p-8 rounded-xl max-w-sm w-full shadow-2xl text-center">
             <FaCheckCircle className="text-green-500 text-5xl mx-auto mb-4" />
             <p className="text-gray-600 mb-6">Quote request submitted successfully.</p>
-            <button className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold"
+            <button className="w-full py-3 bg-brand-gradient text-white rounded-lg font-bold"
               onClick={() => setShowSuccessMessage(false)}>Close</button>
           </div>
         </div>

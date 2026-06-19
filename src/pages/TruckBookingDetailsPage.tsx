@@ -137,7 +137,7 @@ const TruckBookingDetailsPage: React.FC = () => {
           <div className="lg:col-span-7 space-y-12">
             <section>
               <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-3">
-                <span className="w-7 h-7 bg-blue-600 text-white rounded-md flex items-center justify-center text-xs">1</span>
+                <span className="w-7 h-7 bg-brand-gradient text-white rounded-md flex items-center justify-center text-xs">1</span>
                 Consignor details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
@@ -153,7 +153,7 @@ const TruckBookingDetailsPage: React.FC = () => {
 
             <section>
               <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-3">
-                <span className="w-7 h-7 bg-blue-600 text-white rounded-md flex items-center justify-center text-xs">2</span>
+                <span className="w-7 h-7 bg-brand-gradient text-white rounded-md flex items-center justify-center text-xs">2</span>
                 KYC verification
               </h2>
               <div
@@ -230,7 +230,7 @@ const TruckBookingDetailsPage: React.FC = () => {
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:opacity-90 text-white py-4 rounded-xl font-bold text-md transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 group disabled:opacity-50"
+                className="w-full bg-brand-gradient hover:opacity-90 text-white py-4 rounded-xl font-bold text-md transition-all flex items-center justify-center gap-3 shadow-lg shadow-blue-100 group disabled:opacity-50"
               >
                 {loading ? (
                   <span className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>

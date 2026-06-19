@@ -37,7 +37,7 @@ const QuoteFormShippitin: React.FC<QuoteFormShippitinProps> = ({ activeService, 
           {/* The search button for RailQuoteForm */}
           <button
             onClick={handleSubmitRail}
-            className="px-8 py-4 bg-blue-600 text-white font-bold text-xl rounded-xl shadow-lg hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+            className="px-8 py-4 bg-brand-gradient text-white font-bold text-xl rounded-xl shadow-lg hover:opacity-90 transition duration-300 transform hover:scale-105"
           >
             Search Train Options
           </button>

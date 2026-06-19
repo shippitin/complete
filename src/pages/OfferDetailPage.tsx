@@ -18,8 +18,8 @@ const detailedOffers = [
     serviceType: "Truck",
     bgColor: "bg-blue-50",
     iconColor: "text-blue-600",
-    buttonColor: "bg-blue-600",
-    buttonHoverColor: "hover:bg-blue-700",
+    buttonColor: "bg-brand-gradient",
+    buttonHoverColor: "hover:opacity-90",
     isEco: false
   },
   {
@@ -200,7 +200,7 @@ const OfferDetailPage: React.FC = () => {
         </div>
 
         {/* 3. Support CTA */}
-        <div className="mt-20 bg-blue-600 rounded-[3rem] p-12 text-center text-white relative overflow-hidden shadow-2xl">
+        <div className="mt-20 bg-brand-gradient rounded-[3rem] p-12 text-center text-white relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
           <h3 className="text-4xl font-black mb-4">Enterprise Scaling?</h3>
           <p className="text-blue-100 text-lg mb-10 max-w-xl mx-auto">

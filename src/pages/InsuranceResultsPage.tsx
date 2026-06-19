@@ -79,7 +79,7 @@ const InsuranceResultsPage: React.FC = () => {
                     <p className="text-xs text-gray-400">Insurance Premium</p>
                     <div className="flex items-center gap-4">
                       <p className="text-2xl font-black text-gray-900 flex items-center gap-1"><FaRupeeSign className="text-lg text-blue-500" />{result.premium.toLocaleString('en-IN')}</p>
-                      <button onClick={() => navigate('/insurance-booking-details', { state: { selectedResult: result, originalFormData: formData } })} disabled={result.status === 'Full'} className={`flex items-center gap-2 font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap text-white ${result.status === 'Full' ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                      <button onClick={() => navigate('/insurance-booking-details', { state: { selectedResult: result, originalFormData: formData } })} disabled={result.status === 'Full'} className={`flex items-center gap-2 font-bold py-3 px-6 rounded-xl transition text-sm whitespace-nowrap text-white ${result.status === 'Full' ? 'bg-gray-300 cursor-not-allowed' : 'bg-brand-gradient hover:opacity-90'}`}>
                         {result.status === 'Full' ? 'Full' : 'Get Policy'} <FaChevronRight className="text-xs" />
                       </button>
                     </div>

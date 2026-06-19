@@ -904,7 +904,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
       {showButtons && (
         <div className="flex justify-center mt-5">
           <button type="button" onClick={() => handleSubmit()}
-            className="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition">
+            className="px-10 py-3 bg-brand-gradient hover:opacity-90 text-white font-bold rounded-xl shadow-lg transition">
             Search Quotes
           </button>
         </div>
@@ -915,7 +915,7 @@ const RailQuoteForm = forwardRef<QuoteFormHandle, RailQuoteFormProps>(({
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full">
             <p className="text-gray-700 mb-4">Please fill in all required fields.</p>
             <button onClick={() => setShowValMsg(false)}
-              className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
+              className="bg-brand-gradient text-white font-bold py-2 px-4 rounded-lg w-full">Got It</button>
           </div>
         </div>
       )}

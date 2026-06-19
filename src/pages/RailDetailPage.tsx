@@ -42,7 +42,7 @@ const RailDetailPage: React.FC = () => {
         </div>
 
         {/* Call to Action */}
-        <div className="mt-12 text-center bg-blue-600 text-white p-10 rounded-xl shadow-lg animate-fade-in">
+        <div className="mt-12 text-center bg-brand-gradient text-white p-10 rounded-xl shadow-lg animate-fade-in">
           <h3 className="text-3xl font-bold mb-4">Looking for Rail Transport?</h3>
           <p className="text-lg mb-8">
             Get an instant quote for your rail cargo shipment today!
