@@ -345,7 +345,7 @@ const BookingCard: React.FC<{
           {stKey === 'pending' && (
             <>
               {!docsFiled && (
-                <button onClick={() => goComplete(1)} className={BTN_AMBER}>
+                <button onClick={() => goComplete(0)} className={BTN_AMBER}>
                   <FaFileSignature className="text-[11px]" /> Complete documentation
                 </button>
               )}
