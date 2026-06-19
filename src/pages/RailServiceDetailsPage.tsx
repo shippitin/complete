@@ -273,9 +273,10 @@ const RailServiceDetailsPage: React.FC = () => {
             )}
           </div>
 
-          {/* GST + add-ons — all toggles on one line: GST · Insurance · Customs (intl). */}
+          {/* GST + add-ons — all toggles on one line, spread across the full card
+              width (equal gaps) with dividers between: GST · Insurance · Customs (intl). */}
           <div className="px-1">
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+            <div className="flex items-center justify-between gap-x-4 text-sm">
               <Switch on={gstInput}     onToggle={() => setGstInput(v => !v)}     label="Claim GST Input" />
               <span className="h-5 w-px bg-gray-300" aria-hidden="true" />
               <Switch on={addInsurance} onToggle={() => setAddInsurance(v => !v)} label={<>Cargo Insurance <span className="text-gray-400 font-normal">· ₹1,000</span></>} />
