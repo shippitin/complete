@@ -175,11 +175,11 @@ const RailServiceDetailsPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-3 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-5">
 
         {/* ── LEFT ── */}
-        <div className="flex-grow space-y-3">
+        <div className="flex-grow space-y-2.5">
 
           {/* Back (no box) */}
           <button onClick={() => navigate('/train-results', { state: { formData: formData! } })}
@@ -188,8 +188,8 @@ const RailServiceDetailsPage: React.FC = () => {
           </button>
 
           {/* Quote Details */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <div className="flex items-center gap-2 mb-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3.5">
+            <div className="flex items-center gap-2 mb-2">
               <FaClipboardList className="text-gray-500 text-lg" />
               <h2 className="text-lg font-bold text-gray-800">Your Booking Details</h2>
             </div>
@@ -204,41 +204,41 @@ const RailServiceDetailsPage: React.FC = () => {
                 { label: 'Weight',      value: formData!.totalWeight ? `${formData!.totalWeight} KG` : 'N/A' },
                 { label: 'Hazardous',   value: formData!.hazardousCargo ? 'Yes' : 'No' },
               ].map((row, i) => (
-                <div key={i} className="flex items-start justify-between py-1.5 border-b border-gray-100 last:border-0">
+                <div key={i} className="flex items-start justify-between py-1 border-b border-gray-100 last:border-0">
                   <span className="text-sm text-gray-500">{row.label}</span>
                   <span className="text-sm font-medium text-gray-800 text-right">{row.value || 'N/A'}</span>
                 </div>
               ))}
               {isContainer && <>
-                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Container Type</span>
                   <span className="text-sm font-medium text-gray-800">{cfd.containerType}</span>
                 </div>
-                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1 border-b border-gray-100">
                   <span className="text-sm text-gray-500">No. of Containers</span>
                   <span className="text-sm font-medium text-gray-800">{cfd.numberOfContainers}</span>
                 </div>
-                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Booking Type</span>
                   <span className="text-sm font-medium text-gray-800">{isDomestic ? 'Domestic' : 'International'}</span>
                 </div>
-                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Service Type</span>
                   <span className="text-sm font-medium text-gray-800">{cfd.serviceType || 'Terminal to Terminal'}</span>
                 </div>
               </>}
               {formData!.bookingType === 'Train Goods Booking' && <>
-                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1 border-b border-gray-100">
                   <span className="text-sm text-gray-500">No. of Wagons</span>
                   <span className="text-sm font-medium text-gray-800">{(formData as TrainGoodsFormData).numberOfWagons}</span>
                 </div>
-                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Wagon Type</span>
                   <span className="text-sm font-medium text-gray-800">{(formData as TrainGoodsFormData).wagonType}</span>
                 </div>
               </>}
               {formData!.bookingType === 'Train Parcel Booking' && (
-                <div className="flex items-start justify-between py-1.5 border-b border-gray-100">
+                <div className="flex items-start justify-between py-1 border-b border-gray-100">
                   <span className="text-sm text-gray-500">Parcel Count</span>
                   <span className="text-sm font-medium text-gray-800">{(formData as TrainParcelFormData).parcelCount}</span>
                 </div>
@@ -247,7 +247,7 @@ const RailServiceDetailsPage: React.FC = () => {
 
             {/* Shipping Line — international bookings carry an ocean leg */}
             {!isDomestic && (
-              <div className="mt-4 pt-3 border-t border-gray-100">
+              <div className="mt-3 pt-2.5 border-t border-gray-100">
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   Shipping Line <span className="text-red-500">*</span>
                 </label>
@@ -319,7 +319,7 @@ const RailServiceDetailsPage: React.FC = () => {
           </div>
 
           {/* Terms & Conditions */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3">
             <p className="text-xs text-gray-600 mb-2 leading-relaxed">
               This rate is valid for the current CONCOR tariff cycle. Rates are subject to change if the booking is not confirmed before the tariff revision date. For {isDomestic ? 'domestic' : 'international'} shipments, all charges are as per CONCOR's published Schedule of Charges.
             </p>
@@ -359,7 +359,7 @@ const RailServiceDetailsPage: React.FC = () => {
               });
             }}
             disabled={!termsConfirmed || (!isDomestic && !effectiveShippingLine)}
-            className={`w-full py-3.5 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
+            className={`w-full py-3 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
               termsConfirmed && (isDomestic || effectiveShippingLine)
                 ? 'bg-brand-gradient hover:opacity-90 text-white cursor-pointer'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
