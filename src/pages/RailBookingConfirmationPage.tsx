@@ -80,7 +80,7 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [loading, setLoading]                         = useState(true);
   const [error, setError]                             = useState<string | null>(null);
   const [insuranceRequired, setInsuranceRequired]     = useState(false);
-  const [currentStep, setCurrentStep]                 = useState(1);
+  const [currentStep, setCurrentStep]                 = useState(0);  // 0 = all sections collapsed until clicked
   const [showBreakup, setShowBreakup]                 = useState(true);
   const [errors, setErrors]                           = useState<Record<string, string>>({});
   const [claimGstInput, setClaimGstInput]             = useState(false);   // from service-details page; makes sender GSTIN required

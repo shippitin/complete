@@ -79,7 +79,7 @@ const SeaBookingDetailsPage: React.FC = () => {
   const [paymentMode,   setPaymentMode]   = useState<'online'|'bank'|'credit'>('online');
   const [creditAcct,    setCreditAcct]    = useState('');
 
-  const [currentStep,   setCurrentStep]   = useState(1);
+  const [currentStep,   setCurrentStep]   = useState(0);  // 0 = all sections collapsed until clicked
   const [showBreakup,   setShowBreakup]   = useState(true);
   const [errors,        setErrors]        = useState<Record<string,string>>({});
   const [loading,       setLoading]       = useState(false);
