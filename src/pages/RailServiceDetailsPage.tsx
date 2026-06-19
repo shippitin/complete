@@ -281,7 +281,8 @@ const RailServiceDetailsPage: React.FC = () => {
                   placeholder="Enter code"
                   className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 uppercase" />
                 <button onClick={applyPromo}
-                  className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold rounded-xl transition">
+                  style={{ background: 'linear-gradient(to right, #53b2fe, #065af3)' }}
+                  className="px-4 py-2 text-white text-sm font-semibold rounded-xl transition hover:opacity-90">
                   Apply
                 </button>
               </div>
