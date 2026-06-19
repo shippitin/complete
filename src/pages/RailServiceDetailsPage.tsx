@@ -162,6 +162,18 @@ const RailServiceDetailsPage: React.FC = () => {
   // When "Other (not listed)" is chosen, the typed carrier name is the real shipping line.
   const effectiveShippingLine = shippingLine === 'Other' ? shippingLineOther.trim() : shippingLine;
 
+  // Pill toggle — "on" state uses the brand (Apply-button) blue gradient.
+  const Switch = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: React.ReactNode }) => (
+    <label className="flex items-center gap-2.5 cursor-pointer select-none">
+      <button type="button" role="switch" aria-checked={on} onClick={onToggle}
+        style={on ? { background: 'linear-gradient(to right, #53b2fe, #065af3)' } : undefined}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${on ? '' : 'bg-gray-300'}`}>
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${on ? 'translate-x-6' : 'translate-x-1'}`} />
+      </button>
+      <span className="font-semibold text-gray-800">{label}</span>
+    </label>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 py-4 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-5">
@@ -261,28 +273,16 @@ const RailServiceDetailsPage: React.FC = () => {
             )}
           </div>
 
-          {/* Add-ons — insurance (all) + customs (international only), on one line. */}
+          {/* GST + add-ons — all toggles on one line: GST · Insurance · Customs (intl). */}
           <div className="px-1">
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-              {/* Insurance — checkbox on the left */}
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input type="checkbox" checked={addInsurance} onChange={e => setAddInsurance(e.target.checked)}
-                  className="h-5 w-5 accent-blue-600 rounded flex-shrink-0" />
-                <span className="font-semibold text-gray-800">Cargo Insurance <span className="text-gray-400 font-normal">· ₹1,000</span></span>
-              </label>
-
-              {/* Customs — international only; toggle on the left, divider before it */}
+              <Switch on={gstInput}     onToggle={() => setGstInput(v => !v)}     label="Claim GST Input" />
+              <span className="h-5 w-px bg-gray-300" aria-hidden="true" />
+              <Switch on={addInsurance} onToggle={() => setAddInsurance(v => !v)} label={<>Cargo Insurance <span className="text-gray-400 font-normal">· ₹1,000</span></>} />
               {!isDomestic && (
                 <>
                   <span className="h-5 w-px bg-gray-300" aria-hidden="true" />
-                  <div className="flex items-center gap-2.5">
-                    <button type="button" role="switch" aria-checked={addCustoms}
-                      onClick={() => setAddCustoms(v => !v)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${addCustoms ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${addCustoms ? 'translate-x-6' : 'translate-x-1'}`} />
-                    </button>
-                    <span className="font-semibold text-gray-800">Customs Clearance <span className="text-gray-400 font-normal">· ₹2,000</span></span>
-                  </div>
+                  <Switch on={addCustoms} onToggle={() => setAddCustoms(v => !v)} label={<>Customs Clearance <span className="text-gray-400 font-normal">· ₹2,000</span></>} />
                 </>
               )}
             </div>
@@ -316,15 +316,6 @@ const RailServiceDetailsPage: React.FC = () => {
             )}
             {promoError && <p className="text-xs text-red-500 mt-1.5">{promoError}</p>}
           </div>
-
-          {/* GST — plain checkbox; the GSTIN itself is entered (and required) on the booking page */}
-          <label className="flex items-center gap-3 cursor-pointer px-1">
-            <input type="checkbox" checked={gstInput} onChange={e => setGstInput(e.target.checked)}
-              className="h-5 w-5 accent-blue-600 rounded flex-shrink-0" />
-            <span className="text-base font-semibold text-gray-800">
-              Claim GST Input
-            </span>
-          </label>
 
           {/* Terms & Conditions */}
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
