@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FaClipboardList, FaArrowLeft,
-  FaArrowRight, FaChevronDown, FaChevronUp, FaTag,
+  FaArrowRight, FaChevronDown, FaChevronUp, FaTag, FaShieldAlt,
 } from 'react-icons/fa';
 import type {
   AllFormData, TrainContainerFormData, TrainGoodsFormData,
@@ -42,7 +42,8 @@ const RailServiceDetailsPage: React.FC = () => {
   const [selectedTrainResult, setSelectedTrainResult] = useState<FreightTrainResult | null>(null);
   const [loading, setLoading]                         = useState(true);
   const [error, setError]                             = useState<string | null>(null);
-  const [insuranceRequired, setInsuranceRequired]     = useState(false);
+  const [addInsurance, setAddInsurance]               = useState(false);  // cargo insurance (all bookings)
+  const [addCustoms,   setAddCustoms]                 = useState(false);  // customs clearance (international only)
   const [showBreakup, setShowBreakup]                 = useState(true);
   const [promoInput, setPromoInput]                   = useState('');
   const [promoCode, setPromoCode]                     = useState('');
@@ -61,9 +62,10 @@ const RailServiceDetailsPage: React.FC = () => {
     if (state?.formData && state?.selectedTrainResult) {
       setFormData(state.formData);
       setSelectedTrainResult(state.selectedTrainResult);
-      if ('insuranceRequired' in state.formData) {
-        setInsuranceRequired((state.formData as any).insuranceRequired || false);
-      }
+      // Initialise the add-ons from the search defaults set in RailQuoteForm.
+      const fd = state.formData as any;
+      setAddInsurance(!!fd.addInsurance || !!fd.insuranceRequired);
+      setAddCustoms(!!fd.addCustoms);
       setLoading(false);
     } else {
       setError('No service details provided. Please go back to search results.');
@@ -106,13 +108,11 @@ const RailServiceDetailsPage: React.FC = () => {
   const numContainers = isContainer ? (cfd.numberOfContainers || 1) : 1;
   const serviceType   = isContainer ? cfd.serviceType : 'terminalToTerminal';
 
-  // Read add-ons selected on Recommended Services page
+  // First/last mile come from the chosen service type (set during search).
   const addFirstMile = (formData as any)?.addFirstMile || false;
   const addLastMile  = (formData as any)?.addLastMile  || false;
-  const addCustoms   = (formData as any)?.addCustoms   || false;
-  // Insurance is written as `addInsurance` by the Recommended Services page
-  // (older flows used `insuranceRequired` — honour both).
-  const addInsurance = (formData as any)?.addInsurance || insuranceRequired || false;
+  // addCustoms / addInsurance are interactive state (toggled in the Add-ons
+  // block below), initialised from the search defaults in the effect above.
 
   const customsFee    = addCustoms ? 2000 : 0;
   const gstCustoms    = Math.round(customsFee * 0.18);
@@ -261,6 +261,43 @@ const RailServiceDetailsPage: React.FC = () => {
             )}
           </div>
 
+          {/* Add-ons — insurance (all bookings) + customs (international only).
+              Previously lived on the removed Recommended Services page. */}
+          <div className="px-1 space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+              <FaShieldAlt className="text-blue-500" /> Add-ons
+            </p>
+
+            {/* Insurance — tick box */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input type="checkbox" checked={addInsurance} onChange={e => setAddInsurance(e.target.checked)}
+                className="h-5 w-5 accent-blue-600 rounded flex-shrink-0 mt-0.5" />
+              <span>
+                <span className="block text-sm font-semibold text-gray-800">
+                  Cargo Insurance <span className="text-gray-400 font-normal">· ₹1,000</span>
+                </span>
+                <span className="block text-xs text-gray-400">All-risk cargo cover (recommended).</span>
+              </span>
+            </label>
+
+            {/* Customs — toggle, international only */}
+            {!isDomestic && (
+              <div className="flex items-center justify-between gap-4 sm:max-w-md">
+                <div>
+                  <span className="block text-sm font-semibold text-gray-800">
+                    Customs Clearance <span className="text-gray-400 font-normal">· ₹2,000</span>
+                  </span>
+                  <span className="block text-xs text-gray-400">CHA-assisted import/export documentation.</span>
+                </div>
+                <button type="button" role="switch" aria-checked={addCustoms}
+                  onClick={() => setAddCustoms(v => !v)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${addCustoms ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${addCustoms ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Promo / Discount Code — no box */}
           <div className="px-1">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
@@ -328,7 +365,8 @@ const RailServiceDetailsPage: React.FC = () => {
               if (!termsConfirmed || (!isDomestic && !effectiveShippingLine)) return;
               navigate('/rail-booking-confirmation', {
                 state: {
-                  formData: formData!,
+                  // Carry the add-on toggles chosen here so the Booking page reflects them.
+                  formData: { ...(formData as any), addCustoms, addInsurance },
                   selectedTrainResult: selectedTrainResult!,
                   initialInsuranceRequired: addInsurance,
                   claimGstInput: gstInput,
