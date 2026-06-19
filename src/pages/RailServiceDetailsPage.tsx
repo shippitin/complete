@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FaClipboardList, FaArrowLeft,
-  FaArrowRight, FaChevronDown, FaChevronUp, FaTag, FaShieldAlt,
+  FaArrowRight, FaChevronDown, FaChevronUp, FaTag,
 } from 'react-icons/fa';
 import type {
   AllFormData, TrainContainerFormData, TrainGoodsFormData,
@@ -261,41 +261,31 @@ const RailServiceDetailsPage: React.FC = () => {
             )}
           </div>
 
-          {/* Add-ons — insurance (all bookings) + customs (international only).
-              Previously lived on the removed Recommended Services page. */}
-          <div className="px-1 space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
-              <FaShieldAlt className="text-blue-500" /> Add-ons
-            </p>
+          {/* Add-ons — insurance (all) + customs (international only), on one line. */}
+          <div className="px-1">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+              {/* Insurance — checkbox on the left */}
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input type="checkbox" checked={addInsurance} onChange={e => setAddInsurance(e.target.checked)}
+                  className="h-5 w-5 accent-blue-600 rounded flex-shrink-0" />
+                <span className="font-semibold text-gray-800">Cargo Insurance <span className="text-gray-400 font-normal">· ₹1,000</span></span>
+              </label>
 
-            {/* Insurance — tick box */}
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={addInsurance} onChange={e => setAddInsurance(e.target.checked)}
-                className="h-5 w-5 accent-blue-600 rounded flex-shrink-0 mt-0.5" />
-              <span>
-                <span className="block text-sm font-semibold text-gray-800">
-                  Cargo Insurance <span className="text-gray-400 font-normal">· ₹1,000</span>
-                </span>
-                <span className="block text-xs text-gray-400">All-risk cargo cover (recommended).</span>
-              </span>
-            </label>
-
-            {/* Customs — toggle, international only */}
-            {!isDomestic && (
-              <div className="flex items-center justify-between gap-4 sm:max-w-md">
-                <div>
-                  <span className="block text-sm font-semibold text-gray-800">
-                    Customs Clearance <span className="text-gray-400 font-normal">· ₹2,000</span>
-                  </span>
-                  <span className="block text-xs text-gray-400">CHA-assisted import/export documentation.</span>
-                </div>
-                <button type="button" role="switch" aria-checked={addCustoms}
-                  onClick={() => setAddCustoms(v => !v)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${addCustoms ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${addCustoms ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-            )}
+              {/* Customs — international only; toggle on the left, divider before it */}
+              {!isDomestic && (
+                <>
+                  <span className="h-5 w-px bg-gray-300" aria-hidden="true" />
+                  <div className="flex items-center gap-2.5">
+                    <button type="button" role="switch" aria-checked={addCustoms}
+                      onClick={() => setAddCustoms(v => !v)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 focus:outline-none ${addCustoms ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${addCustoms ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                    <span className="font-semibold text-gray-800">Customs Clearance <span className="text-gray-400 font-normal">· ₹2,000</span></span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Promo / Discount Code — no box */}
