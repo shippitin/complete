@@ -137,7 +137,9 @@ const RailServiceDetailsPage: React.FC = () => {
       originPort: isOriginPort, destPort: isDestPort,
     });
 
-  const insuranceAmt    = addInsurance ? 1000 : 0;
+  // Insurance is not priced on this page — it's quoted on the next (booking) page
+  // as 0.25% of the declared cargo value. Here it carries the toggle forward only.
+  const insuranceAmt    = 0;
   // Claiming GST input → 18% across every line. Otherwise concessional rates
   // (rail/first-last mile @5%), but insurance is always 18%.
   const railRate    = gstInput ? 0.18 : 0.05;
@@ -279,7 +281,7 @@ const RailServiceDetailsPage: React.FC = () => {
             <div className="flex items-center justify-between gap-x-4 text-sm">
               <Switch on={gstInput}     onToggle={() => setGstInput(v => !v)}     label="Claim GST Input" />
               <span className="h-5 w-px bg-gray-300" aria-hidden="true" />
-              <Switch on={addInsurance} onToggle={() => setAddInsurance(v => !v)} label={<>Cargo Insurance <span className="text-gray-400 font-normal">· ₹1,000</span></>} />
+              <Switch on={addInsurance} onToggle={() => setAddInsurance(v => !v)} label="Cargo Insurance" />
               {!isDomestic && (
                 <>
                   <span className="h-5 w-px bg-gray-300" aria-hidden="true" />
@@ -359,7 +361,7 @@ const RailServiceDetailsPage: React.FC = () => {
               });
             }}
             disabled={!termsConfirmed || (!isDomestic && !effectiveShippingLine)}
-            className={`w-full py-3 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
+            className={`mx-auto px-12 py-3 font-bold rounded-xl transition text-sm shadow-md flex items-center justify-center gap-2 ${
               termsConfirmed && (isDomestic || effectiveShippingLine)
                 ? 'bg-brand-gradient hover:opacity-90 text-white cursor-pointer'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -472,7 +474,7 @@ const RailServiceDetailsPage: React.FC = () => {
                       </div>
                     )}
 
-                    {addInsurance && (
+                    {insuranceAmt > 0 && (
                       <div className="flex items-start justify-between">
                         <div className="flex-1 pr-2">
                           <p className="text-sm text-gray-700">Cargo Insurance</p>
@@ -517,7 +519,7 @@ const RailServiceDetailsPage: React.FC = () => {
                   <div className="flex justify-between text-xs text-gray-600">
                     <span>Platform Fee GST @18%</span><span className="font-medium">{fmt(gstPlatform)}</span>
                   </div>
-                  {addInsurance && (
+                  {insuranceAmt > 0 && (
                     <div className="flex justify-between text-xs text-gray-600">
                       <span>Insurance GST @18%</span><span className="font-medium">{fmt(gstInsurance)}</span>
                     </div>
