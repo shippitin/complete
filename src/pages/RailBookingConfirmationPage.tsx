@@ -152,10 +152,17 @@ const RailBookingConfirmationPage: React.FC = () => {
   const [addMiles,      setAddMiles]      = useState(false);
   const [firstMileAddr, setFirstMileAddr] = useState('');
   const [lastMileAddr,  setLastMileAddr]  = useState('');
+  const [insuranceCargoValue, setInsuranceCargoValue] = useState('');  // declared value the 0.25% insurance is calculated on
 
   // Payment
   const [paymentMode,   setPaymentMode]   = useState<'online'|'bank'|'credit'>('online');
   const [creditAccount, setCreditAccount] = useState('');
+
+  // Insurance cargo value defaults to the declared invoice value (still editable),
+  // so turning insurance on auto-prices from what was already entered in Cargo.
+  useEffect(() => {
+    if (insuranceRequired && !insuranceCargoValue && invoiceValue) setInsuranceCargoValue(invoiceValue);
+  }, [insuranceRequired, invoiceValue]);
 
   useEffect(() => {
     const state = location.state as {
@@ -273,8 +280,8 @@ const RailBookingConfirmationPage: React.FC = () => {
     const fm      = isDoorO ? (FIRST_LAST_MILE_FIRST[ct]||10500)*n : 0;
     const lm      = isDoorD ? (FIRST_LAST_MILE_LAST[ct]||12000)*n : 0;
     const pf      = isDomestic ? 1000 : 1500;
-    // All-risk cargo insurance — 0.25% of the declared invoice (cargo) value.
-    const insAmt   = insuranceRequired ? Math.round((Number(invoiceValue) || 0) * 0.0025) : 0;
+    // All-risk cargo insurance — 0.25% of the cargo value entered with the add-on.
+    const insAmt   = insuranceRequired ? Math.round((Number(insuranceCargoValue) || 0) * 0.0025) : 0;
     // Claiming GST input → 18% on rail + first/last mile too; else concessional 5%.
     const rRate    = claimGstInput ? 0.18 : 0.05;
     const gRail   = Math.round(base*rRate);
@@ -905,7 +912,7 @@ const RailBookingConfirmationPage: React.FC = () => {
                         {[
                           // Customs Clearance is an international-only service.
                           ...(!isDomestic ? [{ state: addCustoms, setter: setAddCustoms, label: '🛃 Customs Clearance', price: '₹2,000 / shipment', desc: 'CHA-assisted customs documentation' }] : []),
-                          { state: addInsurance, setter: (v: boolean) => { setAddInsurance2(v); setInsuranceRequired(v); }, label: '🛡️ Cargo Insurance', price: '0.25% of cargo value', desc: 'All-risk cargo insurance' },
+                          { state: addInsurance, setter: (v: boolean) => { setAddInsurance2(v); setInsuranceRequired(v); }, label: '🛡️ Cargo Insurance', price: '0.25% of cargo value', desc: 'All-risk cargo insurance', hasValue: true },
                           { state: addCO2,       setter: setAddCO2,        label: '🌱 CO₂ Credits', price: 'Earn green credits', desc: 'Rail emits 75% less CO₂ than road' },
                           { state: addMiles,     setter: setAddMiles,      label: '⭐ Miles Credits', price: 'Earn reward miles', desc: 'Redeem for discounts on future bookings' },
                         ].map((item, i) => (
@@ -920,6 +927,17 @@ const RailBookingConfirmationPage: React.FC = () => {
                                 <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
                               </div>
                             </label>
+                            {item.state && (item as any).hasValue && (
+                              <div className="mt-3 ml-7">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Cargo Value (₹)</label>
+                                <input type="number" min="0" value={insuranceCargoValue}
+                                  onChange={e=>setInsuranceCargoValue(e.target.value)}
+                                  placeholder="e.g., 500000" className={inp()} />
+                                {Number(insuranceCargoValue) > 0 && (
+                                  <p className="text-xs text-gray-500 mt-1">Insurance @ 0.25% = <span className="font-semibold text-gray-700">₹{Math.round(Number(insuranceCargoValue)*0.0025).toLocaleString('en-IN')}</span></p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
