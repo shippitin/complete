@@ -346,15 +346,32 @@ const RailBookingConfirmationPage: React.FC = () => {
   };
 
   // Simulated CONCOR/CTO Shipping Bill verification (no live API yet — swap in the real call here).
+  // Persist filing progress to the booking's detail overrides immediately (not only
+  // on final Confirm), so a verified Shipping Bill / filed e-Forwarding Note survives
+  // leaving this page and coming back ("Complete documentation").
+  const persistFiling = (patch: Record<string, any>) => {
+    if (!existingBooking?.id) return;
+    try {
+      const dov = JSON.parse(localStorage.getItem('bookingDetailOverrides') || '{}');
+      dov[existingBooking.id] = { ...(dov[existingBooking.id] || {}), ...patch };
+      localStorage.setItem('bookingDetailOverrides', JSON.stringify(dov));
+    } catch { /* ignore quota/parse */ }
+  };
+
   const verifyShippingBill = () => {
     if (filingNumber.length !== 7 || sbVerifying || sbVerified) return;
     setSbVerifying(true);
-    setTimeout(() => { setSbVerifying(false); setSbVerified(true); toast.success('Shipping Bill verified with CONCOR / CTO'); }, 1200);
+    setTimeout(() => {
+      setSbVerifying(false); setSbVerified(true);
+      persistFiling({ filing_number: filingNumber });   // remember the verified SB
+      toast.success('Shipping Bill verified with CONCOR / CTO');
+    }, 1200);
   };
   // File the e-Forwarding Note with the DSN PIN (Digitally Signed Number).
   const fileEForwardingNote = () => {
     if (!dsnPin.trim() || efnFiled) return;
     setEfnFiled(true);
+    persistFiling({ efn_filed: true });                 // remember the filed EFN
     toast.success('e-Forwarding Note filed');
   };
 
