@@ -234,6 +234,67 @@ const BookingCard: React.FC<{
   const goComplete = (initialStep: number) => {
     const cb: any = d.charges_breakdown || null;
     const basePrice = cb?.base ?? booking.estimated_price ?? 0;
+
+    // Sea bookings have their own full booking/documentation page (Shipper → Consignee →
+    // Cargo → Add-ons → Payment, with Shipping Bill + VGM filing). Route there instead of rail.
+    if ((booking.service_type || '').toLowerCase().includes('sea')) {
+      const seaFormData = {
+        bookingType:        'Sea',
+        activityType:       d.route_type || 'Port to Port',
+        shipmentMode:       'FCL',
+        containerType:      d.container_type || '40ft Standard',
+        numberOfContainers: d.number_of_containers || 1,
+        isDomestic:         d.is_domestic === true,
+        hazardousCargo:     !!d.hazardous,
+        commodity:          booking.cargo_type || 'General',
+        insuranceRequired:  !!d.insurance_required,
+        addCustomsBrokerage: !!cb?.customs,
+        addOriginPortCharges: (cb?.originThc || 0) > 0,
+        addDestinationPortCharges: (cb?.destThc || 0) > 0,
+        addInsurance:       !!d.insurance_required,
+      };
+      const seaSelectedResult = {
+        id:              booking.booking_number,
+        serviceName:     booking.service_type,
+        carrier:         d.operator || 'Maersk',
+        originPort:      booking.origin,
+        destinationPort: booking.destination,
+        transitTime:     d.transit_time || '—',
+        price:           basePrice,
+        containerSize:   d.container_type || '',
+        status:          'Available',
+      };
+      const seaPrefill = {
+        shipper: {
+          name: d.sender_name, phone: d.sender_phone, email: d.sender_email, gstin: d.sender_gstin,
+          address: d.sender_address, city: d.sender_city, state: d.sender_state, pincode: d.sender_pincode, country: d.sender_country,
+        },
+        consignee: {
+          name: d.receiver_name, phone: d.receiver_phone, email: d.receiver_email, gstin: d.receiver_gstin,
+          address: d.receiver_address, city: d.receiver_city, state: d.receiver_state, pincode: d.receiver_pincode, country: d.receiver_country,
+        },
+        cargo: {
+          goodsDescription: d.goods_description, hsnCode: d.hsn_code, natureOfPacking: d.nature_of_packing,
+          grossWeight: d.weight_per_container, invoiceNumber: d.invoice_number, invoiceDate: d.invoice_date,
+          invoiceValue: d.invoice_value, numPackages: d.num_packages, packageSize: d.package_size,
+          containerNo: d.container_no, sealNo: d.seal_no, vgmWeight: d.vgm, bolNo: d.bol_no,
+          specialInstructions: d.special_instructions,
+        },
+        filing: d.filing_number,
+        vgmFiled: d.efn_filed,
+      };
+      navigate('/sea-booking-details', {
+        state: {
+          selectedResult: seaSelectedResult,
+          originalFormData: seaFormData,
+          initialStep,
+          existing: { id: booking.id, booking_number: booking.booking_number },
+          prefill: seaPrefill,
+        },
+      });
+      return;
+    }
+
     const st = d.route_type || 'terminalToTerminal';
     const doorO = ['doorToDoor', 'doorToTerminal', 'doorToPort'].includes(st);
     const doorD = ['doorToDoor', 'terminalToDoor', 'portToDoor'].includes(st);

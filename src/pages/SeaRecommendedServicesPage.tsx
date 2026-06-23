@@ -216,7 +216,7 @@ const SeaRecommendedServicesPage: React.FC = () => {
                       ? 'Yes - (covers the combined value of goods and initial freight costs up to ₹4 Crore)'
                       : 'No - I will arrange my own insurance'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">All-risk marine cargo insurance. 1% of declared goods value.</p>
+                  <p className="text-xs text-gray-400 mt-0.5">All-risk marine cargo insurance. 0.25% of declared goods value.</p>
                 </div>
                 <button
                   type="button"
