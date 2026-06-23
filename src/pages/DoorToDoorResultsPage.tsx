@@ -54,18 +54,18 @@ const DoorToDoorResultsPage: React.FC = () => {
     })();
   }, [formData]);
 
+  // Route through the full door-to-door booking page (Shipper → Consignee → Cargo →
+  // Add-ons → Payment) instead of jumping straight to confirmation.
   const handleBookNow = (result: D2DResult) => {
-    const user = JSON.parse(localStorage.getItem('shippitin_user') || '{}');
-    navigate('/booking-confirmation', {
+    navigate('/door-to-door-booking-details', {
       state: {
-        bookingDetails: {
-          selectedResult: { id: result.id, serviceName: result.serviceName, origin: formData?.origin, destination: formData?.destination, transitTime: result.transitTime, price: result.price, features: result.features, carrier: result.carrier, status: result.status, bookingType: 'Door to Door', cargoType: formData?.cargoType, weight: formData?.weight, readyDate: formData?.readyDate },
-          originalFormData: formData,
-          contactDetails: { fullName: user.full_name || '', email: user.email || '', phone: user.phone || '', companyName: user.company_name || '' },
-          bookingDate: new Date().toLocaleDateString('en-IN'), bookingTime: new Date().toLocaleTimeString('en-IN'),
-          bookingId: `D2D-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`, finalAmount: result.price,
-        }
-      }
+        selectedResult: {
+          id: result.id, serviceName: result.serviceName, carrier: result.carrier,
+          origin: formData?.origin, destination: formData?.destination,
+          transitTime: result.transitTime, price: result.price, features: result.features, status: result.status,
+        },
+        originalFormData: formData,
+      },
     });
   };
 

@@ -295,6 +295,49 @@ const BookingCard: React.FC<{
       return;
     }
 
+    // Config-driven modes (Air/Truck/Parcel/Customs/First-Last-Mile/Door-to-Door/Port) all run
+    // on the shared BookingFlow engine. Route to the right *-booking-details page with the
+    // generic engine state (selectedResult + originalFormData + prefilled flow_values).
+    const engineRoutes: Array<{ match: string; route: string }> = [
+      { match: 'air', route: '/air-booking-details' },
+      { match: 'truck', route: '/truck-booking-details' },
+      { match: 'parcel', route: '/parcel-booking-details' },
+      { match: 'customs', route: '/customs-booking-details' },
+      { match: 'first', route: '/first-last-mile-booking-details' },
+      { match: 'door', route: '/door-to-door-booking-details' },
+      { match: 'port', route: '/port-booking-details' },
+    ];
+    const stype = (booking.service_type || '').toLowerCase();
+    const engineHit = engineRoutes.find(m => stype.includes(m.match));
+    if (engineHit) {
+      const engineSelected = {
+        id: booking.booking_number, serviceName: booking.service_type, carrier: d.operator || '',
+        origin: booking.origin, destination: booking.destination,
+        originPort: booking.origin, destinationPort: booking.destination,
+        originAirport: booking.origin, destinationAirport: booking.destination, portName: booking.origin,
+        price: (cb?.rows?.[0]?.amount) ?? cb?.base ?? booking.estimated_price ?? 0,
+        totalAmount: booking.estimated_price ?? 0,
+        transitTime: d.transit_time || '—', status: 'Available',
+      };
+      const engineFormData = {
+        bookingType: booking.service_type, isDomestic: d.is_domestic === true,
+        activityType: d.route_type, serviceType: d.route_type,
+        containerType: d.container_type, numberOfContainers: d.number_of_containers,
+        commodity: booking.cargo_type, cargoType: booking.cargo_type, hazardousCargo: !!d.hazardous,
+      };
+      navigate(engineHit.route, {
+        state: {
+          selectedResult: engineSelected,
+          selectedOffer: engineSelected,
+          originalFormData: engineFormData,
+          initialStep,
+          existing: { id: booking.id, booking_number: booking.booking_number },
+          prefill: { values: d.flow_values || {}, filing: d.filing_number, docFiled: d.efn_filed },
+        },
+      });
+      return;
+    }
+
     const st = d.route_type || 'terminalToTerminal';
     const doorO = ['doorToDoor', 'doorToTerminal', 'doorToPort'].includes(st);
     const doorD = ['doorToDoor', 'terminalToDoor', 'portToDoor'].includes(st);

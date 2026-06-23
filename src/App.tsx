@@ -66,6 +66,7 @@ import InsuranceBookingDetailsPage from './pages/InsuranceBookingDetailsPage';
 import ParcelBookingDetailsPage from './pages/ParcelBookingDetailsPage';
 import RailServiceDetailsPage from './pages/RailServiceDetailsPage';
 import PortBookingDetailsPage from './pages/PortBookingDetailsPage';
+import DoorToDoorBookingDetailsPage from './pages/DoorToDoorBookingDetailsPage';
 import BookingConfirmationPage from './pages/BookingConfirmationPage';
 import RailBookingConfirmationPage from './pages/RailBookingConfirmationPage';
 import AdminPage from './pages/AdminPage';
@@ -287,6 +288,7 @@ const AppContent: React.FC = () => {
 
           {/* Other Results Pages — Protected */}
           <Route path="/door-to-door-results" element={<ProtectedRoute><DoorToDoorResultsPage /></ProtectedRoute>} />
+          <Route path="/door-to-door-booking-details" element={<ProtectedRoute><DoorToDoorBookingDetailsPage /></ProtectedRoute>} />
           <Route path="/air-results" element={<ProtectedRoute><AirResultsPage /></ProtectedRoute>} />
           <Route path="/air-booking-details" element={<ProtectedRoute><AirBookingDetailsPage /></ProtectedRoute>} />
           <Route path="/truck-results" element={<ProtectedRoute><TruckResultsPage /></ProtectedRoute>} />
