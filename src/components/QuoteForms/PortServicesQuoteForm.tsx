@@ -43,7 +43,7 @@ const PortServicesQuoteForm = forwardRef<QuoteFormHandle, PortServicesProps>((pr
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const inputClass = `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 border-gray-300`;
+  const inputClass = `block w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400`;
 
   return (
     <div className="space-y-4 p-5 bg-white rounded-xl shadow-md border border-gray-200 font-inter">

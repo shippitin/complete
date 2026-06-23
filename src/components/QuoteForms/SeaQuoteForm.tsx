@@ -178,7 +178,7 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
   useImperativeHandle(ref, () => ({ submit: () => handleSubmitLogic(), reset: () => resetForm() }));
 
   const inputClass = (hasError: boolean) =>
-    `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 ${hasError ? 'border-orange-500' : 'border-gray-300'}`;
+    `block w-full px-3 py-2.5 text-sm bg-white border rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400 ${hasError ? 'border-orange-400 bg-orange-50/40' : 'border-gray-300'}`;
 
   const renderOrigin = () => {
     if (activityType === 'Port to Port' || activityType === 'Port to Door') {
@@ -278,7 +278,7 @@ const SeaQuoteForm = forwardRef<QuoteFormHandle, SeaQuoteFormProps>(({ prefillDa
         <div className="md:col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Date<span className="text-red-500">*</span></label>
           <DatePicker selected={readyDate} onChange={(date) => { setReadyDate(date); setErrors(p => ({ ...p, readyDate: undefined })); }}
-            dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY" className={inputClass(!!errors.readyDate)} />
+            dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY" wrapperClassName="w-full" className={inputClass(!!errors.readyDate)} />
           {errors.readyDate && <p className="mt-1 text-sm text-orange-600">{errors.readyDate}</p>}
         </div>
       </div>

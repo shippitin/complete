@@ -139,14 +139,16 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
 
   useImperativeHandle(ref, () => ({ submit: handleSubmitLogic, reset: resetAll }));
 
+  // Individually-bordered rounded inputs — consistent with the LocationAutocomplete boxes
+  // (the underline style was what made the weight/commodity rows look mismatched).
   const inputClass = (hasError: boolean) =>
-    `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 ${hasError ? 'border-orange-500' : 'border-gray-300'}`;
+    `block w-full px-3 py-2.5 text-sm bg-white border rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400 ${hasError ? 'border-orange-400 bg-orange-50/40' : 'border-gray-300'}`;
 
   const renderDatePicker = () => (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">Clearance Date<span className="text-red-500">*</span></label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Cargo Ready Date<span className="text-red-500">*</span></label>
       <DatePicker selected={readyDate} onChange={(date) => { setReadyDate(date); setErrors(p => ({ ...p, readyDate: undefined })); }}
-        dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY" className={inputClass(!!errors.readyDate)} />
+        dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY" wrapperClassName="w-full" className={inputClass(!!errors.readyDate)} />
       {errors.readyDate && <p className="mt-1 text-sm text-orange-600">{errors.readyDate}</p>}
     </div>
   );
@@ -169,7 +171,7 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
       </div>
 
       {activityType === 'Airport to Airport' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
           <div>
             <LocationAutocomplete label="Origin Airport" required value={originAirport}
               onChange={(v) => { setOriginAirport(v); setErrors(p => ({ ...p, originAirport: undefined })); }}
@@ -182,12 +184,11 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
               placeholder="e.g., JFK New York, JFK" locationType="airport" />
             {errors.destinationAirport && <p className="mt-1 text-sm text-orange-600">{errors.destinationAirport}</p>}
           </div>
-          {renderDatePicker()}
         </div>
       )}
 
       {activityType === 'Airport to Door' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-4">
           <div>
             <LocationAutocomplete label="Origin Airport" required value={originAirport}
               onChange={(v) => { setOriginAirport(v); setErrors(p => ({ ...p, originAirport: undefined })); }}
@@ -206,12 +207,11 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
               placeholder="e.g., JFK New York, JFK" locationType="airport" />
             {errors.destinationAirport && <p className="mt-1 text-sm text-orange-600">{errors.destinationAirport}</p>}
           </div>
-          {renderDatePicker()}
         </div>
       )}
 
       {activityType === 'Door to Airport' && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-5 gap-y-4">
           <div>
             <LocationAutocomplete label="Origin (City/Address)" required value={originDoorCombined}
               onChange={(v) => { setOriginDoorCombined(v); setErrors(p => ({ ...p, originCity: undefined })); }}
@@ -230,13 +230,12 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
               placeholder="e.g., Dubai Airport, DXB" locationType="airport" />
             {errors.destinationAirport && <p className="mt-1 text-sm text-orange-600">{errors.destinationAirport}</p>}
           </div>
-          {renderDatePicker()}
         </div>
       )}
 
       {activityType === 'Door to Door' && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-4">
             <div>
               <LocationAutocomplete label="Origin (City/Address)" required value={originDoorCombined}
                 onChange={(v) => { setOriginDoorCombined(v); setErrors(p => ({ ...p, originCity: undefined })); }}
@@ -262,14 +261,12 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
               {errors.destinationAirport && <p className="mt-1 text-sm text-orange-600">{errors.destinationAirport}</p>}
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-3">
-            {renderDatePicker()}
-          </div>
         </>
       )}
 
-      {/* Weight fields */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3">
+      {/* Cargo Ready Date + weight + commodity — one aligned 4-column grid (no orphan fields) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-4">
+        {renderDatePicker()}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Gross Weight (Kgs)<span className="text-red-500">*</span></label>
           <input type="number" className={inputClass(!!errors.totalWeight)} placeholder="e.g., 100" value={totalWeight}
@@ -288,10 +285,6 @@ const AirQuoteForm = forwardRef<QuoteFormHandle, AirQuoteFormProps>(({ prefillDa
             onChange={(e) => { setVolumeWeight(e.target.value === '' ? '' : Number(e.target.value)); setErrors(p => ({ ...p, volumeWeight: undefined })); }} />
           {errors.volumeWeight && <p className="mt-1 text-sm text-orange-600">{errors.volumeWeight}</p>}
         </div>
-      </div>
-
-      {/* Commodity fields */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Commodity Category<span className="text-red-500">*</span></label>
           <select className={inputClass(!!errors.commodityCategory)} value={commodityCategory}

@@ -92,7 +92,7 @@ const FirstLastMileQuoteForm = forwardRef<QuoteFormHandle, FirstLastMileQuoteFor
   useImperativeHandle(ref, () => ({ submit: handleSubmitLogic, reset: resetForm }));
 
   const inputClass = (hasError: boolean) =>
-    `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 ${hasError ? 'border-orange-500' : 'border-gray-300'}`;
+    `block w-full px-3 py-2.5 text-sm bg-white border rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400 ${hasError ? 'border-orange-400 bg-orange-50/40' : 'border-gray-300'}`;
 
   return (
     <div className="space-y-4 p-5 bg-white rounded-xl shadow-md border border-gray-200 font-inter">
@@ -131,7 +131,7 @@ const FirstLastMileQuoteForm = forwardRef<QuoteFormHandle, FirstLastMileQuoteFor
           <DatePicker selected={pickupDate}
             onChange={(date) => { setPickupDate(date); setErrors(p => ({ ...p, pickupDate: undefined })); }}
             dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY"
-            className={inputClass(!!errors.pickupDate)} />
+            wrapperClassName="w-full" className={inputClass(!!errors.pickupDate)} />
           {errors.pickupDate && <p className="mt-1 text-xs text-orange-600">{errors.pickupDate}</p>}
         </div>
         <div>
@@ -139,7 +139,7 @@ const FirstLastMileQuoteForm = forwardRef<QuoteFormHandle, FirstLastMileQuoteFor
           <DatePicker selected={deliveryDate}
             onChange={(date) => { setDeliveryDate(date); }}
             dateFormat="dd-MM-yyyy" placeholderText="DD-MM-YYYY"
-            className={inputClass(false)} />
+            wrapperClassName="w-full" className={inputClass(false)} />
         </div>
       </div>
 

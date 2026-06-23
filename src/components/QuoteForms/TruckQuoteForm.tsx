@@ -33,7 +33,7 @@ const TruckQuoteForm = forwardRef<QuoteFormHandle, { prefillData?: ParsedVoiceCo
   const [specialInstructions, setSpecialInstructions] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
-  const inputClass = `block w-full pl-3 pr-3 py-2 sm:text-sm bg-transparent border-0 border-b focus:ring-0 focus:border-blue-500 border-gray-300`;
+  const inputClass = `block w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg transition focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 disabled:bg-gray-50 disabled:text-gray-400`;
 
   useEffect(() => {
     if (prefillData) {
@@ -105,7 +105,7 @@ const TruckQuoteForm = forwardRef<QuoteFormHandle, { prefillData?: ParsedVoiceCo
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Date<span className="text-red-500">*</span></label>
           <DatePicker selected={readyDate} onChange={(date) => setReadyDate(date)}
-            dateFormat="dd-MM-yyyy" className={inputClass} placeholderText="Select Date" />
+            dateFormat="dd-MM-yyyy" wrapperClassName="w-full" className={inputClass} placeholderText="Select Date" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Total Weight (Kgs)<span className="text-red-500">*</span></label>
