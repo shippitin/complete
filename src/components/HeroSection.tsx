@@ -133,7 +133,7 @@ const HeroSection: React.FC = () => {
   return (
     <section
       className="w-full py-6 px-4"
-      style={{ background: 'linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%)' }}
+      style={{ background: 'linear-gradient(135deg, rgb(219, 234, 254) 0%,rgb(224, 231, 255) 50%, rgb(239, 246, 255) 100%)' }}
     >
       {/* Centered (even left/right gaps at any width). Width is tuned to ~1072px
           so the centered left edge lands under the logo's 2nd "P" — this stays
