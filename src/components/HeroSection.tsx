@@ -159,10 +159,6 @@ const HeroSection: React.FC = () => {
         {/* Form card */}
         <div
           className="pt-5 pb-5"
-          style={{
-            borderRadius: '0 0 16px 16px',
-            boxShadow: '0 8px 32px rgba(59,130,246,0.10), 0 2px 8px rgba(0,0,0,0.06)',
-          }}
         >
           {renderQuoteForm()}
 
