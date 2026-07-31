@@ -158,7 +158,7 @@ const HeroSection: React.FC = () => {
 
         {/* Form card */}
         <div
-          className="pt-5 pb-5"
+          className="pt-2 pb-5"
         >
           {renderQuoteForm()}
 
