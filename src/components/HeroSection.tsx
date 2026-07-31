@@ -143,7 +143,7 @@ const HeroSection: React.FC = () => {
         {/* White tab strip */}
         <div
           className="bg-white px-4 py-3 flex flex-wrap justify-center sm:justify-between items-center gap-1"
-          style={{ borderRadius: '16px 16px 0 0', borderBottom: '1px solid #e0e7ff' }}
+          style={{ borderRadius: '16px 16px 16px 16px', borderBottom: '1px solid #e0e7ff' }}
         >
           {tabs.map(tab => (
             <Tab
@@ -158,7 +158,7 @@ const HeroSection: React.FC = () => {
 
         {/* Form card */}
         <div
-          className="bg-white px-5 pt-5 pb-5"
+          className="pt-5 pb-5"
           style={{
             borderRadius: '0 0 16px 16px',
             boxShadow: '0 8px 32px rgba(59,130,246,0.10), 0 2px 8px rgba(0,0,0,0.06)',
